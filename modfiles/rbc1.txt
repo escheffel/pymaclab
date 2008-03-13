@@ -1,0 +1,78 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is just a standard RBC model, as you can see.
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Standard RBC Model;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+rho       = 0.36;
+delta     = 0.025;
+R_bar     = 1.01; 
+eta	    = 2.0; 
+psi	    = 0.95;
+z_bar     = 1.0;
+sigma_eps = 0.052; 
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,hp]
+[2]  c(t):consumption{con}[log,hp]
+[4]  y(t):output{con}[log,hp]      
+[5]  z(t):eps(t):productivity{exo}[log,hp]
+[6]  @inv(t):investment[log,hp]
+[7]  @R(t):rrate
+
+%Boundary conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+[1]   @inv(t) = k(t)-(1-delta)*k(t-1);
+[3]   @R(t) = rho*z(t)**psi*k(t)**(rho-1)+(1-delta);
+
+
+
+%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the non-linear FOCs in format g(x)=0
+
+[1]   z(t)*k(t-1)**(rho)+(1-delta)*k(t-1)-k(t)-c(t) = 0;
+[2]   betta*E(t)|c(t+1)**(-eta)*c(t)**(eta)*@R(t)-1 = 0;
+[3]   z(t)*k(t-1)**(rho)-y(t) = 0;
+[4]   psi*LOG(z(t))-LOG(E(t)|z(t+1)) = 0;
+
+
+%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
+[1]   z_bar*k_bar**(rho)-delta*k_bar-c_bar = 0;
+[2]   rho*z_bar*k_bar**(rho-1)+(1-delta)-R_bar = 0;
+[3]   (betta*R_bar)-1 = 0;
+[4]   z_bar*k_bar**(rho)-y_bar = 0;
+
+c_bar = 1.0;
+k_bar = 1.0;
+y_bar = 1.0;
+betta = 1.0;
+
+%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+betta   = 1.0/R_bar;
+k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
+y_bar   = (z_bar*k_bar)**rho;
+c_bar   = y_bar - delta*k_bar;
+
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_eps**2];
+
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

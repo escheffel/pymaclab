@@ -1,0 +1,1934 @@
+\File{dsge.py}{Wed Aug 15 12:33:55 2007}
+
+\I{1}{0}$\K{import}\ \V{copy}\ \V{as}\ \V{COP}$
+\I{2}{0}$\K{import}\ \V{os}\ \V{as}\ \V{OPS}$
+\I{3}{0}$\K{import}\ \V{sys}\ \V{as}\ \V{SYST}$
+\I{4}{0}$\K{import}\ \V{re}\ \V{as}\ \V{RE}$
+\I{5}{0}$\K{import}\ \V{string}\ \V{as}\ \V{STR}$
+\I{6}{0}$\K{import}\ \V{scipy}\ \V{as}\ S$
+\I{7}{0}$\K{from}\ \V{numpy}\ \K{import}\ \Y{*}$
+\I{8}{0}$\K{from}\ \V{numpy}\ \K{import}\ \V{matlib}\ \V{as}\ \V{MAT}$
+\I{9}{0}$\K{from}\ \V{scipy}\ \K{import}\ \V{linalg}\ \V{as}\ \V{LIN}$
+\I{10}{0}$$
+\I{11}{0}$\K{class}\ \V{model}\Y{:}$
+\I{12}{1}$\K{def}\ \F{\_\_init\_\_}\,(\V{self},\V{ffile})\Y{:}$
+\I{13}{2}$\V{self}.\V{attr}\Y{=}\{\}$
+\I{14}{2}$\V{self}.\V{mod\_attr}\Y{=}\{\}$
+\I{15}{2}$\V{self}.\V{uhlig\_attr}\Y{=}\{\}$
+\I{16}{2}$\V{self}.\V{uhlig\_mats}\Y{=}\{\}$
+\I{17}{2}$\V{self}.\V{uhlig\_opt}\Y{=}\{\}$
+\I{18}{2}$\V{self}.\V{uhlig\_out}\Y{=}\{\}$
+\I{19}{2}$\V{self}.\F{getmodfile}\,(\V{ffile})$
+\I{20}{2}$\V{self}.\F{parsit}\,()$
+\I{21}{2}$$
+\I{22}{1}$\K{def}\ \F{getmodfile}\,(\V{self},\V{ffile})\Y{:}$
+\I{23}{2}$\V{self}.\V{attr}[{}$\S{'\verb*'modelfile''}${}]\Y{=}\V{ffile}$
+\I{24}{2}$\V{input}\Y{=}\F{open}\,(\V{OPS}.\F{getcwd}\,()\Y{+}{}$\S{'\verb*'/''}${}\Y{+}\V{ffile},{}$\S{'\verb*'r''}${})$
+\I{25}{2}$\V{lines}\Y{=}\V{input}.\F{read}\,().\F{splitlines}\,()$
+\I{26}{2}$\V{lines}\Y{=}\F{tuple}\,(\V{lines})$
+\I{27}{2}$\V{self}.\V{attr}[{}$\S{'\verb*'file_lines''}${}]\Y{=}\V{lines}$
+\I{28}{2}$\V{num\_lines}\Y{=}\F{len}\,(\V{lines})$
+\I{29}{2}$\V{self}.\V{attr}[{}$\S{'\verb*'file_num_lines''}${}]\Y{=}\V{num\_lines}$
+\I{30}{2}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}]\Y{=}\{\}$
+\I{31}{0}$$
+\I{32}{0}$$
+\B{33}{1}{%
+This is the parser method, it collects for Uhlig and others
+from the imported model file
+}
+\I{35}{1}$\K{def}\ \F{parsit}\,(\V{self})\Y{:}$
+\I{36}{2}$\V{lines}\Y{=}\V{self}.\V{attr}[{}$\S{'\verb*'file_lines''}${}]$
+\I{37}{2}$\V{num\_lines}\Y{=}\V{self}.\V{attr}[{}$\S{'\verb*'file_num_lines''}${}]$
+\B{38}{2}{%
+INPUT SECTION TO GATHER THE INFORMATION !!!!!!!!!!
+}
+\I{39}{2}$\V{varlist}\Y{=}(({}$\S{'\verb*'%Parameters''}${},{}$\S{'\verb*'PA_loc''}${}),$
+\I{40}{3}$({}$\S{'\verb*'%Steady States[in matlab format]''}${},{}$\S{'\verb*'SS_loc''}${}),$
+\I{41}{3}$({}$\S{'\verb*'%Variable Vectors''}${},{}$\S{'\verb*'VV_loc''}${}),$
+\I{42}{3}$({}$\S{'\verb*'%Boundary conditions''}${},{}$\S{'\verb*'BC_loc''}${}),$
+\I{43}{3}$({}$\S{'\verb*'%Non-linear first-order conditions''}${},{}$\S{'\verb*'FO_loc''}${}),$
+\I{44}{3}$({}$\S{'\verb*'%Variance-Covariance Matrix[in matlab format]''}${},{}$\S{'\verb*'VCM_loc''}${}),$
+\I{45}{3}$({}$\S{'\verb*'%Varnames''}${},{}$\S{'\verb*'VN_loc''}${}),$
+\I{46}{3}$({}$\S{'\verb*'%Variable Substitutions''}${},{}$\S{'\verb*'VS_loc''}${}),$
+\I{47}{3}$({}$\S{'\verb*'%Model Equations''}${},{}$\S{'\verb*'ME_loc''}${}),$
+\I{48}{3}$({}$\S{'\verb*'%End Of Model File''}${},{}$\S{'\verb*'END_loc''}${}))$
+\I{49}{2}$\V{locdic}\Y{=}\F{locate}\,(\V{lines},\V{varlist})$
+\I{50}{0}$$
+\B{51}{1}{%
+Storage operations into various tuples, etc are carried out
+}
+\I{52}{0}$$
+\B{53}{1}{%
+Extract parameters into parameter tuple
+}
+\I{54}{1}$\V{param}\Y{=}\{\}$
+\I{55}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'PA_loc''}${}]\Y{+}\NUM{1}{}$
+\I{56}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{57}{1}$\V{para\_tuple}\Y{=}()$
+\I{58}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{59}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{60}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{61}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{62}{3}$\V{list\_tmp}\Y{=}x.\F{split}\,({}$\S{'\verb*'=''}${})$
+\I{63}{3}$\V{str\_tmp1}\Y{=}\V{list\_tmp}[\NUM{0}{}].\F{strip}\,()$
+\I{64}{3}$\V{str\_tmp2}\Y{=}\V{list\_tmp}[\NUM{1}{}].\F{strip}\,()$
+\I{65}{3}$\V{param}[\V{str\_tmp1}]\Y{=}\F{float}\,(\V{str\_tmp2})$
+\B{66}{3}{%
+Make parameters available to numeric environment
+}
+\I{67}{3}$\K{exec}\ (\V{str\_tmp1}\Y{+}{}$\S{'\verb*' = ''}${}\Y{+}\V{str\_tmp2})$
+\I{68}{3}$\V{para\_tuple}\Y{=}\V{para\_tuple}\Y{+}((\V{str\_tmp1},\V{str\_tmp2}),)$
+\I{69}{2}$\K{else}\Y{:}$
+\I{70}{3}$\K{break}\ $
+\I{71}{1}$\V{self}.\V{mod\_attr}[{}$\S{'\verb*'param''}${}]\Y{=}\V{param}$
+\I{72}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'para_tuple''}${}]\Y{=}\V{para\_tuple}$
+\I{73}{0}$$
+\I{74}{1}$$
+\B{75}{1}{%
+Extract Steady States into SSS_tuple
+}
+\I{76}{1}$\V{SSS\_tuple}\Y{=}()$
+\I{77}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'SS_loc''}${}]\Y{+}\NUM{1}{}$
+\I{78}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{79}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{80}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{81}{3}$\V{SSS\_tuple}\Y{=}\V{SSS\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{82}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{83}{2}$\K{else}\Y{:}$
+\I{84}{3}$\K{break}\ $
+\I{85}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'SSS_tuple''}${}]\Y{=}\V{SSS\_tuple}$
+\I{86}{2}$$
+\I{87}{2}$$
+\B{88}{1}{%
+Extract Boundary Conditions into BC_tuple
+}
+\I{89}{1}$\V{BC\_tuple}\Y{=}()$
+\I{90}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'BC_loc''}${}]\Y{+}\NUM{1}{}$
+\I{91}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{92}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{93}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{94}{3}$\V{BC\_tuple}\Y{=}\V{BC\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{95}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{96}{2}$\K{else}\Y{:}$
+\I{97}{3}$\K{break}\ $
+\I{98}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'BC_tuple''}${}]\Y{=}\V{BC\_tuple}$
+\I{99}{1}$$
+\I{100}{0}$$
+\B{101}{1}{%
+Extract non-linear first order conditions into FO_tuple
+}
+\I{102}{1}$\V{FO\_tuple}\Y{=}()$
+\I{103}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'FO_loc''}${}]\Y{+}\NUM{1}{}$
+\I{104}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{105}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{106}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{107}{3}$\V{FO\_tuple}\Y{=}\V{FO\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{108}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{109}{2}$\K{else}\Y{:}$
+\I{110}{3}$\K{break}\ $
+\I{111}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'FO_tuple''}${}]\Y{=}\V{FO\_tuple}$
+\I{112}{1}$$
+\B{113}{1}{%
+Before extracting the individual variables, k, y, z, e
+first collect the entire lines of section into VAR_tuple
+}
+\I{115}{1}$\V{VAR\_tuple}\Y{=}()$
+\I{116}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VV_loc''}${}]\Y{+}\NUM{1}{}$
+\I{117}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{118}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{119}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{120}{3}$\V{VAR\_tuple}\Y{=}\V{VAR\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{121}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{122}{2}$\K{else}\Y{:}$
+\I{123}{3}$\K{break}\ $
+\I{124}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'VAR_tuple''}${}]\Y{=}\V{VAR\_tuple}$
+\I{125}{0}$$
+\B{126}{1}{%
+Extract the state variables and store them in tuple k
+}
+\I{127}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VV_loc''}${}]\Y{+}\NUM{1}{}$
+\I{128}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{129}{1}$\V{col\_iter}\Y{=}\NUM{0}{}$
+\I{130}{1}$k\Y{=}()$
+\I{131}{1}$\V{str\_1}\Y{=}\V{lines}[\V{row\_iter}]$
+\I{132}{1}$\K{while}\ \V{str\_1}[\V{col\_iter}]\Y{!=}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{133}{2}$\V{col\_iter}\Y{=}\V{col\_iter}\Y{+}\NUM{1}{}$
+\I{134}{0}$$
+\I{135}{1}$k\Y{=}\F{strlisttuple}\,(\V{str\_1}[\V{col\_iter}\Y{:}\Y{-}\NUM{1}{}])$
+\I{136}{1}$\V{num\_k}\Y{=}\F{len}\,(k)$
+\I{137}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_k''}${}]\Y{=}\V{num\_k}$
+\I{138}{0}$$
+\B{139}{1}{%
+Extract control variables and store them in tuple y
+}
+\I{140}{1}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{141}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{142}{1}$\V{col\_iter}\Y{=}\NUM{0}{}$
+\I{143}{1}$y\Y{=}()$
+\I{144}{1}$\V{str\_1}\Y{=}\V{lines}[\V{row\_iter}]$
+\I{145}{1}$\K{while}\ \V{str\_1}[\V{col\_iter}]\Y{!=}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{146}{2}$\V{col\_iter}\Y{=}\V{col\_iter}\Y{+}\NUM{1}{}$
+\I{147}{0}$$
+\I{148}{1}$y\Y{=}\F{strlisttuple}\,(\V{str\_1}[\V{col\_iter}\Y{:}\Y{-}\NUM{1}{}])$
+\I{149}{1}$\V{num\_y}\Y{=}\F{len}\,(y)$
+\I{150}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_y''}${}]\Y{=}\V{num\_y}$
+\I{151}{0}$$
+\B{152}{1}{%
+Extract the shock variables and store them in tuple z
+}
+\I{153}{1}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{154}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{155}{1}$\V{col\_iter}\Y{=}\NUM{0}{}$
+\I{156}{1}$z\Y{=}()$
+\I{157}{1}$\V{str\_1}\Y{=}\V{lines}[\V{row\_iter}]$
+\I{158}{1}$\K{while}\ \V{str\_1}[\V{col\_iter}]\Y{!=}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{159}{2}$\V{col\_iter}\Y{=}\V{col\_iter}\Y{+}\NUM{1}{}$
+\I{160}{0}$$
+\I{161}{1}$z\Y{=}\F{strlisttuple}\,(\V{str\_1}[\V{col\_iter}\Y{:}\Y{-}\NUM{1}{}])$
+\I{162}{1}$\V{num\_z}\Y{=}\F{len}\,(z)$
+\I{163}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_z''}${}]\Y{=}\V{num\_z}$
+\I{164}{0}$$
+\B{165}{1}{%
+Extract the iid variables and store them in tuple e
+}
+\I{166}{1}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{167}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{168}{1}$\V{col\_iter}\Y{=}\NUM{0}{}$
+\I{169}{1}$e\Y{=}()$
+\I{170}{1}$\V{str\_1}\Y{=}\V{lines}[\V{row\_iter}]$
+\I{171}{1}$\K{while}\ \V{str\_1}[\V{col\_iter}]\Y{!=}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{172}{2}$\V{col\_iter}\Y{=}\V{col\_iter}\Y{+}\NUM{1}{}$
+\I{173}{0}$$
+\I{174}{1}$e\Y{=}\F{strlisttuple}\,(\V{str\_1}[\V{col\_iter}\Y{:}\Y{-}\NUM{1}{}])$
+\I{175}{0}$$
+\B{176}{1}{%
+Extract the Variance-Covariance Matrix into VCM_tuple
+}
+\I{177}{1}$\V{VCM\_tuple}\Y{=}()$
+\I{178}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VCM_loc''}${}]\Y{+}\NUM{1}{}$
+\I{179}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{180}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{181}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{182}{3}$\V{VCM\_tuple}\Y{=}\V{VCM\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{183}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{184}{2}$\K{else}\Y{:}$
+\I{185}{3}$\K{break}\ $
+\I{186}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'VCM_tuple''}${}]\Y{=}\V{VCM\_tuple}$
+\I{187}{1}$$
+\B{188}{1}{%
+Before extracting individual varname into varname_tuple
+first store the entire section into VARN_tuple
+}
+\I{190}{1}$\V{VARN\_tuple}\Y{=}()$
+\I{191}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VN_loc''}${}]\Y{+}\NUM{1}{}$
+\I{192}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{193}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{194}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{195}{3}$\V{VARN\_tuple}\Y{=}\V{VARN\_tuple}\Y{+}(\V{lines}[\V{row\_iter}],)$
+\I{196}{3}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{197}{2}$\K{else}\Y{:}$
+\I{198}{3}$\K{break}\ $
+\I{199}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'VARN_tuple''}${}]\Y{=}\V{VARN\_tuple}$
+\I{200}{0}$$
+\B{201}{1}{%
+Extract Varnames into varnames tuple
+}
+\I{202}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VN_loc''}${}]\Y{+}\NUM{1}{}$
+\I{203}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{204}{1}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{205}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{206}{3}$\V{i1}\Y{=}\NUM{0}{}$
+\I{207}{3}$\V{i2}\Y{=}\NUM{0}{}$
+\I{208}{3}$\V{sub\_char}\Y{=}{}$\S{''}${}$
+\I{209}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{210}{3}$\V{varname\_tuple}\Y{=}()$
+\I{211}{3}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*';''}${}\Y{:}$
+\I{212}{4}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'.''}${}\O{and}\V{sub\_char}\Y{!=}{}$\S{'\verb*';''}${}\Y{:}$
+\I{213}{5}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*',''}${}\O{and}\V{sub\_char}\Y{!=}{}$\S{'\verb*'.''}${}\Y{:}$
+\I{214}{6}$\V{sub\_char}\Y{=}x[\V{i2}]$
+\I{215}{6}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{216}{5}$\V{item\_tmp}\Y{=}x[\V{i1}\Y{:}\V{i2}\Y{-}\NUM{1}{}]$
+\I{217}{5}$\V{varname\_tuple}\Y{=}\V{varname\_tuple}\Y{+}(\V{item\_tmp},)$
+\I{218}{5}$\V{i1}\Y{=}\V{i2}$
+\I{219}{5}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{220}{5}$\V{sub\_char}\Y{=}x[\V{i2}]$
+\I{221}{4}$\K{break}\ $
+\I{222}{3}$\K{break}\ $
+\I{223}{2}$\K{else}\Y{:}$
+\I{224}{3}$\K{break}\ $
+\I{225}{0}$$
+\I{226}{0}$$
+\B{227}{1}{%
+Now continue with some manipulations of what has been stored
+}
+\I{228}{0}$$
+\B{229}{1}{%
+Test whether any variables subsitution has to be carried out
+}
+\I{230}{1}$\K{for}\ x\O{in}\V{lines}[\V{locdic}[{}$\S{'\verb*'VS_loc''}${}]\Y{+}\NUM{1}{}\Y{:}\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]\Y{-}\NUM{1}{}]\Y{:}$
+\I{231}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{232}{3}$\V{VS\_switch}\Y{=}\NUM{1}{}$
+\I{233}{3}$\K{break}\ $
+\I{234}{2}$\K{else}\Y{:}$
+\I{235}{3}$\V{VS\_switch}\Y{=}\NUM{0}{}$
+\I{236}{0}$$
+\B{237}{1}{%
+If variables substitution is present, determine the total no of substitutions
+}
+\I{238}{1}$\K{if}\,\ \V{VS\_switch}\Y{==}\NUM{1}{}\Y{:}$
+\I{239}{2}$\V{list\_tmp}\Y{=}\F{list}\,(\V{lines}[\V{locdic}[{}$\S{'\verb*'VS_loc''}${}]\Y{+}\NUM{1}{}\Y{:}\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]])$
+\I{240}{2}$\V{list\_tmp}.\F{reverse}\,()$
+\I{241}{2}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{242}{3}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\O{and}x[\NUM{0}{}]\Y{==}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{243}{4}$\V{i1}\Y{=}\NUM{1}{}$
+\I{244}{4}$\K{while}\ x[\V{i1}]\Y{!=}{}$\S{'\verb*']''}${}\Y{:}$
+\I{245}{5}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{246}{4}$\V{VS\_num}\Y{=}x[\NUM{1}{}\Y{:}\V{i1}]$
+\I{247}{4}$\K{break}\ $
+\I{248}{1}$\V{VS\_num}\Y{=}\F{int}\,(\V{VS\_num})$
+\I{249}{0}$$
+\B{250}{1}{%
+Now determine the total number of model equations
+}
+\I{251}{1}$\V{list\_tmp}\Y{=}\F{list}\,(\V{lines}[\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]\Y{+}\NUM{1}{}\Y{:}\V{locdic}[{}$\S{'\verb*'END_loc''}${}]])$
+\I{252}{1}$\V{list\_tmp}.\F{reverse}\,()$
+\I{253}{1}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{254}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\O{and}x[\NUM{0}{}]\Y{==}{}$\S{'\verb*'[''}${}\Y{:}$
+\I{255}{3}$\V{i1}\Y{=}\NUM{1}{}$
+\I{256}{3}$\K{while}\ x[\V{i1}]\Y{!=}{}$\S{'\verb*']''}${}\Y{:}$
+\I{257}{4}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{258}{3}$\V{ME\_num}\Y{=}x[\NUM{1}{}\Y{:}\V{i1}]$
+\I{259}{3}$\K{break}\ $
+\I{260}{1}$\V{ME\_num}\Y{=}\F{int}\,(\V{ME\_num})$
+\I{261}{0}$$
+\B{262}{1}{%
+Now determine the total number of lines per each equation
+}
+\I{263}{1}$\V{VS\_lines}\Y{=}\F{linesPerEq}\,(\V{lines}[\V{locdic}[{}$\S{'\verb*'VS_loc''}${}]\Y{+}\NUM{1}{}\Y{:}\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]],\V{VS\_num})$
+\I{264}{1}$\V{ME\_lines}\Y{=}\F{linesPerEq}\,(\V{lines}[\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]\Y{+}\NUM{1}{}\Y{:}\V{locdic}[{}$\S{'\verb*'END_loc''}${}]],\V{ME\_num})$
+\I{265}{0}$$
+\B{266}{1}{%
+Now determine the total number of equation lines for VS and ME
+}
+\I{267}{1}$\V{total\_VS\_lines}\Y{=}\NUM{0}{}$
+\I{268}{1}$\K{for}\ x\O{in}\V{VS\_lines}\Y{:}$
+\I{269}{2}$\V{total\_VS\_lines}\Y{=}\V{total\_VS\_lines}\Y{+}x[\NUM{1}{}]$
+\I{270}{0}$$
+\I{271}{1}$\V{total\_ME\_lines}\Y{=}\NUM{0}{}$
+\I{272}{1}$\K{for}\ x\O{in}\V{ME\_lines}\Y{:}$
+\I{273}{2}$\V{total\_ME\_lines}\Y{=}\V{total\_ME\_lines}\Y{+}x[\NUM{1}{}]$
+\I{274}{0}$$
+\B{275}{1}{%
+Create tuple of all possible variables
+}
+\I{276}{1}$\V{y\_all}\Y{=}y\Y{+}\F{makeLags}\,(y,{}$\S{'\verb*'2''}${})\Y{+}\F{makeForward}\,(y,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})$
+\I{277}{1}$\V{k\_all}\Y{=}k\Y{+}\F{makeLags}\,(k,{}$\S{'\verb*'2''}${})\Y{+}\F{makeForward}\,(k,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})$
+\I{278}{1}$\V{z\_all}\Y{=}z\Y{+}\F{makeLags}\,(z,{}$\S{'\verb*'2''}${})\Y{+}\F{makeForward}\,(z,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})$
+\I{279}{1}$\V{x\_all}\Y{=}\V{y\_all}\Y{+}\V{k\_all}\Y{+}\V{z\_all}\Y{+}e$
+\I{280}{0}$$
+\I{281}{0}$$
+\B{282}{1}{%
+Now read in all VS equations and summarize them in tuples
+}
+\I{283}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'VS_loc''}${}]\Y{+}\NUM{1}{}$
+\I{284}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{285}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{286}{1}$\V{i2}\Y{=}\V{row\_iter}$
+\I{287}{1}$\V{all\_VS\_tuple}\Y{=}()$
+\I{288}{1}$\K{while}\ \V{row\_iter}<\V{i2}\Y{+}\V{total\_VS\_lines}\Y{:}$
+\I{289}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{290}{2}$\K{for}\ c\O{in}\V{lines}[\V{row\_iter}]\Y{:}$
+\I{291}{3}$\K{if}\,\ c\Y{==}{}$\S{'\verb*'\t''}${}\Y{:}$
+\I{292}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{293}{4}$\K{break}\ $
+\I{294}{3}$\K{else}\Y{:}$
+\I{295}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{296}{2}$\V{tuple\_tmp}\Y{=}(\V{lines}[\V{row\_iter}][\V{i3}\Y{:}],)$
+\I{297}{2}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{+}\NUM{1}{}\Y{:}\V{row\_iter}\Y{+}\V{VS\_lines}[\V{i1}][\NUM{1}{}]]\Y{:}$
+\I{298}{3}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x[\NUM{1}{}\Y{:}],)$
+\I{299}{2}$\V{all\_VS\_tuple}\Y{=}\V{all\_VS\_tuple}\Y{+}(\F{sumEq}\,(\V{tuple\_tmp},\V{x\_all}))$
+\I{300}{2}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\V{VS\_lines}[\V{i1}][\NUM{1}{}]$
+\I{301}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{302}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'all_VS_tuple''}${}]\Y{=}\V{all\_VS\_tuple}$
+\I{303}{0}$$
+\I{304}{0}$$
+\B{305}{1}{%
+Now read in all ME equations and summarize them in tuples
+}
+\I{306}{1}$\V{row\_iter}\Y{=}\V{locdic}[{}$\S{'\verb*'ME_loc''}${}]\Y{+}\NUM{1}{}$
+\I{307}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{lines},\V{row\_iter})$
+\I{308}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{309}{1}$\V{i2}\Y{=}\V{row\_iter}$
+\I{310}{1}$\V{all\_ME\_tuple}\Y{=}()$
+\I{311}{1}$\K{while}\ \V{row\_iter}<\V{i2}\Y{+}\V{total\_ME\_lines}\Y{:}$
+\I{312}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{313}{2}$\K{for}\ c\O{in}\V{lines}[\V{row\_iter}]\Y{:}$
+\I{314}{3}$\K{if}\,\ c\Y{==}{}$\S{'\verb*'\t''}${}\Y{:}$
+\I{315}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{316}{4}$\K{break}\ $
+\I{317}{3}$\K{else}\Y{:}$
+\I{318}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{319}{2}$\V{tuple\_tmp}\Y{=}(\V{lines}[\V{row\_iter}][\V{i3}\Y{:}],)$
+\I{320}{2}$\K{for}\ x\O{in}\V{lines}[\V{row\_iter}\Y{+}\NUM{1}{}\Y{:}\V{row\_iter}\Y{+}\V{ME\_lines}[\V{i1}][\NUM{1}{}]]\Y{:}$
+\I{321}{3}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x[\NUM{1}{}\Y{:}],)$
+\I{322}{2}$\V{all\_ME\_tuple}\Y{=}\V{all\_ME\_tuple}\Y{+}(\F{sumEq}\,(\V{tuple\_tmp},\V{x\_all}))$
+\I{323}{2}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\V{ME\_lines}[\V{i1}][\NUM{1}{}]$
+\I{324}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{325}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'file_secs''}${}][{}$\S{'\verb*'all_ME_tuple''}${}]\Y{=}\V{all\_ME\_tuple}$
+\I{326}{0}$$
+\B{327}{1}{%
+Prepare VS_tuple, i.e. didvide through 
+}
+\I{328}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{329}{1}$\V{tuple\_tmp}\Y{=}()$
+\I{330}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_VS\_tuple})\Y{:}$
+\I{331}{2}$\K{if}\,\ \V{all\_VS\_tuple}[\V{i1}][\NUM{0}{}][\NUM{0}{}]\Y{!=}{}$\S{'\verb*'1''}${}\Y{:}$
+\I{332}{3}$\V{str\_tmp}\Y{=}{}$\S{''}${}$
+\I{333}{3}$\K{for}\ x\O{in}\V{all\_VS\_tuple}[\V{i1}\Y{+}\NUM{1}{}]\Y{:}$
+\I{334}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'(''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*')/''}${}\Y{+}{}$\S{'\verb*'(''}${}\Y{+}\V{all\_VS\_tuple}[\V{i1}][\NUM{0}{}][\NUM{0}{}]\Y{+}{}$\S{'\verb*')''}${}$
+\I{335}{4}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}((\V{str\_tmp},x[\NUM{1}{}]),)$
+\I{336}{3}$\V{tuple\_tmp}\Y{=}((({}$\S{'\verb*'1''}${},\V{all\_VS\_tuple}[\V{i1}][\NUM{0}{}][\NUM{1}{}]),),(\V{tuple\_tmp}))$
+\I{337}{2}$\K{else}\Y{:}$
+\I{338}{3}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}\V{all\_VS\_tuple}[\V{i1}\Y{:}\V{i1}\Y{+}\NUM{2}{}]$
+\I{339}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{2}{}$
+\I{340}{1}$\V{all\_VS\_tuple}\Y{=}\V{tuple\_tmp}$
+\I{341}{0}$$
+\B{342}{1}{%
+What is the name of the variables to be substituted?
+}
+\I{343}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{344}{1}$\V{subst\_var\_tuple}\Y{=}()$
+\I{345}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_VS\_tuple})\Y{:}$
+\I{346}{2}$\V{subst\_var\_tuple}\Y{=}\V{subst\_var\_tuple}\Y{+}(\V{all\_VS\_tuple}[\V{i1}][\NUM{0}{}][\NUM{1}{}],)$
+\I{347}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{2}{}$
+\I{348}{0}$$
+\B{349}{1}{%
+Create a tuple with all expectational variables
+}
+\I{350}{1}$\V{expect\_all}\Y{=}\F{makeForward}\,(y,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})\Y{+}\F{makeForward}\,(k,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})\Y{+}\F{makeForward}\,(z,{}$\S{'\verb*'2''}${},{}$\S{'\verb*'0''}${})$
+\I{351}{0}$$
+\B{352}{1}{%
+Find out which equations are expectational
+}
+\I{353}{1}$\V{all\_equations}\Y{=}\V{all\_VS\_tuple}\Y{+}\V{all\_ME\_tuple}$
+\I{354}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{355}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{356}{1}$\V{expect\_switch}\Y{=}\V{ME\_num}\Y{*}[\NUM{0}{},]$
+\I{357}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_ME\_tuple})\Y{:}$
+\I{358}{2}$\K{if}\,\ (\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}]),\V{expect\_all},{}$\S{'\verb*'0''}${})\O{or}\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}\Y{+}\NUM{1}{}]),\V{expect\_all},{}$\S{'\verb*'0''}${}))\O{and}\O{not}(\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}]),\V{subst\_var\_tuple},{}$\S{'\verb*'0''}${})\O{or}\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}\Y{+}\NUM{1}{}]),\V{subst\_var\_tuple},{}$\S{'\verb*'0''}${}))\Y{:}$
+\I{359}{3}$\V{expect\_switch}[\V{i2}]\Y{=}\NUM{1}{}$
+\I{360}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{2}{}$
+\I{361}{2}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{362}{0}$$
+\B{363}{1}{%
+Record number of expectational equations
+}
+\I{364}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{365}{1}$\K{for}\ x\O{in}\V{expect\_switch}\Y{:}$
+\I{366}{2}$\V{i1}\Y{=}\V{i1}\Y{+}x$
+\I{367}{1}$\V{exp\_eq\_num}\Y{=}\V{i1}$
+\I{368}{0}$$
+\B{369}{1}{%
+Find out which equations are error laws of motion
+}
+\I{370}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{371}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{372}{1}$\V{errorlaws\_switch}\Y{=}\V{ME\_num}\Y{*}[\NUM{0}{},]$
+\I{373}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_ME\_tuple})\Y{:}$
+\I{374}{2}$\K{if}\,\ (\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}]),\V{z\_all},{}$\S{'\verb*'0''}${})\O{or}\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}\Y{+}\NUM{1}{}]),\V{z\_all},{}$\S{'\verb*'0''}${}))\O{and}(\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}]),e,{}$\S{'\verb*'0''}${})\O{or}\F{containsVar}\,(\F{str}\,(\V{all\_ME\_tuple}[\V{i1}\Y{+}\NUM{1}{}]),e,{}$\S{'\verb*'0''}${}))\Y{:}$
+\I{375}{3}$\V{errorlaws\_switch}[\V{i2}]\Y{=}\NUM{1}{}$
+\I{376}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{2}{}$
+\I{377}{2}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{378}{0}$$
+\B{379}{1}{%
+Filter out only the deterministic equations from all_ME_tuple using expect_switch
+}
+\I{380}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{381}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{382}{1}$\K{for}\ x\O{in}\V{expect\_switch}\Y{:}$
+\I{383}{2}$\K{if}\,\ x\Y{==}\NUM{1}{}\Y{:}$
+\I{384}{3}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{2}{},\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{1}{}]$
+\I{385}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{386}{2}$\K{else}\Y{:}$
+\I{387}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{388}{1}$\V{dict\_tmp}\Y{=}\{\}$
+\I{389}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{390}{1}$\K{for}\ x\O{in}\V{all\_ME\_tuple}\Y{:}$
+\I{391}{2}$\V{dict\_tmp}[\V{i1}]\Y{=}x$
+\I{392}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{393}{1}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{394}{2}$\K{del}\ \V{dict\_tmp}[x]$
+\I{395}{1}$\V{tuple\_tmp}\Y{=}()$
+\I{396}{1}$\K{for}\ x\O{in}\V{dict\_tmp}\Y{:}$
+\I{397}{2}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x,)$
+\I{398}{1}$\V{all\_DET\_tuple}\Y{=}()$
+\I{399}{1}$\K{for}\ x\O{in}\V{tuple\_tmp}\Y{:}$
+\I{400}{2}$\V{all\_DET\_tuple}\Y{=}\V{all\_DET\_tuple}\Y{+}(\V{dict\_tmp}[x],)$
+\I{401}{0}$$
+\B{402}{1}{%
+Find out which equations in all_DET_tuple require substitution
+}
+\I{403}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{404}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{405}{1}$\V{detsubst\_switch}\Y{=}(\F{len}\,(\V{all\_DET\_tuple})\Y{/}\NUM{2}{})\Y{*}[\NUM{0}{},]$
+\I{406}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_DET\_tuple})\Y{:}$
+\I{407}{2}$\K{if}\,\ (\F{containsVar}\,(\F{str}\,(\V{all\_DET\_tuple}[\V{i1}]),\V{subst\_var\_tuple},{}$\S{'\verb*'0''}${})\O{or}\F{containsVar}\,(\F{str}\,(\V{all\_DET\_tuple}[\V{i1}\Y{+}\NUM{1}{}]),\V{subst\_var\_tuple},{}$\S{'\verb*'0''}${}))\Y{:}$
+\I{408}{3}$\V{detsubst\_switch}[\V{i2}]\Y{=}\NUM{1}{}$
+\I{409}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{2}{}$
+\I{410}{2}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{411}{0}$$
+\B{412}{1}{%
+Filter out only the expectational equations from all_ME_tuple using expect_switch
+}
+\I{413}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{414}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{415}{1}$\K{for}\ x\O{in}\V{expect\_switch}\Y{:}$
+\I{416}{2}$\K{if}\,\ x\Y{==}\NUM{0}{}\Y{:}$
+\I{417}{3}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{2}{},\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{1}{}]$
+\I{418}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{419}{2}$\K{else}\Y{:}$
+\I{420}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{421}{1}$\V{dict\_tmp}\Y{=}\{\}$
+\I{422}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{423}{1}$\K{for}\ x\O{in}\V{all\_ME\_tuple}\Y{:}$
+\I{424}{2}$\V{dict\_tmp}[\V{i1}]\Y{=}x$
+\I{425}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{426}{1}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{427}{2}$\K{del}\ \V{dict\_tmp}[x]$
+\I{428}{1}$\V{tuple\_tmp}\Y{=}()$
+\I{429}{1}$\K{for}\ x\O{in}\V{dict\_tmp}\Y{:}$
+\I{430}{2}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x,)$
+\I{431}{1}$\V{all\_EXP\_tuple}\Y{=}()$
+\I{432}{1}$\K{for}\ x\O{in}\V{tuple\_tmp}\Y{:}$
+\I{433}{2}$\V{all\_EXP\_tuple}\Y{=}\V{all\_EXP\_tuple}\Y{+}(\V{dict\_tmp}[x],)$
+\I{434}{0}$$
+\B{435}{1}{%
+Filter out only the error laws equations from all_ME_tuple using errorlaws_switch
+}
+\I{436}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{437}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{438}{1}$\K{for}\ x\O{in}\V{errorlaws\_switch}\Y{:}$
+\I{439}{2}$\K{if}\,\ x\Y{==}\NUM{0}{}\Y{:}$
+\I{440}{3}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{2}{},\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{1}{}]$
+\I{441}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{442}{2}$\K{else}\Y{:}$
+\I{443}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{444}{1}$\V{dict\_tmp}\Y{=}\{\}$
+\I{445}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{446}{1}$\K{for}\ x\O{in}\V{all\_ME\_tuple}\Y{:}$
+\I{447}{2}$\V{dict\_tmp}[\V{i1}]\Y{=}x$
+\I{448}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{449}{1}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{450}{2}$\K{del}\ \V{dict\_tmp}[x]$
+\I{451}{1}$\V{tuple\_tmp}\Y{=}()$
+\I{452}{1}$\K{for}\ x\O{in}\V{dict\_tmp}\Y{:}$
+\I{453}{2}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x,)$
+\I{454}{1}$\V{all\_ERR\_tuple}\Y{=}()$
+\I{455}{1}$\K{for}\ x\O{in}\V{tuple\_tmp}\Y{:}$
+\I{456}{2}$\V{all\_ERR\_tuple}\Y{=}\V{all\_ERR\_tuple}\Y{+}(\V{dict\_tmp}[x],)$
+\I{457}{0}$$
+\B{458}{1}{%
+Filter out only the equations that require substituting from all_DET_tuple using detsubst_switch
+}
+\I{459}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{460}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{461}{1}$\K{for}\ x\O{in}\V{detsubst\_switch}\Y{:}$
+\I{462}{2}$\K{if}\,\ x\Y{==}\NUM{0}{}\Y{:}$
+\I{463}{3}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{2}{},\V{i1}\Y{*}\NUM{2}{}\Y{-}\NUM{1}{}]$
+\I{464}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{465}{2}$\K{else}\Y{:}$
+\I{466}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{467}{1}$\V{dict\_tmp}\Y{=}\{\}$
+\I{468}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{469}{1}$\K{for}\ x\O{in}\V{all\_DET\_tuple}\Y{:}$
+\I{470}{2}$\V{dict\_tmp}[\V{i1}]\Y{=}x$
+\I{471}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{472}{1}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{473}{2}$\K{del}\ \V{dict\_tmp}[x]$
+\I{474}{1}$\V{tuple\_tmp}\Y{=}()$
+\I{475}{1}$\K{for}\ x\O{in}\V{dict\_tmp}\Y{:}$
+\I{476}{2}$\V{tuple\_tmp}\Y{=}\V{tuple\_tmp}\Y{+}(x,)$
+\I{477}{1}$\V{all\_SUB\_tuple}\Y{=}()$
+\I{478}{1}$\K{for}\ x\O{in}\V{tuple\_tmp}\Y{:}$
+\I{479}{2}$\V{all\_SUB\_tuple}\Y{=}\V{all\_SUB\_tuple}\Y{+}(\V{dict\_tmp}[x],)$
+\I{480}{0}$$
+\B{481}{1}{%
+Transform all_SUB_tuple sothat there is a 0 on LHS
+Create even-tuple for all_SUB_tuple
+}
+\I{483}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{484}{1}$\V{tuple\_even}\Y{=}()$
+\I{485}{1}$\K{while}\ \V{i1}\Y{<=}(\F{len}\,(\V{all\_SUB\_tuple})\Y{/}\NUM{2}{})\Y{:}$
+\I{486}{2}$\V{tuple\_even}\Y{=}\V{tuple\_even}\Y{+}(\V{i1}\Y{*}\NUM{2}{},)$
+\I{487}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{488}{0}$$
+\B{489}{1}{%
+Convert deep-structure tuple into deep-structure list
+}
+\I{490}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{491}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{492}{1}$\K{for}\ x\O{in}\V{all\_SUB\_tuple}\Y{:}$
+\I{493}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{494}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\F{list}\,(x),]$
+\I{495}{2}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{496}{2}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{497}{0}$$
+\B{498}{1}{%
+Change the sign
+}
+\I{499}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{500}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{list\_tmp1})\Y{:}$
+\I{501}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{502}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{503}{3}$\K{while}\ \V{i3}<\F{len}\,(\V{list\_tmp1}[\V{i1}])\Y{:}$
+\I{504}{4}$\K{if}\,\ \V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{0}{}]\Y{!=}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{505}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}{}$\S{'\verb*'-''}${}\Y{+}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]$
+\I{506}{4}$\K{else}\Y{:}$
+\I{507}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{1}{}\Y{:}]$
+\I{508}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{509}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{510}{2}$\K{else}\Y{:}$
+\I{511}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{512}{1}$\V{all\_SUB\_list}\Y{=}\V{list\_tmp1}$
+\I{513}{0}$$
+\B{514}{1}{%
+Take over to right-hand side
+}
+\I{515}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{516}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{517}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{518}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_SUB\_list})\Y{:}$
+\I{519}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{520}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_SUB\_list}[\V{i1}]$
+\I{521}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{522}{2}$\K{else}\Y{:}$
+\I{523}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_SUB\_list}[\V{i1}]$
+\I{524}{3}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{525}{3}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{526}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{527}{0}$$
+\I{528}{1}$\V{all\_SUB\_list\_os}\Y{=}\V{list\_tmp1}$
+\I{529}{0}$$
+\B{530}{1}{%
+Transform all_EXP_tuple sothat there is a 0 on LHS
+}
+\I{531}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{532}{1}$\V{tuple\_even}\Y{=}()$
+\I{533}{1}$\K{while}\ \V{i1}\Y{<=}(\F{len}\,(\V{all\_EXP\_tuple})\Y{/}\NUM{2}{})\Y{:}$
+\I{534}{2}$\V{tuple\_even}\Y{=}\V{tuple\_even}\Y{+}(\V{i1}\Y{*}\NUM{2}{},)$
+\I{535}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{536}{0}$$
+\B{537}{1}{%
+Convert deep-structure tuple into deep-structure list
+}
+\I{538}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{539}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{540}{1}$\K{for}\ x\O{in}\V{all\_EXP\_tuple}\Y{:}$
+\I{541}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{542}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\F{list}\,(x),]$
+\I{543}{2}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{544}{2}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{545}{0}$$
+\B{546}{1}{%
+Change the sign
+}
+\I{547}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{548}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{list\_tmp1})\Y{:}$
+\I{549}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{550}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{551}{3}$\K{while}\ \V{i3}<\F{len}\,(\V{list\_tmp1}[\V{i1}])\Y{:}$
+\I{552}{4}$\K{if}\,\ \V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{0}{}]\Y{!=}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{553}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}{}$\S{'\verb*'-''}${}\Y{+}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]$
+\I{554}{4}$\K{else}\Y{:}$
+\I{555}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{1}{}\Y{:}]$
+\I{556}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{557}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{558}{2}$\K{else}\Y{:}$
+\I{559}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{560}{1}$\V{all\_EXP\_list}\Y{=}\V{list\_tmp1}$
+\I{561}{0}$$
+\B{562}{1}{%
+Take over to right-hand side
+}
+\I{563}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{564}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{565}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{566}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_EXP\_list})\Y{:}$
+\I{567}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{568}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_EXP\_list}[\V{i1}]$
+\I{569}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{570}{2}$\K{else}\Y{:}$
+\I{571}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_EXP\_list}[\V{i1}]$
+\I{572}{3}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{573}{3}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{574}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{575}{0}$$
+\I{576}{1}$\V{all\_EXP\_list\_os}\Y{=}\V{list\_tmp1}$
+\I{577}{0}$$
+\B{578}{1}{%
+Transform all_DET_tuple sothat there is a 0 on LHS
+}
+\I{579}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{580}{1}$\V{tuple\_even}\Y{=}()$
+\I{581}{1}$\K{while}\ \V{i1}\Y{<=}(\F{len}\,(\V{all\_DET\_tuple})\Y{/}\NUM{2}{})\Y{:}$
+\I{582}{2}$\V{tuple\_even}\Y{=}\V{tuple\_even}\Y{+}(\V{i1}\Y{*}\NUM{2}{},)$
+\I{583}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{584}{0}$$
+\B{585}{1}{%
+Convert deep-structure tuple into deep-structure list
+}
+\I{586}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{587}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{588}{1}$\K{for}\ x\O{in}\V{all\_DET\_tuple}\Y{:}$
+\I{589}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{590}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\F{list}\,(x),]$
+\I{591}{2}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{592}{2}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{593}{0}$$
+\I{594}{0}$$
+\B{595}{1}{%
+Change the sign
+}
+\I{596}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{597}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{list\_tmp1})\Y{:}$
+\I{598}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{599}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{600}{3}$\K{while}\ \V{i3}<\F{len}\,(\V{list\_tmp1}[\V{i1}])\Y{:}$
+\I{601}{4}$\K{if}\,\ \V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{0}{}]\Y{!=}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{602}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}{}$\S{'\verb*'-''}${}\Y{+}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]$
+\I{603}{4}$\K{else}\Y{:}$
+\I{604}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{1}{}\Y{:}]$
+\I{605}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{606}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{607}{2}$\K{else}\Y{:}$
+\I{608}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{609}{1}$\V{all\_DET\_list}\Y{=}\V{list\_tmp1}$
+\I{610}{0}$$
+\B{611}{1}{%
+Take over to right-hand side
+}
+\I{612}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{613}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{614}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{615}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_DET\_list})\Y{:}$
+\I{616}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{617}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_DET\_list}[\V{i1}]$
+\I{618}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{619}{2}$\K{else}\Y{:}$
+\I{620}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_DET\_list}[\V{i1}]$
+\I{621}{3}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{622}{3}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{623}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{624}{1}$\V{all\_DET\_list\_os}\Y{=}\V{list\_tmp1}$
+\I{625}{0}$$
+\B{626}{1}{%
+Transform all_ERR_tuple sothat there is a 0 on LHS
+}
+\I{627}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{628}{1}$\V{tuple\_even}\Y{=}()$
+\I{629}{1}$\K{while}\ \V{i1}\Y{<=}(\F{len}\,(\V{all\_ERR\_tuple})\Y{/}\NUM{2}{})\Y{:}$
+\I{630}{2}$\V{tuple\_even}\Y{=}\V{tuple\_even}\Y{+}(\V{i1}\Y{*}\NUM{2}{},)$
+\I{631}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{632}{0}$$
+\B{633}{1}{%
+Convert deep-structure tuple into deep-structure list
+}
+\I{634}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{635}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{636}{1}$\K{for}\ x\O{in}\V{all\_ERR\_tuple}\Y{:}$
+\I{637}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{638}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\F{list}\,(x),]$
+\I{639}{2}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{640}{2}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{641}{0}$$
+\B{642}{1}{%
+Change the sign
+}
+\I{643}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{644}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{list\_tmp1})\Y{:}$
+\I{645}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{646}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{647}{3}$\K{while}\ \V{i3}<\F{len}\,(\V{list\_tmp1}[\V{i1}])\Y{:}$
+\I{648}{4}$\K{if}\,\ \V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{0}{}]\Y{!=}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{649}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}{}$\S{'\verb*'-''}${}\Y{+}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]$
+\I{650}{4}$\K{else}\Y{:}$
+\I{651}{5}$\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}]\Y{=}\V{list\_tmp1}[\V{i1}][\V{i3}][\NUM{0}{}][\NUM{1}{}\Y{:}]$
+\I{652}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{653}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{654}{2}$\K{else}\Y{:}$
+\I{655}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{656}{0}$$
+\B{657}{1}{%
+Take over to right-hand side
+}
+\I{658}{1}$\V{all\_ERR\_list}\Y{=}\V{list\_tmp1}$
+\I{659}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{660}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{661}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{662}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_ERR\_list})\Y{:}$
+\I{663}{2}$\K{if}\,\ \V{i1}\Y{+}\NUM{1}{}\O{not in}\V{tuple\_even}\Y{:}$
+\I{664}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_ERR\_list}[\V{i1}]$
+\I{665}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{666}{2}$\K{else}\Y{:}$
+\I{667}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}\V{all\_ERR\_list}[\V{i1}]$
+\I{668}{3}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{669}{3}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{670}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{671}{0}$$
+\I{672}{1}$\V{all\_ERR\_list\_os}\Y{=}\V{list\_tmp1}$
+\I{673}{0}$$
+\B{674}{1}{%
+Carry out the whole substitution operation using above calculated all_SUB_list_os
+Convert deep-structure tuple into deep-structure list
+}
+\I{676}{1}$\V{list\_tmp1}\Y{=}\Y{[]}$
+\I{677}{1}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{678}{1}$\K{for}\ x\O{in}\V{all\_VS\_tuple}\Y{:}$
+\I{679}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{680}{3}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\F{list}\,(x),]$
+\I{681}{2}$\V{list\_tmp1}\Y{=}\V{list\_tmp1}\Y{+}[\V{list\_tmp2},]$
+\I{682}{2}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{683}{1}$\V{all\_VS\_list}\Y{=}\V{list\_tmp1}$
+\I{684}{0}$$
+\I{685}{0}$$
+\B{686}{1}{%
+Now substitute out
+}
+\I{687}{1}$\V{all\_VS\_list\_tmp}\Y{=}\V{all\_VS\_list}$
+\I{688}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{689}{1}$\K{for}\ x\O{in}\V{all\_SUB\_list\_os}\Y{:}$
+\I{690}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{691}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{692}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{subst\_var\_tuple}\Y{:}$
+\I{693}{4}$\V{coff\_tmp}\Y{=}x[\NUM{0}{}]$
+\I{694}{4}$\V{indexer}\Y{=}\F{list}\,(\V{subst\_var\_tuple}).\F{index}\,(x[\NUM{1}{}])$
+\I{695}{4}$\V{indexer}\Y{=}\NUM{2}{}\Y{*}\V{indexer}\Y{+}\NUM{1}{}$
+\I{696}{4}$\V{i3}\Y{=}\NUM{0}{}$
+\I{697}{4}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{698}{4}$\K{for}\ x\O{in}\V{all\_VS\_list\_tmp}[\V{indexer}]\Y{:}$
+\I{699}{5}$\K{if}\,\ \V{coff\_tmp}\Y{==}{}$\S{'\verb*'1''}${}\Y{:}$
+\I{700}{6}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[[\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{0}{}],\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{1}{}]],]$
+\I{701}{5}$\K{elif}\ \V{coff\_tmp}\Y{==}{}$\S{'\verb*'-1''}${}\Y{:}$
+\I{702}{6}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[[{}$\S{'\verb*'-''}${}\Y{+}\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{0}{}],\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{1}{}]],]$
+\I{703}{5}$\K{else}\Y{:}$
+\I{704}{6}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[[{}$\S{'\verb*'(''}${}\Y{+}\V{coff\_tmp}\Y{+}{}$\S{'\verb*')*''}${}\Y{+}\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{0}{}],\V{all\_VS\_list}[\V{indexer}][\V{i3}][\NUM{1}{}]],]$
+\I{705}{5}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{706}{4}$\V{all\_SUB\_list\_os}[\V{i1}]\Y{=}\V{all\_SUB\_list\_os}[\V{i1}][\NUM{0}{}\Y{:}\V{i2}]\Y{+}\V{list\_tmp}\Y{+}\V{all\_SUB\_list\_os}[\V{i1}][\V{i2}\Y{+}\NUM{1}{}\Y{:}]$
+\I{707}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{708}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{709}{0}$$
+\B{710}{1}{%
+Now collect coefficients on duplicate variable entries
+}
+\I{711}{1}$\V{all\_SUB\_list\_os\_tmp}\Y{=}\V{COP}.\F{deepcopy}\,(\V{all\_SUB\_list\_os})$
+\I{712}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{713}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{714}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_SUB\_list\_os})\Y{:}$
+\I{715}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{716}{2}$\K{while}\ \V{i2}<\F{len}\,(\V{all\_SUB\_list\_os}[\V{i1}])\Y{:}$
+\I{717}{3}$\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}]\Y{=}\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}][\NUM{1}{}]$
+\I{718}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{719}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{720}{0}$$
+\I{721}{0}$$
+\I{722}{1}$\V{checked\_list}\Y{=}\Y{[]}$
+\I{723}{1}$\V{var\_pos\_list}\Y{=}\F{len}\,(\V{all\_SUB\_list\_os})\Y{*}[\Y{[]},]$
+\I{724}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{725}{1}$\K{for}\ x\O{in}\V{all\_SUB\_list\_os\_tmp}\Y{:}$
+\I{726}{2}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{727}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{728}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{729}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{730}{3}$\K{if}\,\ x\O{in}\V{x\_all}\O{and}\V{all\_SUB\_list\_os\_tmp}[\V{i1}].\F{count}\,(\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}])>\NUM{1}{}\O{and}\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}]\O{not in}\V{checked\_list}\Y{:}$
+\I{731}{4}$\V{checked\_list}\Y{=}\V{checked\_list}\Y{+}[\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}],]$
+\I{732}{4}$\V{i4}\Y{=}\NUM{0}{}$
+\I{733}{4}$\K{while}\ \V{i4}<\F{len}\,(\V{all\_SUB\_list\_os\_tmp}[\V{i1}])\Y{:}$
+\I{734}{5}$\K{if}\,\ \V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i4}]\Y{==}\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}]\Y{:}$
+\I{735}{6}$\V{list\_tmp2}\Y{=}\V{list\_tmp2}\Y{+}[\V{i4},]$
+\I{736}{5}$\V{i4}\Y{=}\V{i4}\Y{+}\NUM{1}{}$
+\I{737}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[[\V{all\_SUB\_list\_os\_tmp}[\V{i1}][\V{i2}],]\Y{+}\V{list\_tmp2},]$
+\I{738}{4}$\V{list\_tmp2}\Y{=}\Y{[]}$
+\I{739}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{740}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{741}{2}$\V{var\_pos\_list}[\V{i1}]\Y{=}\V{list\_tmp}$
+\I{742}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{743}{0}$$
+\I{744}{1}$\V{var\_pos\_list\_tmp}\Y{=}\V{COP}.\F{deepcopy}\,(\V{var\_pos\_list})$
+\I{745}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{746}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{var\_pos\_list\_tmp})\Y{:}$
+\I{747}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{748}{2}$\K{while}\ \V{i2}<\F{len}\,(\V{var\_pos\_list\_tmp}[\V{i1}])\Y{:}$
+\I{749}{3}$\V{var\_pos\_list\_tmp}[\V{i1}][\V{i2}]\Y{=}\V{var\_pos\_list\_tmp}[\V{i1}][\V{i2}][\NUM{1}{}\Y{:}]$
+\I{750}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{751}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{752}{0}$$
+\I{753}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{754}{1}$\V{coff\_list}\Y{=}\Y{[]}$
+\I{755}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{var\_pos\_list\_tmp})\Y{:}$
+\I{756}{2}$\V{coff\_tmp2}\Y{=}\Y{[]}$
+\I{757}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{758}{2}$\K{while}\ \V{i2}<\F{len}\,(\V{var\_pos\_list\_tmp}[\V{i1}])\Y{:}$
+\I{759}{3}$\V{coff\_tmp3}\Y{=}{}$\S{''}${}$
+\I{760}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{761}{3}$\K{for}\ x\O{in}\V{var\_pos\_list\_tmp}[\V{i1}][\V{i2}]\Y{:}$
+\I{762}{4}$\K{if}\,\ \V{i3}\Y{==}\NUM{0}{}\Y{:}$
+\I{763}{5}$\V{coff\_tmp3}\Y{=}{}$\S{'\verb*'(''}${}\Y{+}\V{all\_SUB\_list\_os}[\V{i1}][\V{var\_pos\_list\_tmp}[\V{i1}][\V{i2}][\V{i3}]][\NUM{0}{}]\Y{+}{}$\S{'\verb*')''}${}$
+\I{764}{4}$\K{else}\Y{:}$
+\I{765}{5}$\V{coff\_tmp3}\Y{=}\V{coff\_tmp3}\Y{+}{}$\S{'\verb*'+(''}${}\Y{+}\V{all\_SUB\_list\_os}[\V{i1}][\V{var\_pos\_list\_tmp}[\V{i1}][\V{i2}][\V{i3}]][\NUM{0}{}]\Y{+}{}$\S{'\verb*')''}${}$
+\I{766}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{767}{3}$\V{coff\_tmp2}\Y{=}\V{coff\_tmp2}\Y{+}[\V{coff\_tmp3},]$
+\I{768}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{769}{2}$\V{coff\_list}\Y{=}\V{coff\_list}\Y{+}[\V{coff\_tmp2},]$
+\I{770}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{771}{0}$$
+\B{772}{1}{%
+Delete the duplicate variable entries in all_SUB_list_os
+}
+\I{773}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{774}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{775}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_SUB\_list\_os})\Y{:}$
+\I{776}{2}$\K{for}\ x\O{in}\V{var\_pos\_list}[\V{i1}]\Y{:}$
+\I{777}{3}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}\V{COP}.\F{deepcopy}\,(x[\NUM{1}{}\Y{:}])$
+\I{778}{2}$\V{list\_tmp}.\F{sort}\,()$
+\I{779}{2}$\V{list\_tmp}.\F{reverse}\,()$
+\I{780}{2}$\K{for}\ x\O{in}\V{list\_tmp}\Y{:}$
+\I{781}{3}$\V{all\_SUB\_list\_os}[\V{i1}]\Y{=}\V{all\_SUB\_list\_os}[\V{i1}][\NUM{0}{}\Y{:}x]\Y{+}\V{all\_SUB\_list\_os}[\V{i1}][x\Y{+}\NUM{1}{}\Y{:}]$
+\I{782}{2}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{783}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{784}{0}$$
+\B{785}{1}{%
+Re-insert the composite (bundled) variable coefficient
+}
+\I{786}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{787}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{788}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{all\_SUB\_list\_os})\Y{:}$
+\I{789}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{790}{2}$\K{while}\ \V{i2}<\F{len}\,(\V{var\_pos\_list}[\V{i1}])\Y{:}$
+\I{791}{3}$\V{all\_SUB\_list\_os}[\V{i1}]\Y{=}\V{all\_SUB\_list\_os}[\V{i1}]\Y{+}[[\V{coff\_list}[\V{i1}][\V{i2}],\V{var\_pos\_list}[\V{i1}][\V{i2}][\NUM{0}{}]],]$
+\I{792}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{793}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{794}{0}$$
+\B{795}{1}{%
+Finally, re-insert the modified all_SUB_list_os into all_DET_list_os using detsubst_switch
+}
+\I{796}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{797}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{798}{1}$\K{while}\ \V{i1}<\F{len}\,(\V{detsubst\_switch})\Y{:}$
+\I{799}{2}$\K{if}\,\ \V{detsubst\_switch}[\V{i1}]\Y{==}\NUM{1}{}\Y{:}$
+\I{800}{3}$\V{all\_DET\_list\_os}[\V{i1}]\Y{=}\V{COP}.\F{deepcopy}\,(\V{all\_SUB\_list\_os}[\V{i2}])$
+\I{801}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{802}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{803}{2}$\K{else}\Y{:}$
+\I{804}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{805}{1}$\V{num\_err}\Y{=}\F{len}\,(\V{all\_ERR\_list\_os})$
+\I{806}{1}$\V{all\_DET\_list\_os}\Y{=}\V{all\_DET\_list\_os}[\Y{:}\Y{-}\V{num\_err}]$
+\I{807}{1}$\V{num\_det}\Y{=}\F{len}\,(\V{all\_DET\_list\_os})$
+\I{808}{1}$\V{num\_exp}\Y{=}\F{len}\,(\V{all\_EXP\_list\_os})$
+\I{809}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_det''}${}]\Y{=}\V{num\_det}$
+\I{810}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_exp''}${}]\Y{=}\V{num\_exp}$
+\I{811}{1}$\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_err''}${}]\Y{=}\V{num\_err}$
+\I{812}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'equations''}${}]\Y{=}\{\}$
+\I{813}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'equations''}${}][{}$\S{'\verb*'deterministic''}${}]\Y{=}\V{all\_DET\_list\_os}$
+\I{814}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'equations''}${}][{}$\S{'\verb*'expectational''}${}]\Y{=}\V{all\_EXP\_list\_os}$
+\I{815}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'equations''}${}][{}$\S{'\verb*'errors''}${}]\Y{=}\V{all\_ERR\_list\_os}$
+\I{816}{0}$$
+\B{817}{1}{%
+THIS IS THE OUTPUT SECTION !!!!!!!!!!!!!!!!!
+}
+\I{818}{0}$$
+\I{819}{1}$\K{try}\Y{:}$
+\I{820}{2}$\V{outfile}\Y{=}\F{open}\,(\V{outfile\_name},{}$\S{'\verb*'r''}${})$
+\I{821}{2}$\V{outlines}\Y{=}\V{outfile}.\F{read}\,().\F{splitlines}\,()$
+\I{822}{2}$\V{outfile}.\F{close}\,()$
+\I{823}{1}$\K{except}\ \Y{:}$
+\I{824}{2}$\V{outlines}\Y{=}[{}$\S{'\verb*'%PARAMETERS''}${},{}$\S{''}${},{}$\S{''}${},$
+\I{825}{3}\S{'\verb*'%STEADY STATES''}${},{}$\S{''}${},{}$\S{''}${},$
+\I{826}{3}\S{'\verb*'%DECLARING VARNAMES''}${},{}$\S{''}${},{}$\S{''}${},$
+\I{827}{3}\S{'\verb*'%DETERMINISTIC EQUATIONS''}${},{}$\S{''}${},{}$\S{''}${}$
+\I{828}{3}\S{'\verb*'%EXPECTATIONAL EQUATIONS''}${},{}$\S{''}${},{}$\S{''}${}$
+\I{829}{3}\S{'\verb*'%AUTOREGRESSIVE MATRIX FOR z(t)''}${},{}$\S{''}${},{}$\S{''}${}$
+\I{830}{3}\S{'\verb*'%OPTIONS''}${},{}$\S{''}${},{}$\S{''}${}]$
+\I{831}{3}$$
+\I{832}{0}$$
+\B{833}{1}{%
+What to do when the outfile already exists
+}
+\I{834}{1}$$
+\I{835}{1}$\V{varlist}\Y{=}(({}$\S{'\verb*'%PARAMETERS''}${},{}$\S{'\verb*'PA_out_loc''}${}),$
+\I{836}{2}$({}$\S{'\verb*'%STEADY STATES''}${},{}$\S{'\verb*'SS_out_loc''}${}),$
+\I{837}{2}$({}$\S{'\verb*'%DECLARING VARNAMES''}${},{}$\S{'\verb*'VN_out_loc''}${}),$
+\I{838}{2}$({}$\S{'\verb*'%DETERMINISTIC EQUATIONS''}${},{}$\S{'\verb*'DE_out_loc''}${}),$
+\I{839}{2}$({}$\S{'\verb*'%EXPECTATIONAL EQUATIONS''}${},{}$\S{'\verb*'EE_out_loc''}${}),$
+\I{840}{2}$({}$\S{'\verb*'%AUTOREGRESSIVE MATRIX FOR z(t)''}${},{}$\S{'\verb*'AR_out_loc''}${}),$
+\I{841}{2}$({}$\S{'\verb*'%OPTIONS''}${},{}$\S{'\verb*'OP_out_loc''}${}))$
+\I{842}{1}$$
+\B{843}{1}{%
+RELOCATE
+}
+\I{844}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{845}{1}{%
+RELOCATE END
+}
+\I{846}{1}$$
+\B{847}{1}{%
+Delete parameters and reinsert them from the textfile
+}
+\I{848}{1}$$
+\B{849}{1}{%
+Determine maximum word length of parameter names
+}
+\I{850}{1}$\V{varname\_len}\Y{=}\NUM{0}{}$
+\I{851}{1}$\K{for}\ x\O{in}\V{para\_tuple}\Y{:}$
+\I{852}{2}$\K{if}\,\ \F{len}\,(x[\NUM{0}{}])>\V{varname\_len}\Y{:}$
+\I{853}{3}$\V{varname\_len}\Y{=}\F{len}\,(x[\NUM{0}{}])$
+\I{854}{0}$$
+\I{855}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'PA_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'SS_out_loc''}${}]\Y{:}]$
+\I{856}{1}$$
+\B{857}{1}{%
+RELOCATE
+}
+\I{858}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{859}{1}{%
+RELOCATE END
+}
+\I{860}{1}$$
+\I{861}{1}$i\Y{=}\NUM{0}{}$
+\I{862}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{863}{1}$\K{for}\ x\O{in}\V{para\_tuple}\Y{:}$
+\I{864}{2}$i\Y{=}i\Y{+}\NUM{1}{}$
+\I{865}{2}$\V{string\_tmp}\Y{=}x[\NUM{0}{}]\Y{+}(\V{varname\_len}\Y{-}\F{len}\,(x[\NUM{0}{}])\Y{+}\NUM{1}{})\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'= ''}${}\Y{+}x[\NUM{1}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{866}{2}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{string\_tmp},]$
+\I{867}{0}$$
+\I{868}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'PA_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\V{list\_tmp}\Y{+}\NUM{3}{}\Y{*}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'SS_out_loc''}${}]\Y{:}]$
+\I{869}{0}$$
+\B{870}{1}{%
+RELOCATE
+}
+\I{871}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{872}{1}{%
+RELOCATE END
+}
+\I{873}{1}$$
+\B{874}{1}{%
+Delete steady states and reinsert them from the textfile
+}
+\I{875}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'SS_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'VN_out_loc''}${}]\Y{:}]$
+\I{876}{1}$$
+\B{877}{1}{%
+RELOCATE
+}
+\I{878}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{879}{1}{%
+RELOCATE END
+}
+\I{880}{1}$$
+\I{881}{1}$\V{SSS\_list}\Y{=}\F{list}\,(\V{SSS\_tuple})$
+\I{882}{1}$\K{for}\ x\O{in}\V{SSS\_list}\Y{:}$
+\I{883}{2}$\K{if}\,\ x\Y{!=}{}$\S{''}${}\Y{:}$
+\I{884}{3}$\V{list\_tmp}\Y{=}x[\Y{:}\Y{-}\NUM{1}{}].\F{split}\,({}$\S{'\verb*'=''}${})$
+\I{885}{3}$\V{str\_tmp1}\Y{=}\V{list\_tmp}[\NUM{0}{}].\F{strip}\,()$
+\I{886}{3}$\V{str\_tmp2}\Y{=}\V{list\_tmp}[\NUM{1}{}].\F{strip}\,()$
+\B{887}{3}{%
+Make parameters available to numeric environment
+}
+\I{888}{3}$\K{exec}\ (\V{str\_tmp1}\Y{+}{}$\S{'\verb*' = ''}${}\Y{+}\V{str\_tmp2})$
+\I{889}{2}$\K{else}\Y{:}$
+\I{890}{3}$\K{break}\ $
+\I{891}{0}$$
+\I{892}{1}$$
+\I{893}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'SS_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\F{list}\,(\V{SSS\_tuple})\Y{+}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'VN_out_loc''}${}]\Y{:}]$
+\I{894}{0}$$
+\B{895}{1}{%
+RELOCATE
+}
+\I{896}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{897}{1}{%
+RELOCATE END
+}
+\I{898}{1}$$
+\B{899}{1}{%
+Determine maximum word length of varnames
+}
+\I{900}{1}$\V{varname\_len}\Y{=}\NUM{0}{}$
+\I{901}{1}$\K{for}\ x\O{in}\V{varname\_tuple}\Y{:}$
+\I{902}{2}$\K{if}\,\ \F{len}\,(x)>\V{varname\_len}\Y{:}$
+\I{903}{3}$\V{varname\_len}\Y{=}\F{len}\,(x)$
+\I{904}{0}$$
+\I{905}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'VN_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'DE_out_loc''}${}]\Y{:}]$
+\I{906}{1}$$
+\B{907}{1}{%
+RELOCATE
+}
+\I{908}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{909}{1}{%
+RELOCATE END
+}
+\I{910}{1}$$
+\I{911}{1}$\V{list\_tmp}\Y{=}\Y{[]}$
+\I{912}{1}$i\Y{=}\NUM{0}{}$
+\I{913}{1}$\V{list\_tmp}\Y{=}[{}$\S{'\verb*'VARNAMES = [\'''}${}\Y{+}\V{varname\_tuple}[\NUM{0}{}]\Y{+}(\V{varname\_len}\Y{+}\NUM{1}{}\Y{-}\F{len}\,(\V{varname\_tuple}[\NUM{0}{}]))\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'\''\verb*',''}${},]$
+\I{914}{1}$\K{for}\ x\O{in}\V{varname\_tuple}[\NUM{1}{}\Y{:}\F{len}\,(\V{varname\_tuple})]\Y{:}$
+\I{915}{2}$i\Y{=}i\Y{+}\NUM{1}{}$
+\I{916}{2}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\NUM{12}{}\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'\'''}${}\Y{+}x\Y{+}(\V{varname\_len}\Y{+}\NUM{1}{}\Y{-}\F{len}\,(x))\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'\''\verb*',''}${},]$
+\I{917}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\NUM{12}{}\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'\'''}${}\Y{+}\V{varname\_tuple}[\Y{-}\NUM{1}{}]\Y{+}(\V{varname\_len}\Y{+}\NUM{1}{}\Y{-}\F{len}\,(\V{varname\_tuple}[\Y{-}\NUM{1}{}]))\Y{*}{}$\S{'''\verb*' ''''}${}\Y{+}{}$\S{'\verb*'\''\verb*'];''}${},]$
+\I{918}{0}$$
+\I{919}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'VN_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\V{list\_tmp}\Y{+}\NUM{3}{}\Y{*}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'DE_out_loc''}${}]\Y{:}]$
+\I{920}{0}$$
+\B{921}{1}{%
+RELOCATE
+}
+\I{922}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{923}{1}{%
+RELOCATE END
+}
+\I{924}{0}$$
+\B{925}{1}{%
+Now do the deterministic equations
+}
+\I{926}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'DE_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'EE_out_loc''}${}]\Y{:}]$
+\I{927}{1}$$
+\B{928}{1}{%
+RELOCATE
+}
+\I{929}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{930}{1}{%
+RELOCATE END
+}
+\I{931}{0}$$
+\B{932}{1}{%
+Now start writing lines for the A matrix for x(t)
+}
+\I{933}{1}$\V{list\_tmp}\Y{=}[{}$\S{'\verb*'AA = zeros(''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{934}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'AA = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{935}{1}$\K{exec}\ (\V{str\_exec})$
+\I{936}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{937}{1}$\K{for}\ x\O{in}\V{all\_DET\_list\_os}\Y{:}$
+\I{938}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{939}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}k\Y{:}$
+\I{940}{4}$\V{indexer}\Y{=}\F{list}\,(k).\F{index}\,(x[\NUM{1}{}])$
+\I{941}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{942}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'AA(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{943}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'AA[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{944}{4}$\K{exec}\ (\V{str\_exec})$
+\I{945}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'AA''}${}]\Y{=}\V{AA}$
+\I{946}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{947}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{948}{0}$$
+\B{949}{1}{%
+Now do for B
+}
+\I{950}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'BB = zeros(''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{951}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'BB = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{952}{1}$\K{exec}\ (\V{str\_exec})$
+\I{953}{1}$\V{k\_l\_1}\Y{=}\F{makeLags}\,(k,{}$\S{'\verb*'1''}${})$
+\I{954}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{955}{1}$\K{for}\ x\O{in}\V{all\_DET\_list\_os}\Y{:}$
+\I{956}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{957}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{k\_l\_1}\Y{:}$
+\I{958}{4}$\V{indexer}\Y{=}\F{list}\,(\V{k\_l\_1}).\F{index}\,(x[\NUM{1}{}])$
+\I{959}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{960}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'BB(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{961}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'BB[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{962}{4}$\K{exec}\ (\V{str\_exec})$
+\I{963}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'BB''}${}]\Y{=}\V{BB}$
+\I{964}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{965}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{966}{0}$$
+\B{967}{1}{%
+Now do for C
+}
+\I{968}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'CC = zeros(''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{969}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'CC = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{970}{1}$\K{exec}\ (\V{str\_exec})$
+\I{971}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{972}{1}$\K{for}\ x\O{in}\V{all\_DET\_list\_os}\Y{:}$
+\I{973}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{974}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}y\Y{:}$
+\I{975}{4}$\V{indexer}\Y{=}\F{list}\,(y).\F{index}\,(x[\NUM{1}{}])$
+\I{976}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{977}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'CC(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{978}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'CC[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{979}{4}$\K{exec}\ (\V{str\_exec})$
+\I{980}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'CC''}${}]\Y{=}\V{CC}$
+\I{981}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{982}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{983}{0}$$
+\B{984}{1}{%
+Now do for D
+}
+\I{985}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'DD = zeros(''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{986}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'DD = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_det})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{987}{1}$\K{exec}\ (\V{str\_exec})$
+\I{988}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{989}{1}$\K{for}\ x\O{in}\V{all\_DET\_list\_os}\Y{:}$
+\I{990}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{991}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}z\Y{:}$
+\I{992}{4}$\V{indexer}\Y{=}\F{list}\,(z).\F{index}\,(x[\NUM{1}{}])$
+\I{993}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{994}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'DD(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{995}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'DD[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{996}{4}$\K{exec}\ (\V{str\_exec})$
+\I{997}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'DD''}${}]\Y{=}\V{DD}$
+\I{998}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{999}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1000}{0}$$
+\I{1001}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'DE_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\V{list\_tmp}\Y{+}\NUM{3}{}\Y{*}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'EE_out_loc''}${}]\Y{:}]$
+\I{1002}{0}$$
+\B{1003}{1}{%
+RELOCATE
+}
+\I{1004}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{1005}{1}{%
+RELOCATE END
+}
+\I{1006}{0}$$
+\B{1007}{1}{%
+Now do the expectational equations
+}
+\I{1008}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'EE_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'AR_out_loc''}${}]\Y{:}]$
+\I{1009}{0}$$
+\B{1010}{1}{%
+RELOCATE
+}
+\I{1011}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{1012}{1}{%
+RELOCATE END
+}
+\I{1013}{0}$$
+\B{1014}{1}{%
+Now start writing lines for the F matrix for x(t+1)
+}
+\I{1015}{1}$\V{list\_tmp}\Y{=}[{}$\S{'\verb*'FF = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1016}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'FF = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1017}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1018}{1}$\V{k\_f\_1}\Y{=}\F{makeForward}\,(k,{}$\S{'\verb*'1''}${},{}$\S{'\verb*'0''}${})$
+\I{1019}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1020}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1021}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1022}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{k\_f\_1}\Y{:}$
+\I{1023}{4}$\V{indexer}\Y{=}\F{list}\,(\V{k\_f\_1}).\F{index}\,(x[\NUM{1}{}])$
+\I{1024}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1025}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'FF(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1026}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'FF[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1027}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1028}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'FF''}${}]\Y{=}\V{FF}$
+\I{1029}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1030}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1031}{0}$$
+\B{1032}{1}{%
+Now do for G
+}
+\I{1033}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'GG = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1034}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'GG = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1035}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1036}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1037}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1038}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1039}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}k\Y{:}$
+\I{1040}{4}$\V{indexer}\Y{=}\F{list}\,(k).\F{index}\,(x[\NUM{1}{}])$
+\I{1041}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1042}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'GG(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1043}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'GG[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1044}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1045}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'GG''}${}]\Y{=}\V{GG}$
+\I{1046}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1047}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1048}{0}$$
+\B{1049}{1}{%
+Now do for H
+}
+\I{1050}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'HH = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1051}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'HH = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(k))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1052}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1053}{1}$\V{k\_l\_1}\Y{=}\F{makeLags}\,(k,{}$\S{'\verb*'1''}${})$
+\I{1054}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1055}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1056}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1057}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{k\_l\_1}\Y{:}$
+\I{1058}{4}$\V{indexer}\Y{=}\F{list}\,(\V{k\_l\_1}).\F{index}\,(x[\NUM{1}{}])$
+\I{1059}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1060}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'GG(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1061}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'GG[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1062}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1063}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'GG''}${}]\Y{=}\V{GG}$
+\I{1064}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1065}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1066}{0}$$
+\B{1067}{1}{%
+Now do for J
+}
+\I{1068}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'JJ = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1069}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'JJ = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1070}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1071}{1}$\V{y\_f\_1}\Y{=}\F{makeForward}\,(y,{}$\S{'\verb*'1''}${},{}$\S{'\verb*'0''}${})$
+\I{1072}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1073}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1074}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1075}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{y\_f\_1}\Y{:}$
+\I{1076}{4}$\V{indexer}\Y{=}\F{list}\,(\V{y\_f\_1}).\F{index}\,(x[\NUM{1}{}])$
+\I{1077}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1078}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'JJ(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1079}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'JJ[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1080}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1081}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'JJ''}${}]\Y{=}\V{JJ}$
+\I{1082}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1083}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1084}{0}$$
+\B{1085}{1}{%
+Now do for K
+}
+\I{1086}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'KK = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1087}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'KK = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(y))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1088}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1089}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1090}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1091}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1092}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}y\Y{:}$
+\I{1093}{4}$\V{indexer}\Y{=}\F{list}\,(y).\F{index}\,(x[\NUM{1}{}])$
+\I{1094}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1095}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'KK(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1096}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'KK[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1097}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1098}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'KK''}${}]\Y{=}\V{KK}$
+\I{1099}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1100}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1101}{0}$$
+\B{1102}{1}{%
+Now do for L
+}
+\I{1103}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'LL = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1104}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'LL = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1105}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1106}{1}$\V{z\_f\_1}\Y{=}\F{makeForward}\,(z,{}$\S{'\verb*'1''}${},{}$\S{'\verb*'0''}${})$
+\I{1107}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1108}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1109}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1110}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}\V{z\_f\_1}\Y{:}$
+\I{1111}{4}$\V{indexer}\Y{=}\F{list}\,(\V{z\_f\_1}).\F{index}\,(x[\NUM{1}{}])$
+\I{1112}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1113}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'LL(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1114}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'LL[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1115}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1116}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'LL''}${}]\Y{=}\V{LL}$
+\I{1117}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1118}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1119}{0}$$
+\B{1120}{1}{%
+Now do for M
+}
+\I{1121}{1}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}[{}$\S{'\verb*'MM = zeros(''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1122}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'MM = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_exp})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1123}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1124}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1125}{1}$\K{for}\ x\O{in}\V{all\_EXP\_list\_os}\Y{:}$
+\I{1126}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1127}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}z\Y{:}$
+\I{1128}{4}$\V{indexer}\Y{=}\F{list}\,(z).\F{index}\,(x[\NUM{1}{}])$
+\I{1129}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1130}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'MM(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1131}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'MM[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1132}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1133}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'MM''}${}]\Y{=}\V{MM}$
+\I{1134}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1135}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1136}{0}$$
+\I{1137}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'EE_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\V{list\_tmp}\Y{+}\NUM{3}{}\Y{*}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'AR_out_loc''}${}]\Y{:}]$
+\I{1138}{0}$$
+\B{1139}{1}{%
+RELOCATE
+}
+\I{1140}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{1141}{1}{%
+RELOCATE END
+}
+\I{1142}{0}$$
+\B{1143}{1}{%
+Now do the error motion equations
+}
+\I{1144}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'AR_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'OP_out_loc''}${}]\Y{:}]$
+\I{1145}{0}$$
+\B{1146}{1}{%
+RELOCATE
+}
+\I{1147}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{1148}{1}{%
+RELOCATE END
+}
+\I{1149}{0}$$
+\B{1150}{1}{%
+Now start writing lines for the N matrix for z
+}
+\I{1151}{1}$\V{list\_tmp}\Y{=}[{}$\S{'\verb*'NN = zeros(''}${}\Y{+}\F{str}\,(\V{num\_err})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*');''}${},]$
+\I{1152}{1}$\V{str\_exec}\Y{=}{}$\S{'\verb*'NN = MAT.zeros((''}${}\Y{+}\F{str}\,(\V{num\_err})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\F{len}\,(z))\Y{+}{}$\S{'\verb*'))''}${}$
+\I{1153}{1}$\K{exec}\ (\V{str\_exec})$
+\I{1154}{1}$\V{i1}\Y{=}\NUM{1}{}$
+\I{1155}{1}$\K{for}\ x\O{in}\V{all\_ERR\_list\_os}\Y{:}$
+\I{1156}{2}$\K{for}\ x\O{in}x\Y{:}$
+\I{1157}{3}$\K{if}\,\ x[\NUM{1}{}]\O{in}z\Y{:}$
+\I{1158}{4}$\V{indexer}\Y{=}\F{list}\,(z).\F{index}\,(x[\NUM{1}{}])$
+\I{1159}{4}$\V{indexer}\Y{=}\V{indexer}\Y{+}\NUM{1}{}$
+\I{1160}{4}$\V{str\_tmp}\Y{=}{}$\S{'\verb*'NN(''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer})\Y{+}{}$\S{'\verb*') = ''}${}\Y{+}x[\NUM{0}{}]\Y{+}{}$\S{'\verb*';''}${}$
+\I{1161}{4}$\V{str\_exec}\Y{=}{}$\S{'\verb*'NN[''}${}\Y{+}\F{str}\,(\V{i1}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*',''}${}\Y{+}\F{str}\,(\V{indexer}\Y{-}\NUM{1}{})\Y{+}{}$\S{'\verb*'] = ''}${}\Y{+}x[\NUM{0}{}]$
+\I{1162}{4}$\K{exec}\ (\V{str\_exec})$
+\I{1163}{4}$\V{self}.\V{uhlig\_mats}[{}$\S{'\verb*'NN''}${}]\Y{=}\V{NN}$
+\I{1164}{4}$\V{list\_tmp}\Y{=}\V{list\_tmp}\Y{+}[\V{str\_tmp},]$
+\I{1165}{2}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1166}{0}$$
+\I{1167}{1}$\V{outlines}\Y{=}\V{outlines}[\NUM{0}{}\Y{:}\V{locdic}[{}$\S{'\verb*'AR_out_loc''}${}]\Y{+}\NUM{1}{}]\Y{+}[{}$\S{''}${},]\Y{+}\V{list\_tmp}\Y{+}[{}$\S{''}${},]\Y{+}\F{list}\,(\V{VCM\_tuple})\Y{+}\NUM{3}{}\Y{*}[{}$\S{''}${},]\Y{+}\V{outlines}[\V{locdic}[{}$\S{'\verb*'OP_out_loc''}${}]\Y{:}]$
+\I{1168}{0}$$
+\B{1169}{1}{%
+RELOCATE
+}
+\I{1170}{1}$\V{locdic}\Y{=}\F{locate}\,(\V{outlines},\V{varlist})$
+\B{1171}{1}{%
+RELOCATE END
+}
+\I{1172}{1}$$
+\I{1173}{1}$\V{self}.\V{attr}[{}$\S{'\verb*'outlines''}${}]\Y{=}\V{outlines}$
+\I{1174}{1}$$
+\I{1175}{1}$$
+\B{1176}{1}{%
+Just writes out the matlab file
+}
+\I{1177}{1}$\K{def}\ \F{writeout}\,(\V{self},\V{outfile\_name})\Y{:}$
+\I{1178}{2}$\V{outlines}\Y{=}\V{self}.\V{attr}[{}$\S{'\verb*'outlines''}${}]$
+\B{1179}{2}{%
+Delete the old outfile_name on computer
+}
+\I{1180}{2}$\K{if}\,\ \V{outfile\_name}\O{in}\V{OPS}.\F{listdir}\,(\V{OPS}.\F{getcwd}\,())\Y{:}$
+\I{1181}{3}$\V{OPS}.\F{remove}\,(\V{OPS}.\F{getcwd}\,()\Y{+}{}$\S{'\verb*'/''}${}\Y{+}\V{outfile\_name})$
+\I{1182}{0}$$
+\B{1183}{1}{%
+Finally write the entire outlines into outfile_name
+}
+\I{1184}{1}$\V{outfile}\Y{=}\F{open}\,(\V{outfile\_name},{}$\S{'\verb*'w''}${})$
+\I{1185}{1}$\K{for}\ x\O{in}\V{outlines}\Y{:}$
+\I{1186}{2}$\V{outfile}.\F{write}\,(x\Y{+}{}$\S{'\verb*'\n''}${})$
+\I{1187}{1}$\V{outfile}.\F{close}\,()$
+\I{1188}{1}$$
+\I{1189}{1}$\K{def}\ \F{uhlig\_solve}\,(\V{self})\Y{:}$
+\I{1190}{2}$\K{pass}\ $
+\I{1191}{1}$$
+\I{1192}{1}$\K{def}\ \F{do\_PP}\,(\V{self})\Y{:}$
+\I{1193}{2}$\V{num\_det}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_det''}${}]$
+\I{1194}{2}$\V{num\_exp}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_exp''}${}]$
+\I{1195}{2}$\V{num\_err}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_err''}${}]$
+\I{1196}{2}$\V{num\_k}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_k''}${}]$
+\I{1197}{2}$\V{num\_y}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_y''}${}]$
+\I{1198}{2}$\V{num\_z}\Y{=}\V{self}.\V{uhlig\_attr}[{}$\S{'\verb*'num_z''}${}]$
+\I{1199}{2}$\V{mats}\Y{=}\V{self}.\V{uhlig\_mats}$
+\B{1200}{2}{%
+Make the uhlig matrices globally available
+}
+\I{1201}{2}$\K{for}\ x\O{in}\V{mats}.\F{items}\,()\Y{:}$
+\I{1202}{3}$\F{globals}\,()[x[\NUM{0}{}]]\Y{=}x[\NUM{1}{}]$
+\I{1203}{2}$$
+\I{1204}{2}$\K{if}\,\ \V{MAT}.\F{rank}\,(\V{CC})<\V{num\_y}\Y{:}$
+\I{1205}{3}$\K{raise}\ \V{uhlerr},{}$\S{'\verb*'Error: Rank(CC) needs to be at least\n\\r'}
+\I{1206}{3}$\V{equal}\ \V{to}\ \V{the}\ \V{number}\ \V{of}\ \V{endogenous}\ \V{variables}{}$\S{'\verb*'\r'}
+\I{1207}{2}$\K{if}\,\ \V{num\_det}\Y{==}\NUM{0}{}\Y{:}$
+\I{1208}{3}$\V{CC\_plus}\Y{=}\V{LIN}.\F{pinv}\,(\V{CC})$
+\I{1209}{3}$\V{CC\_0}\Y{=}(\F{null}\,(\V{CC}.T)).T$
+\I{1210}{3}$\V{Psi\_mat}\Y{=}\V{FF}$
+\I{1211}{3}$\V{Gamma\_mat}\Y{=}\Y{-}\V{GG}$
+\I{1212}{3}$\V{Theta\_mat}\Y{=}\Y{-}\V{HH}$
+\I{1213}{3}$\V{Xi\_mat}\Y{=}\Y{\}$
+\I{1214}{4}$\F{concatenate}\,((\V{Gamma\_mat},\V{Theta\_mat},\V{MAT}.\F{eye}\,(\V{num\_k}),\Y{\}$
+\I{1215}{5}$\V{MAT}.\F{zeros}\,((\V{num\_k},\V{num\_k}))),\NUM{1}{})$
+\I{1216}{3}$\V{Delta\_mat}\Y{=}\Y{\}$
+\I{1217}{3}$\F{concatenate}\,((\V{Psi\_mat},\V{MAT}.\F{zeros}\,((\V{num\_k},\V{num\_k})),\V{MAT}.\F{zeros}\,((\V{num\_k},\V{num\_k})),\Y{\}$
+\I{1218}{4}$\V{MAT}.\F{zeros}\,((\V{num\_k},\V{num\_k})),\V{MAT}.\F{eye}\,(\V{num\_k}),\NUM{1}{}))$
+\I{1219}{2}$$
+\I{1220}{2}$$
+\I{1221}{2}$\K{else}\Y{:}$
+\I{1222}{3}$\V{CC\_plus}\Y{=}\V{LIN}.\F{pinv}\,(\V{CC})$
+\I{1223}{3}$\V{CC\_0}\Y{=}(\F{null}\,(\V{CC}.T)).T$
+\I{1224}{3}$\V{Psi\_mat}\Y{=}\Y{\}$
+\I{1225}{4}$\F{concatenate}\,((\V{MAT}.\F{zeros}\,((\V{num\_det}\Y{-}\V{num\_y},\V{num\_k})),\V{FF}\Y{-}\V{JJ}\Y{*}\V{CC\_plus}\Y{*}\V{AA}),\NUM{1}{})$
+\I{1226}{3}$\V{Gamma\_mat}\Y{=}\Y{\}$
+\I{1227}{4}$\F{concatenate}\,((\V{CC\_0}\Y{*}\V{AA},\V{JJ}\Y{*}\V{CC\_plus}\Y{*}\V{BB}\Y{-}\V{GG}\Y{+}\V{KK}\Y{*}\V{CC\_plus}\Y{*}\V{AA}),\NUM{1}{})$
+\I{1228}{3}$\V{Theta\_mat}\Y{=}\Y{\}$
+\I{1229}{4}$\F{concatenate}\,((\V{CC\_0}\Y{*}\V{BB},\V{KK}\Y{*}\V{CC\_plus}\Y{*}\V{BB}\Y{-}\V{HH}),\NUM{1}{})$
+\I{1230}{3}$\V{Xi\_mat}\Y{=}\Y{\}$
+\I{1231}{4}$\F{concatenate}\,((\V{Gamma\_mat},\V{Theta\_mat},\V{MAT}.\F{eye}\,(\V{num\_k}),\Y{\}$
+\I{1232}{5}$\F{zeros}\,((\V{num\_k},\V{num\_k}))),\NUM{1}{})$
+\I{1233}{3}$\V{Delta\_mat}\Y{=}\Y{\}$
+\I{1234}{4}$\F{concatenate}\,((\V{Psi\_mat},\V{MAT}.\F{zeros}\,((\V{num\_k},\V{num\_k})),\V{MAT}.\F{eye}\,(\V{num\_k})),\NUM{1}{})$
+\I{1235}{2}$$
+\I{1236}{2}$\V{Xi\_eigvec}\Y{=}\V{LIN}.\F{eig}\,(\F{concatenate}\,((\V{Xi\_mat},\V{Delta\_mat}),\NUM{1}{}))[\NUM{0}{}]$
+\I{1237}{2}$\V{Xi\_eigval}\Y{=}\V{LIN}.\F{eig}\,(\F{concatenate}\,((\V{Xi\_mat},\V{Delta\_mat}),\NUM{1}{}))[\NUM{1}{}]$
+\I{1238}{2}$\V{self}.\V{eigvec}\Y{=}\V{Xi\_eigvec}$
+\I{1239}{2}$\V{self}.\V{eigval}\Y{=}\V{Xi\_eigval}$
+\I{1240}{3}$$
+\I{1241}{0}$$
+\I{1242}{1}$$
+\I{1243}{1}$$
+\I{1244}{1}$$
+\I{1245}{1}$$
+\I{1246}{1}$$
+\PythonOuterBlock
+ERROR CLASSES
+\PythonOuterBlockEnd
+\I{1248}{0}$\K{class}\ \F{errbase}\,(\V{Exception})\Y{:}$
+\I{1249}{1}$\K{pass}\ $
+\I{1250}{0}$$
+\I{1251}{0}$\K{class}\ \F{uhlerr}\,(\V{errbase})\Y{:}$
+\I{1252}{1}$\K{pass}\ $
+\I{1253}{1}$$
+\I{1254}{1}$$
+\I{1255}{2}$$
+\I{1256}{0}$$
+\I{1257}{0}$$
+\I{1258}{0}$$
+\I{1259}{0}$$
+\I{1260}{0}$$
+\I{1261}{0}$$
+\PythonOuterBlock
+Collection of the supporting functions used in the class
+\PythonOuterBlockEnd
+\I{1263}{0}$$
+\I{1264}{0}$$
+\PythonOuterBlock
+Converts string '[x,y,..,z]' into tuple (x,y,...,z)
+\PythonOuterBlockEnd
+\I{1266}{0}$\K{def}\ \F{strlisttuple}\,(\V{seq})\Y{:}$
+\I{1267}{1}$i\Y{=}\NUM{1}{}$
+\I{1268}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1269}{1}$\V{ret\_tuple}\Y{=}()$
+\I{1270}{1}$\K{while}\ \V{seq}[i]\Y{!=}{}$\S{'\verb*']''}${}\Y{:}$
+\I{1271}{2}$\K{while}\ \V{seq}[i]\Y{!=}{}$\S{'\verb*',''}${}\Y{:}$
+\I{1272}{3}$\K{if}\,\ \V{seq}[i]\Y{==}{}$\S{'\verb*']''}${}\Y{:}$
+\I{1273}{4}$\V{ret\_tuple}\Y{=}\V{ret\_tuple}\Y{+}(\V{sub\_str},)$
+\I{1274}{4}$\K{break}\ $
+\I{1275}{3}$\K{else}\Y{:}$
+\I{1276}{4}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{seq}[i]$
+\I{1277}{4}$i\Y{=}i\Y{+}\NUM{1}{}$
+\I{1278}{2}$\K{else}\Y{:}$
+\I{1279}{3}$\V{ret\_tuple}\Y{=}\V{ret\_tuple}\Y{+}(\V{sub\_str},)$
+\I{1280}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1281}{3}$i\Y{=}i\Y{+}\NUM{1}{}$
+\I{1282}{0}$$
+\I{1283}{1}$\K{return}\ \V{ret\_tuple}$
+\I{1284}{0}$$
+\PythonOuterBlock
+Move through empty rows(lines) until hitting line with characters,current line as input, line no as output
+\PythonOuterBlockEnd
+\I{1286}{0}$\K{def}\ \F{cycleEmptyRows}\,(\V{collection},\V{cur\_pos})\Y{:}$
+\I{1287}{1}$\K{while}\ \V{collection}[\V{cur\_pos}]\Y{==}{}$\S{''}${}\Y{:}$
+\I{1288}{2}$\V{cur\_pos}\Y{=}\V{cur\_pos}\Y{+}\NUM{1}{}$
+\I{1289}{0}$$
+\I{1290}{1}$\K{return}\ \V{cur\_pos}$
+\I{1291}{0}$$
+\I{1292}{0}$$
+\PythonOuterBlock
+Move through empty columns until hitting a character, returns integer with column number, cur_pos is optional if search should not take place from 0, but somewhere inside the line
+\PythonOuterBlockEnd
+\I{1294}{0}$\K{def}\ \F{cycleEmptyColumns}\,(\V{seq},\V{cur\_pos})\Y{:}$
+\I{1295}{1}$\K{while}\ \V{seq}[\V{cur\_pos}]\Y{==}{}$\S{''}${}\Y{:}$
+\I{1296}{2}$\V{cur\_pos}\Y{=}\V{cur\_pos}\Y{+}\NUM{1}{}$
+\I{1297}{0}$$
+\I{1298}{1}$\K{return}\ \V{cur\_pos}$
+\I{1299}{0}$$
+\I{1300}{0}$$
+\PythonOuterBlock
+Take tuple of variables and return tuple with specfied lag variables
+\PythonOuterBlockEnd
+\I{1302}{0}$\K{def}\ \F{makeLags}\,(\V{tuple\_in},\V{num\_lags})\Y{:}$
+\I{1303}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1304}{1}$\V{ret\_tuple}\Y{=}()$
+\I{1305}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1306}{1}$\V{sub\_char}\Y{=}{}$\S{''}${}$
+\I{1307}{1}$\K{for}\ x\O{in}\V{tuple\_in}\Y{:}$
+\I{1308}{2}$\V{x\_len}\Y{=}\F{len}\,(x)$
+\I{1309}{2}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'(''}${}\Y{:}$
+\I{1310}{3}$\V{sub\_char}\Y{=}x[\V{i1}]$
+\I{1311}{3}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1312}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1313}{2}$\V{sub\_str}\Y{=}\V{sub\_str}[\NUM{0}{}\Y{:}\V{i1}\Y{-}\NUM{1}{}]$
+\I{1314}{2}$\K{while}\ x[\V{i1}]\Y{!=}{}$\S{'\verb*'|''}${}\O{and}\V{i1}\Y{!=}\NUM{0}{}\Y{:}$
+\I{1315}{3}$\V{i1}\Y{=}\V{i1}\Y{-}\NUM{1}{}$
+\I{1316}{2}$\K{if}\,\ \V{i1}\Y{==}\NUM{0}{}\Y{:}$
+\I{1317}{3}$\V{var}\Y{=}\V{sub\_str}[\V{i1}\Y{:}]$
+\I{1318}{2}$\K{else}\Y{:}$
+\I{1319}{3}$\V{var}\Y{=}\V{sub\_str}[\V{i1}\Y{+}\NUM{1}{}\Y{:}]$
+\I{1320}{2}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1321}{2}$\K{while}\ \V{i1}<\F{int}\,(\V{num\_lags})\Y{:}$
+\I{1322}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1323}{3}$\V{ret\_tuple}\Y{=}\V{ret\_tuple}\Y{+}(\V{var}\Y{+}{}$\S{'\verb*'(t-''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*')''}${},)$
+\I{1324}{2}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1325}{2}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1326}{2}$\V{sub\_char}\Y{=}{}$\S{''}${}$
+\I{1327}{1}$\K{return}\ \V{ret\_tuple}$
+\I{1328}{0}$$
+\I{1329}{0}$$
+\PythonOuterBlock
+Take tuple of variables and return tuple with specfied forward variables
+\PythonOuterBlockEnd
+\I{1331}{0}$\K{def}\ \F{makeForward}\,(\V{tuple\_in},\V{num\_for},\V{num\_info})\Y{:}$
+\I{1332}{1}$i\Y{=}\NUM{0}{}$
+\I{1333}{1}$\V{ret\_tuple}\Y{=}()$
+\I{1334}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1335}{1}$\V{sub\_char}\Y{=}{}$\S{''}${}$
+\I{1336}{1}$\K{for}\ x\O{in}\V{tuple\_in}\Y{:}$
+\I{1337}{2}$\V{x\_len}\Y{=}\F{len}\,(x)$
+\I{1338}{2}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'(''}${}\Y{:}$
+\I{1339}{3}$\V{sub\_char}\Y{=}x[i]$
+\I{1340}{3}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1341}{3}$i\Y{=}i\Y{+}\NUM{1}{}$
+\I{1342}{2}$\V{sub\_str}\Y{=}\V{sub\_str}[\NUM{0}{}\Y{:}i\Y{-}\NUM{1}{}]$
+\I{1343}{2}$\K{while}\ x[i]\Y{!=}{}$\S{'\verb*'|''}${}\O{and}i\Y{!=}\NUM{0}{}\Y{:}$
+\I{1344}{3}$i\Y{=}i\Y{-}\NUM{1}{}$
+\I{1345}{2}$\K{if}\,\ i\Y{==}\NUM{0}{}\Y{:}$
+\I{1346}{3}$\V{var}\Y{=}\V{sub\_str}[i\Y{:}]$
+\I{1347}{2}$\K{else}\Y{:}$
+\I{1348}{3}$\V{var}\Y{=}\V{sub\_str}[i\Y{+}\NUM{1}{}\Y{:}]$
+\I{1349}{2}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1350}{2}$\K{while}\ \V{i1}\Y{<=}\F{int}\,(\V{num\_info})\Y{:}$
+\I{1351}{3}$\V{i2}\Y{=}\NUM{1}{}$
+\I{1352}{3}$\K{while}\ \V{i2}\Y{<=}\F{int}\,(\V{num\_for})\Y{:}$
+\I{1353}{4}$\K{if}\,\ \V{i1}\Y{==}\NUM{0}{}\Y{:}$
+\I{1354}{5}$\V{ret\_tuple}\Y{=}\V{ret\_tuple}\Y{+}({}$\S{'\verb*'E(t)|''}${}\Y{+}\V{var}\Y{+}{}$\S{'\verb*'(t+''}${}\Y{+}\F{str}\,(\V{i2})\Y{+}{}$\S{'\verb*')''}${},)$
+\I{1355}{4}$\K{else}\Y{:}$
+\I{1356}{5}$\V{ret\_tuple}\Y{=}\V{ret\_tuple}\Y{+}({}$\S{'\verb*'E(t)-''}${}\Y{+}\F{str}\,(\V{i1})\Y{+}{}$\S{'\verb*'|''}${}\Y{+}\V{var}\Y{+}{}$\S{'\verb*'(t+''}${}\Y{+}\F{str}\,(\V{i2})\Y{+}{}$\S{'\verb*')''}${},)$
+\I{1357}{4}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1358}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1359}{2}$i\Y{=}\NUM{0}{}$
+\I{1360}{2}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1361}{2}$\V{sub\_char}\Y{=}{}$\S{''}${}$
+\I{1362}{1}$\K{return}\ \V{ret\_tuple}$
+\I{1363}{0}$$
+\PythonOuterBlock
+Test whether a string contains one variable of a list, opt '0' gives Boolean, '1' variable
+\PythonOuterBlockEnd
+\I{1365}{0}$\K{def}\ \F{containsVar}\,(\V{seq},\V{var\_coll},\V{option\_str})\Y{:}$
+\I{1366}{1}$\V{position}\Y{=}\NUM{0}{}$
+\I{1367}{1}$\V{pos\_list}\Y{=}\Y{[]}$
+\I{1368}{1}$\V{var\_list}\Y{=}\Y{[]}$
+\I{1369}{1}$\K{for}\ x\O{in}\V{var\_coll}\Y{:}$
+\I{1370}{2}$\K{if}\,\ x\O{in}\V{seq}\Y{:}$
+\I{1371}{3}$\V{pos\_list}\Y{=}\V{pos\_list}\Y{+}[\V{position},]$
+\I{1372}{3}$\V{position}\Y{=}\V{position}\Y{+}\NUM{1}{}$
+\I{1373}{2}$\K{else}\Y{:}$
+\I{1374}{3}$\V{position}\Y{=}\V{position}\Y{+}\NUM{1}{}$
+\I{1375}{1}$\K{if}\,\ \F{len}\,(\V{pos\_list})\Y{==}\NUM{1}{}\Y{:}$
+\I{1376}{2}$\K{if}\,\ \V{option\_str}\Y{==}{}$\S{'\verb*'0''}${}\Y{:}$
+\I{1377}{3}$\K{return}\ \V{True}$
+\I{1378}{2}$\K{elif}\ \V{option\_str}\Y{==}{}$\S{'\verb*'1''}${}\Y{:}$
+\I{1379}{3}$\K{return}\ \V{var\_coll}[\V{pos\_list}[\NUM{0}{}]]$
+\I{1380}{1}$\K{elif}\ \F{len}\,(\V{pos\_list})>\NUM{1}{}\Y{:}$
+\I{1381}{2}$\K{if}\,\ \V{option\_str}\Y{==}{}$\S{'\verb*'0''}${}\Y{:}$
+\I{1382}{3}$\K{return}\ \V{True}$
+\I{1383}{2}$\K{elif}\ \V{option\_str}\Y{==}{}$\S{'\verb*'1''}${}\Y{:}$
+\I{1384}{3}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1385}{3}$\K{while}\ \V{i1}<\F{len}\,(\V{pos\_list})\Y{:}$
+\I{1386}{4}$\V{var\_list}\Y{=}\V{var\_list}\Y{+}[\V{var\_coll}[\V{pos\_list}[\V{i1}]],]$
+\I{1387}{4}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1388}{3}$\V{aux\_var\_list}\Y{=}[(\F{len}\,(x),x)\ \K{for}\ x\O{in}\V{var\_list}]$
+\I{1389}{3}$\V{aux\_var\_list}.\F{sort}\,()$
+\I{1390}{3}$\V{aux\_var\_list}\Y{=}\V{aux\_var\_list}[\NUM{1}{}]$
+\I{1391}{3}$\K{return}\ \V{aux\_var\_list}[\Y{-}\NUM{1}{}]$
+\I{1392}{1}$\K{else}\Y{:}$
+\I{1393}{2}$\K{if}\,\ \V{option\_str}\Y{==}{}$\S{'\verb*'0''}${}\Y{:}$
+\I{1394}{3}$\K{return}\ \V{False}$
+\I{1395}{2}$\K{elif}\ \V{option\_str}\Y{==}{}$\S{'\verb*'1''}${}\Y{:}$
+\I{1396}{3}$\K{return}\ {}$\S{'\verb*'None''}${}$
+\I{1397}{0}$$
+\PythonOuterBlock
+Read equation
+\PythonOuterBlockEnd
+\I{1399}{0}$\K{def}\ \F{sumEq}\,(\V{tuple\_in},\V{allvar})\Y{:}$
+\I{1400}{1}$\K{if}\,\ \F{len}\,(\V{tuple\_in})\Y{==}\NUM{1}{}\Y{:}$
+\I{1401}{2}$\V{allvar\_len}\Y{=}\F{len}\,(\V{allvar})$
+\I{1402}{2}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1403}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{1404}{2}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\NUM{0}{}]$
+\I{1405}{2}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1406}{2}$\V{lh\_eq\_tuple}\Y{=}()$
+\I{1407}{2}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1408}{2}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'=''}${}\Y{:}$
+\I{1409}{3}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1410}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1411}{3}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1412}{4}$\V{lh\_eq\_tuple}\Y{=}\V{lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1413}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1414}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1415}{4}$\V{lh\_eq\_tuple}\Y{=}\V{lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1416}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1417}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1418}{4}$\V{lh\_eq\_tuple}\Y{=}\V{lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1419}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1420}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1421}{4}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1422}{5}$\V{lh\_eq\_tuple}\Y{=}\V{lh\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1423}{4}$\K{else}\Y{:}$
+\I{1424}{5}$\V{lh\_eq\_tuple}\Y{=}\V{lh\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1425}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1426}{3}$\K{else}\Y{:}$
+\I{1427}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1428}{3}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1429}{4}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1430}{4}$\V{i1}\Y{=}\V{i2}$
+\I{1431}{4}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\V{i2}]$
+\I{1432}{4}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1433}{4}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1434}{3}$\K{else}\Y{:}$
+\I{1435}{4}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1436}{4}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\V{i2}]$
+\I{1437}{0}$$
+\I{1438}{1}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1439}{1}$\V{i1}\Y{=}\V{i2}$
+\I{1440}{1}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\V{i2}]$
+\I{1441}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1442}{1}$\V{rh\_eq\_tuple}\Y{=}()$
+\I{1443}{1}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1444}{1}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*';''}${}\Y{:}$
+\I{1445}{2}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1446}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1447}{2}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1448}{3}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1449}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1450}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1451}{3}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1452}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1453}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1454}{3}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1455}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1456}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1457}{3}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1458}{4}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1459}{3}$\K{else}\Y{:}$
+\I{1460}{4}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1461}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1462}{2}$\K{else}\Y{:}$
+\I{1463}{3}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1464}{2}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1465}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1466}{3}$\V{i1}\Y{=}\V{i2}$
+\I{1467}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\V{i2}]$
+\I{1468}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1469}{3}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1470}{2}$\K{else}\Y{:}$
+\I{1471}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1472}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\NUM{0}{}][\V{i2}]$
+\I{1473}{1}$\K{return}\ (\V{lh\_eq\_tuple},\V{rh\_eq\_tuple},)$
+\I{1474}{0}$$
+\I{1475}{1}$\K{else}\Y{:}$
+\I{1476}{2}$\V{loc\_equal}\Y{=}\NUM{0}{}$
+\I{1477}{2}$\K{for}\ x\O{in}\V{tuple\_in}\Y{:}$
+\I{1478}{3}$\K{if}\,\ {}$\S{'\verb*'=''}${}\O{in}x\Y{:}$
+\I{1479}{4}$\K{break}\ $
+\I{1480}{3}$\K{else}\Y{:}$
+\I{1481}{4}$\V{loc\_equal}\Y{=}\V{loc\_equal}\Y{+}\NUM{1}{}$
+\I{1482}{2}$\V{allvar\_len}\Y{=}\F{len}\,(\V{allvar})$
+\I{1483}{2}$\V{tuple\_len}\Y{=}\F{len}\,(\V{tuple\_in})$
+\I{1484}{2}$\V{line\_iter}\Y{=}\NUM{0}{}$
+\I{1485}{2}$\V{top\_lh\_eq\_tuple}\Y{=}()$
+\I{1486}{2}$\K{while}\ \V{line\_iter}<\V{loc\_equal}\Y{:}$
+\I{1487}{3}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1488}{3}$\V{i2}\Y{=}\NUM{0}{}$
+\I{1489}{3}$\V{lh\_one\_eq\_tuple}\Y{=}()$
+\I{1490}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\NUM{0}{}]$
+\I{1491}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1492}{3}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1493}{3}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'.''}${}\Y{:}$
+\I{1494}{4}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1495}{4}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1496}{4}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1497}{5}$\V{lh\_one\_eq\_tuple}\Y{=}\V{lh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1498}{5}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1499}{4}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1500}{5}$\V{lh\_one\_eq\_tuple}\Y{=}\V{lh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1501}{5}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1502}{4}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1503}{5}$\V{lh\_one\_eq\_tuple}\Y{=}\V{lh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1504}{5}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1505}{4}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1506}{5}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1507}{6}$\V{rh\_eq\_tuple}\Y{=}\V{rh\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1508}{5}$\K{else}\Y{:}$
+\I{1509}{6}$\V{lh\_one\_eq\_tuple}\Y{=}\V{lh\_one\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1510}{5}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1511}{4}$\K{else}\Y{:}$
+\I{1512}{5}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1513}{4}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1514}{5}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1515}{5}$\V{i1}\Y{=}\V{i2}$
+\I{1516}{5}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1517}{5}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1518}{5}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1519}{4}$\K{else}\Y{:}$
+\I{1520}{5}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1521}{5}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1522}{3}$\V{top\_lh\_eq\_tuple}\Y{=}\V{top\_lh\_eq\_tuple}\Y{+}\V{lh\_one\_eq\_tuple}$
+\I{1523}{3}$\V{line\_iter}\Y{=}\V{line\_iter}\Y{+}\NUM{1}{}$
+\I{1524}{0}$$
+\I{1525}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1526}{1}$\V{i2}\Y{=}\NUM{0}{}$
+\I{1527}{1}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\NUM{0}{}]$
+\I{1528}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1529}{1}$\V{mid\_lh\_eq\_tuple}\Y{=}()$
+\I{1530}{1}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1531}{1}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*'=''}${}\Y{:}$
+\I{1532}{2}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1533}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1534}{2}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1535}{3}$\V{mid\_lh\_eq\_tuple}\Y{=}\V{mid\_lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1536}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1537}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1538}{3}$\V{mid\_lh\_eq\_tuple}\Y{=}\V{mid\_lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1539}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1540}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1541}{3}$\V{mid\_lh\_eq\_tuple}\Y{=}\V{mid\_lh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1542}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1543}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1544}{3}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1545}{4}$\V{mid\_lh\_eq\_tuple}\Y{=}\V{mid\_lh\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1546}{3}$\K{else}\Y{:}$
+\I{1547}{4}$\V{mid\_lh\_eq\_tuple}\Y{=}\V{mid\_lh\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1548}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1549}{2}$\K{else}\Y{:}$
+\I{1550}{3}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1551}{2}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1552}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1553}{3}$\V{i1}\Y{=}\V{i2}$
+\I{1554}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1555}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1556}{3}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1557}{2}$\K{else}\Y{:}$
+\I{1558}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1559}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1560}{0}$$
+\I{1561}{1}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1562}{1}$\V{i1}\Y{=}\V{i2}$
+\I{1563}{1}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1564}{1}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1565}{1}$\V{mid\_rh\_eq\_tuple}\Y{=}()$
+\I{1566}{1}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1567}{1}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*';''}${}\O{and}\V{sub\_char}\Y{!=}{}$\S{'\verb*'.''}${}\Y{:}$
+\I{1568}{2}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1569}{2}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1570}{2}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1571}{3}$\V{mid\_rh\_eq\_tuple}\Y{=}\V{mid\_rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1572}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1573}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1574}{3}$\V{mid\_rh\_eq\_tuple}\Y{=}\V{mid\_rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1575}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1576}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1577}{3}$\V{mid\_rh\_eq\_tuple}\Y{=}\V{mid\_rh\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1578}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1579}{2}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1580}{3}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1581}{4}$\V{mid\_rh\_eq\_tuple}\Y{=}\V{mid\_rh\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1582}{3}$\K{else}\Y{:}$
+\I{1583}{4}$\V{mid\_rh\_eq\_tuple}\Y{=}\V{mid\_rh\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1584}{3}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1585}{2}$\K{else}\Y{:}$
+\I{1586}{3}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1587}{2}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1588}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1589}{3}$\V{i1}\Y{=}\V{i2}$
+\I{1590}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1591}{3}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1592}{3}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1593}{2}$\K{else}\Y{:}$
+\I{1594}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1595}{3}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1596}{0}$$
+\I{1597}{0}$$
+\I{1598}{1}$\V{line\_iter}\Y{=}\V{line\_iter}\Y{+}\NUM{1}{}$
+\I{1599}{1}$\V{bottom\_rh\_eq\_tuple}\Y{=}()$
+\I{1600}{1}$\K{while}\ \V{line\_iter}<\V{tuple\_len}\Y{:}$
+\I{1601}{2}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1602}{2}$\V{i2}\Y{=}\NUM{0}{}$
+\I{1603}{2}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}()$
+\I{1604}{2}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\NUM{0}{}]$
+\I{1605}{2}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1606}{2}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1607}{2}$\K{while}\ \V{sub\_char}\Y{!=}{}$\S{'\verb*';''}${}\O{and}\V{sub\_char}\Y{!=}{}$\S{'\verb*'.''}${}\Y{:}$
+\I{1608}{3}$\V{sub\_str}\Y{=}\V{sub\_str}\Y{+}\V{sub\_char}$
+\I{1609}{3}$\V{i3}\Y{=}\NUM{0}{}$
+\I{1610}{3}$\K{if}\,\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\Y{-}\NUM{1}{}\Y{:}$
+\I{1611}{4}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}\V{bottom\_rh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1612}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1613}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1614}{4}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}\V{bottom\_rh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1615}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1616}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\O{and}\V{i2}\Y{-}\V{i1}\Y{==}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))\O{and}\V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'-''}${}\Y{:}$
+\I{1617}{4}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}\V{bottom\_rh\_one\_eq\_tuple}\Y{+}(({}$\S{'\verb*'-1''}${},\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1618}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1619}{3}$\K{elif}\ \F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'0''}${})\Y{:}$
+\I{1620}{4}$\K{if}\,\ \V{sub\_str}[\NUM{0}{}]\Y{==}{}$\S{'\verb*'+''}${}\Y{:}$
+\I{1621}{5}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}\V{bottom\_rh\_one\_eq\_tuple}\Y{+}((\V{sub\_str}[\NUM{1}{}\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1622}{4}$\K{else}\Y{:}$
+\I{1623}{5}$\V{bottom\_rh\_one\_eq\_tuple}\Y{=}\V{bottom\_rh\_one\_eq\_tuple}\Y{+}((\V{sub\_str}[\Y{:}\V{i2}\Y{-}\V{i1}\Y{-}\F{len}\,(\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${}))],\F{containsVar}\,(\V{sub\_str},\V{var\_index}[\NUM{0}{}],{}$\S{'\verb*'1''}${})),)$
+\I{1624}{4}$\V{var\_index}[\NUM{1}{}][\V{i3}]\Y{=}\NUM{1}{}$
+\I{1625}{3}$\K{else}\Y{:}$
+\I{1626}{4}$\V{i3}\Y{=}\V{i3}\Y{+}\NUM{1}{}$
+\I{1627}{3}$\K{if}\,\ \V{var\_index}[\NUM{1}{}].\F{count}\,(\NUM{1}{})>\NUM{0}{}\Y{:}$
+\I{1628}{4}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1629}{4}$\V{i1}\Y{=}\V{i2}$
+\I{1630}{4}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1631}{4}$\V{sub\_str}\Y{=}{}$\S{''}${}$
+\I{1632}{4}$\V{var\_index}\Y{=}(\V{allvar},)\Y{+}(\V{allvar\_len}\Y{*}[\NUM{0}{},],)$
+\I{1633}{3}$\K{else}\Y{:}$
+\I{1634}{4}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1635}{4}$\V{sub\_char}\Y{=}\V{tuple\_in}[\V{line\_iter}][\V{i2}]$
+\I{1636}{2}$\V{bottom\_rh\_eq\_tuple}\Y{=}\V{bottom\_rh\_eq\_tuple}\Y{+}\V{bottom\_rh\_one\_eq\_tuple}$
+\I{1637}{2}$\V{line\_iter}\Y{=}\V{line\_iter}\Y{+}\NUM{1}{}$
+\I{1638}{1}$\K{return}\ (\V{top\_lh\_eq\_tuple}\Y{+}\V{mid\_lh\_eq\_tuple},\V{mid\_rh\_eq\_tuple}\Y{+}\V{bottom\_rh\_eq\_tuple})$
+\I{1639}{0}$$
+\I{1640}{0}$$
+\PythonOuterBlock
+Determine total no of lines per each equation, last line of equation block given,tot_eq_num is total number of equations
+\PythonOuterBlockEnd
+\I{1642}{0}$\K{def}\ \F{linesPerEq}\,(\V{collection},\V{tot\_eq\_num})\Y{:}$
+\I{1643}{1}$\V{row\_iter}\Y{=}\F{cycleEmptyRows}\,(\V{collection},\NUM{0}{})$
+\I{1644}{1}$\V{tuple\_ret}\Y{=}()$
+\I{1645}{1}$\V{i1}\Y{=}\NUM{0}{}$
+\I{1646}{1}$\V{i2}\Y{=}\NUM{1}{}$
+\I{1647}{1}$\K{for}\ x\O{in}\V{collection}[\V{row\_iter}\Y{:}]\Y{:}$
+\I{1648}{2}$\K{if}\,\ x\Y{==}{}$\S{''}${}\Y{:}$
+\I{1649}{3}$\K{break}\ $
+\I{1650}{2}$\K{elif}\ x[\Y{-}\NUM{1}{}]\Y{==}{}$\S{'\verb*';''}${}\Y{:}$
+\I{1651}{3}$\V{i1}\Y{=}\V{i1}\Y{+}\NUM{1}{}$
+\I{1652}{3}$\V{tuple\_ret}\Y{=}\V{tuple\_ret}\Y{+}((\V{i1},\V{i2}),)$
+\I{1653}{3}$\V{i2}\Y{=}\NUM{1}{}$
+\I{1654}{2}$\K{else}\Y{:}$
+\I{1655}{3}$\V{i2}\Y{=}\V{i2}\Y{+}\NUM{1}{}$
+\I{1656}{0}$$
+\I{1657}{1}$\K{return}\ \V{tuple\_ret}$
+\I{1658}{0}$$
+\PythonOuterBlock
+A function, takes stringlines (split file) and a varlist
+and then creates a location dictionary for location of strings in file
+\PythonOuterBlockEnd
+\I{1661}{0}$\K{def}\ \F{locate}\,(\V{stringlines},\V{varlist})\Y{:}$
+\I{1662}{1}$\V{locdic}\Y{=}\{\}$
+\I{1663}{1}$\K{for}\ x\O{in}\V{varlist}\Y{:}$
+\I{1664}{2}$\V{row\_iter}\Y{=}\NUM{0}{}$
+\I{1665}{2}$\K{while}\ \V{row\_iter}<\F{len}\,(\V{stringlines})\Y{:}$
+\I{1666}{3}$\K{if}\,\ x[\NUM{0}{}]\O{in}\V{stringlines}[\V{row\_iter}]\Y{:}$
+\I{1667}{4}$\V{locdic}[x[\NUM{1}{}]]\Y{=}\V{row\_iter}$
+\I{1668}{4}$\K{break}\ $
+\I{1669}{3}$\K{else}\Y{:}$
+\I{1670}{4}$\V{row\_iter}\Y{=}\V{row\_iter}\Y{+}\NUM{1}{}$
+\I{1671}{1}$\K{return}\ \V{locdic}$
+\I{1672}{0}$$
+\PythonOuterBlock
+Function to get the nullspace of a matrix
+\PythonOuterBlockEnd
+\I{1674}{0}$\K{def}\ \F{null}\,(A,\V{eps}\Y{=}\EXP{1}{-15}{})\Y{:}$
+\I{1675}{1}$u,s,\V{vh}\Y{=}\V{LIN}.\F{svd}\,(A)$
+\I{1676}{1}$\V{null\_mask}\Y{=}(s\Y{<=}\V{eps})$
+\I{1677}{1}$\V{null\_space}\Y{=}S.\F{compress}\,(\V{null\_mask},\V{vh},\V{axis}\Y{=}\NUM{0}{})$
+\I{1678}{1}$\K{return}\ S.\F{transpose}\,(\V{null\_space})$
+\I{1679}{0}$$
+\I{1680}{1}$$
+\I{1681}{0}$$
+\I{1682}{0}$$
+\I{1683}{0}$$
+\I{1684}{0}$$
+\I{1685}{0}$$
+\I{1686}{0}$$
+\I{1687}{0}$$
+\I{1688}{0}$$

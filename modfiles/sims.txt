@@ -1,0 +1,64 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is Chris Sims' simple RBC model used to test his second order approximation code.
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Chris Sims' RBC model;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+betta     = 0.95;
+delta     = 0.0;
+alpha     = 0.3;
+rho       = 0.0;
+gamma     = 2.0;
+z_bar     = 1.0;
+sigma_eps = 1.0; 
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,hp]
+[2]  c(t):consumption{con}[log,hp]
+[3]  z(t):eps(t):productivity{exo}[log,hp]
+[4]  @y(t):output[log,hp]
+
+
+%Boundary conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  @y(t) = z(t)*k(t-1)**alpha;
+
+
+%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the non-linear FOCs in format g(x)=0
+[1]  c(t)**(-gamma)-betta*E(t)|c(t+1)**(-gamma)*...
+     (alpha*E(t)|z(t+1)*k(t)**(alpha-1)+delta) = 0;
+[2]  c(t)+k(t)-z(t)*k(t-1)**alpha-delta*k(t-1) = 0;
+[3]  LOG(E(t)|z(t+1))-rho*LOG(z(t)) = 0;
+
+
+%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+k_bar = (alpha*betta/(1-betta*delta))**(1/(1-alpha));
+c_bar = k_bar**alpha-(1-delta)*k_bar;
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_eps**2];
+
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

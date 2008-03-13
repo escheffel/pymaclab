@@ -1,0 +1,115 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is just a standard MRBC model, as you can see.
+
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = CIA Model;
+
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+z_bar   =                 1.0;
+n_bar   =                 1/3;
+l_bar   =             1-n_bar;
+nl_bar  =         n_bar/l_bar;
+alpha   =                0.36;
+delta   =               0.019;
+beta    =               0.989;
+PHI     =                 2.0;
+eta     =                 1.0;
+a       =                0.95;
+b       =              1/0.39;
+THETA   =              1.0125;
+rho_z   =                0.95;
+sigma_z =                 0.7;
+g_bar   =              1.0125;
+sigma_m =                0.89;
+rho_g   =                 0.5;
+xi      =               -0.15;
+sigma_v =    ((1-rho_g**2)*(sigma_m)**2-(xi**2/(1-rho_z**2))*sigma_z**2)**(0.5);
+
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,hp]
+[2]  m(t):money{endo}[log,hp]
+[3]  y(t):output{con}[log,hp]
+[4]  c(t):consumption{con}[log,hp]
+[5]  n(t):labour{con}[log,hp]
+[6]  lam(t):lambda{con}[log,hp]
+[7]  i(t):nom_rate{con}
+[8]  r(t):real_rate{con}
+[9]  inf(t):inflation{con}[log,hp]
+[10] inv(t):investment{con}[log,hp]
+[11] z(t):epsz(t):productivity{exo}[log,hp]
+[12] g(t):epsg(t):mgrowth{exo}[log,hp]
+
+
+%Boundary conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+None
+
+
+%Non-linear first-order conditions+++++++++++++++++++
+None
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++
+r_bar     = 1/beta;
+yk_bar    = (r_bar - 1 + delta)/alpha;
+ck_bar    = yk_bar - delta;
+nk_bar    = (yk_bar)**(1/(1-alpha));
+kn_bar    = 1/nk_bar;
+k_bar     = kn_bar*n_bar;
+c_bar     = ck_bar*k_bar;
+inf_bar   = g_bar - 1;
+nl_bar    = n_bar/(1.0 - n_bar);
+yn_bar    = yk_bar/(1.0 - n_bar);
+y_bar     = yn_bar*n_bar;
+i_bar     = r_bar*THETA;
+in_bar     = i_bar-1;
+mk_bar    = (ck_bar)*(a*i_bar/((1-a)*(1+i_bar)))**(-1/b);
+m_bar     = mk_bar*k_bar;
+mc_bar    = mk_bar/ck_bar;
+X         = a*(ck_bar**(1-b))+(1-a)*(mk_bar**(1-b));
+XX        = (PHI*a*((ck_bar)**(1-b))+(1-a)*b*((mk_bar)**(1-b)))/X;
+XM        = (1-a)*(mk_bar**(1-b))/X;
+gamma     = 1/(1+((1-a)/a)*((mc_bar)**(1-b)));
+A         = gamma*PHI+(1-gamma)*b;
+B         = (b - PHI)*(1-gamma);
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+[1]   k(t)=(1-delta)*k(t-1)+yk_bar*y(t)-ck_bar*m(t);
+[2]   y(t)=alpha*k(t-1)+(1-alpha)*n(t)+z(t);
+[3]   m(t)=m(t-1)-inf(t)+g(t);
+[4]   m(t)=c(t);
+[5]   (1+eta*nl_bar)*n(t)=y(t)+lam(t);
+[6]   ((alpha+eta*nl_bar)+alpha*(1-alpha)*yk_bar)*...
+      r(t)=alpha*(1-alpha)*yk_bar*lam(t)...
+      +alpha*yk_bar*rho_z*z(t)-alpha*yk_bar*eta*nl_bar*k(t);
+[7]   lam(t)=beta*(1-PHI)*r(t)-beta*(1-PHI)...
+      *i(t)-PHI*beta*m(t)...
+      -beta*PHI*xi*z(t)-PHI*beta*rho_g*g(t);
+[8]   delta*inv(t)=k(t)-(1-delta)*k(t-1);
+[9]   E(t)|lam(t+1)=lam(t)-r(t);
+[10]  E(t)|inf(t+1)=i(t)-r(t);
+[11]  z(t+1)=rho_z*z(t)+epsz(t+1);
+[12]  g(t+1)=rho_g*g(t)+xi*z(t)+epsg(t+1);
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+Sigma = [sigma_z**2 0;
+         0 sigma_v**2];
+
+%Minford Model Evaluation++++++++++++++++++++++++++++
+None
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++

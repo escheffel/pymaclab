@@ -1,0 +1,242 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is the model based on the paper "Money Velocity
+in an Endogenous Growth Business Cycle with Credit
+Shocks"(2007) by Benk, Gillman, Kejak.
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = CreditModel1;
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+# Labour share goods production
+alpha         = 0.6;
+# Factor Prod. goods production
+A_g           = 1.0;
+# Physical capital depreciation
+delta_k       = 0.012;
+# Human capital depreciation
+delta_h       = 0.012;
+# Leisure preference
+Psi           = 3.2;
+# Consumption Elasticity
+Theta         = 2.0;
+# Time preference
+beta          = 0.99;
+# Factor Productivity Human Production
+A_h           = 0.12;
+# Leisure Steady State
+X_bar         = 0.7;
+# Goods time steady state
+L_bar         = 0.16;
+# Human time steady state
+N_bar         = 0.14;
+# Credit time steady state
+F_bar         = 0.0008;
+# Steady State Value of a
+A_bar         = 0.224;
+# Autocorrelation good shock
+phi_z         = 0.86;
+# Autocorrelation money shock
+phi_u         = 0.93;
+# Correlation money with good shock
+phi_uz        = -0.15;
+# Correlation money with credit shock
+phi_uv        = -0.30;
+# Autocorrelation credit shock
+phi_v         = 0.93;
+# Correlation credit with good shock
+phi_vz        = 0.25;
+# Standard Deviation of iid shock good
+sigma_ez      = 2.39;
+# Standard Deviation of iid shock money
+sigma_eu      = 0.85;
+# Standard Deviation of iid shock credit
+sigma_ev      = 1.9;
+# Correlation good money
+corr_zu       = -0.03;
+# Correlation good credit
+corr_zv       = -0.24;
+# Correlation money credit
+corr_uv       = 0.85;
+# Cash proportion of consumption
+a_bar         = 0.224;
+# Credit Production parameter
+gamma         = 0.13;
+# Net Nominal Interest Rate
+IN_bar        = 0.0627;
+
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+
+[1]  k(t):capital{endo}[log,hp]
+[2]  m(t):money{endo}[log,hp]
+[3]  c(t):consumption{con}[log,hp]
+[4]  r(t):rrate{con}
+[5]  i(t):nrate{con}
+[6]  in(t):nrate_n{con}
+[7]  pi(t):inflation{con}[log,hp]
+[8]  a(t):mon_a{con}[log,hp]
+[9]  q(t):credit{con}[log,hp]
+[10] qs(t):ncredit{con}[log,hp]
+[11] l(t):lab_g{con}[log,hp]
+[12] n(t):lab_h{con}[log,hp]
+[13] x(t):leisure{con}[log,hp]
+[14] f(t):lab_c{con}[log,hp]
+[15] g(t):growth{con}[log,hp]
+[16] y(t):output{con}[log,hp]
+[17] lam(t):lambda{con}[log,hp]
+[18] mu(t):mu{con}[log,hp]
+[19] w(t):wage{con}[log,hp]
+[20] z(t):eps_z(t):productivity{exo}[log,hp]
+[21] u(t):eps_u(t):moneyg{exo}[log,hp]
+[22] v(t):eps_v(t):creditsh{exo}[log,hp]
+
+
+%Boundary conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+None
+
+
+%Non-linear first-order conditions+++++++++++++++++++
+None
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++
+# Steady State Gross Real Interest
+R_bar   = 1/beta;
+# Steady State Gross Nominal Interest
+I_bar   = 1+IN_bar;
+# Steady State Net Real Interest
+Rn_bar   = R_bar-1;
+# Steady State Net Inflation Rate
+PIN_bar  = IN_bar-Rn_bar;
+# Steady State Gross Inflation Rate
+PI_bar  = 1+PIN_bar;
+# Steady State consumption money velocity
+CM_bar   = 1/A_bar;
+# Steady State output-capital ratio
+YK_bar   = 1/(1-alpha)*(R_bar-1+delta_k);
+# Steady State consumption-capital ratio
+CK_bar   = YK_bar-delta_k;
+# Steady State consumption-capital ratio
+KC_bar   = 1/CK_bar;
+# Steady State output-consumption ratio
+YC_bar   = YK_bar/(1/CK_bar);
+# Steady State labour-capital ratio
+LK_bar   = (1/A_g)**(1/alpha)*(YK_bar)**(1/alpha);
+# Steady State output-labour ratio
+YL_bar   = YK_bar/LK_bar;
+# Steady State wage rate
+W_bar    = alpha*YL_bar;
+# Steady State leisure-consumption ratio
+XC_bar   = (1+a_bar*Rn_bar)/W_bar;
+# Steady State consumption
+C_bar    = (1/XC_bar)*X_bar;
+# Steady State capital
+K_bar    = (1/CK_bar)*C_bar;
+# Steady State output
+Y_bar    = YK_bar*K_bar;
+# Steady State consumption-normalized credit
+QS_bar   = 1-A_bar;
+# Steady State credit
+Q_bar    = QS_bar*C_bar;
+# Steady State growth rate
+G_bar    = beta*R_bar;
+# Steady State lambda
+LAM_bar  = (1/C_bar)**Theta*X_bar**(Psi*(1-Theta))/X_bar;
+# Steady State money balances
+M_bar    = A_bar*C_bar;
+# Steady State mu
+MU_bar   = IN_bar*LAM_bar;
+# Steady State Prod. Shock
+Z_bar    = 1.0;
+# Steady State Money Shock
+U_bar    = 1.0;
+# Steady State Credit Shock
+V_bar    = 1.0;
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+# foc consumption
+[1]   (1/C_bar)**Theta*X_bar**(Psi*(1-Theta))*x(t)...
+      -(1/C_bar)**Theta*X_bar**(Psi*(1-Theta))*c(t)=...
+      LAM_bar*lam(t)+A_bar*MU_bar*mu(t);
+# foc leisure
+[2]   (1-Theta)*c(t)+(Psi*(1-Theta)-1)*x(t)=lam(t)+...
+      z(t)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
+# foc human capital --> growth
+[3]   g(t)=A_h/G_bar*N_bar*n(t);
+# foc capital
+[4]   lam(t)+g(t)=E(t)|lam(t+1)+r(t);
+# foc labour goods sector
+[5]   w(t)=y(t)-l(t);
+# foc labour credit sector
+[6]   w(t)=in(t)+q(t)-f(t);
+# real rate condition
+[7]   (((1-Theta)*YC_bar*alpha-(Psi*(1-Theta)-1)*(L_bar/X_bar)*...
+      (1+(1-(1/gamma)*(A_bar/QS_bar))*YC_bar*alpha)+(1-alpha))*(1/(1-alpha))*(1/YK_bar))*r(t)=...
+      phi_z*((1-Theta)*YC_bar*alpha-(Psi*(1-Theta)-1)*(L_bar/X_bar)*(1+(1-(1/gamma)*(A_bar/QS_bar))*YC_bar*alpha)+(1-alpha)...
+      +alpha+alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1-(1/gamma)*(A_bar/QS_bar))*YC_bar-alpha*(1-Theta)*YC_bar)*z(t)...
+      +(alpha*(Psi*(1-Theta)-1)*(L_bar/X_bar)*(1+(1-(1/gamma)*(A_bar/QS_bar))*YC_bar*alpha)-alpha*(1-Theta)*YC_bar*alpha...
+      -alpha*(1-alpha)+alpha*(1-Theta)*(KC_bar-(1-alpha))+alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1-(1/gamma)*(A_bar/QS_bar))...
+      *(YC_bar*(1-alpha)-KC_bar)+alpha*(1-alpha))*k(t)...
+      +(alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1-(1/gamma)*(A_bar/QS_bar))*KC_bar*(1-delta_k)-alpha*(1-Theta)*KC_bar)*k(t-1)...
+      +alpha*phi_u*((Psi*(1-Theta)-1)*(F_bar/X_bar)*(1/gamma)*(A_bar/QS_bar))*u(t)...
+      -alpha*phi_v*((Psi*(1-Theta)-1)*(F_bar/X_bar)*(1/gamma))*v(t)...
+      +alpha*(1+(Psi*(1-Theta)-1)*(N_bar/X_bar)*(G_bar/(A_h*N_bar)))*g(t)...
+      +(alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1/gamma)*(A_bar/QS_bar)...
+      -alpha*(Psi*(1-Theta)-1)*(N_bar/X_bar)*(G_bar/(A_h*N_bar))-alpha)*r(t)...
+      +alpha*lam(t)...
+      +(alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1/gamma)*(A_bar/QS_bar))*m(t)...
+      -(alpha*(Psi*(1-Theta)-1)*(F_bar/X_bar)*(1/gamma)*(A_bar/QS_bar))*i(t);
+# Fisher Equation
+[8]   i(t)=E(t)|pi(t+1)+r(t);
+# credit production
+[9]   q(t)=v(t)+gamma*f(t)+(1-gamma)*c(t);
+# consumption-normalized credit production
+[10]  qs(t)=q(t)-c(t);
+# condition that (1-a)=q
+[11]  A_bar*a(t)=QS_bar*qs(t);
+# goods production function
+[12]  y(t)=z(t)+alpha*l(t)+(1-alpha)*k(t-1);
+# foc for money balances
+[13]  (PI_bar*G_bar/beta-I_bar)*lam(t)=...
+       I_bar*g(t)-IN_bar*r(t)+IN_bar*i(t);
+# resource constraint
+[14]  YK_bar*y(t)=CK_bar*c(t)+k(t)-(1-delta_k)*k(t-1);
+# condition between net and gross nominal interest rate
+[15]  I_bar*i(t)=IN_bar*in(t);
+# labour time share equilibrium
+[16]  X_bar*x(t)+N_bar*n(t)+L_bar*l(t)+F_bar*f(t)=0;
+# consumption money velocity
+[17]  c(t)=m(t)-a(t);
+# relation mu, lambda and net nominal interest
+[18]  in(t)=mu(t)-lam(t);
+# money supply equation
+[19]  m(t)=m(t-1)-pi(t)+u(t);
+# law motion goods shock
+[20]  z(t)=phi_z*z(t-1)+eps_z(t);
+# law motion credit shock
+[21]  v(t)=phi_v*v(t-1)+eps_v(t);
+# law motion money shock
+[22]  u(t)=phi_u*u(t-1)+eps_u(t);
+
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+None
+
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++
+none
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++

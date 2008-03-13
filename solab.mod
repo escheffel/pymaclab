@@ -1,0 +1,50 @@
+G95 module created on Fri Dec 28 12:56:56 2007 from solab.f90
+If you edit this, you'll get what you deserve.
+module-version 3
+(() () () () () () () () () () () () () () () () () () () () ())
+
+()
+
+()
+
+()
+
+()
+
+(2 'solab' 'solab' 1 ((MODULE UNKNOWN UNKNOWN UNKNOWN NONE NONE) (
+UNKNOWN 0 ()) 0 0 () () '' () ())
+3 'zsolab' 'solab' 1 ((PROCEDURE UNKNOWN MODULE-PROC DECL NONE NONE
+SUBROUTINE) (PROCEDURE 0 ()) 0 0 (4 NONE 5 NONE 6 NONE 7 NONE 8 NONE 9
+NONE 10 NONE) () '' () ())
+11 'funcg' 'solab' 1 ((PROCEDURE UNKNOWN MODULE-PROC DECL NONE NONE
+FUNCTION) (LOGICAL 4 ()) 0 0 (12 NONE 13 NONE) () '' () ())
+7 'b' '' 14 ((VARIABLE IN UNKNOWN UNKNOWN NONE NONE DIMENSION DUMMY) (
+REAL 8 ()) 0 0 () (2 EXPLICIT (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE
+(INTEGER 4 ()) 0 8 ()) (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE (
+INTEGER 4 ()) 0 8 ())) '' () ())
+6 'a' '' 14 ((VARIABLE IN UNKNOWN UNKNOWN NONE NONE DIMENSION DUMMY) (
+REAL 8 ()) 0 0 () (2 EXPLICIT (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE
+(INTEGER 4 ()) 0 8 ()) (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE (
+INTEGER 4 ()) 0 8 ())) '' () ())
+5 'p' '' 14 ((VARIABLE OUT UNKNOWN UNKNOWN NONE NONE DIMENSION DUMMY) (
+REAL 8 ()) 0 0 () (2 EXPLICIT (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE
+(INTEGER 4 ()) 0 9 ()) (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE (
+INTEGER 4 ()) 0 9 ())) '' () ())
+4 'f' '' 14 ((VARIABLE OUT UNKNOWN UNKNOWN NONE NONE DIMENSION DUMMY) (
+REAL 8 ()) 0 0 () (2 EXPLICIT (CONSTANT (INTEGER 4 ()) 0 '1') (OP (
+INTEGER 4 ()) 0 MINUS (VARIABLE (INTEGER 4 ()) 0 8 ()) (VARIABLE (
+INTEGER 4 ()) 0 9 ())) (CONSTANT (INTEGER 4 ()) 0 '1') (VARIABLE (
+INTEGER 4 ()) 0 9 ())) '' () ())
+12 'sii' '' 15 ((VARIABLE UNKNOWN UNKNOWN UNKNOWN NONE NONE DUMMY) (
+COMPLEX 8 ()) 0 0 () () '' () ())
+13 'tii' '' 15 ((VARIABLE UNKNOWN UNKNOWN UNKNOWN NONE NONE DUMMY) (
+COMPLEX 8 ()) 0 0 () () '' () ())
+10 'retco' '' 14 ((VARIABLE OUT UNKNOWN UNKNOWN NONE NONE DUMMY) (
+INTEGER 4 ()) 0 0 () () '' () ())
+9 'k' '' 14 ((VARIABLE IN UNKNOWN UNKNOWN NONE NONE DUMMY) (INTEGER 4 ())
+0 0 () () '' () ())
+8 'n' '' 14 ((VARIABLE IN UNKNOWN UNKNOWN NONE NONE DUMMY) (INTEGER 4 ())
+0 0 () () '' () ())
+)
+
+('funcg' 0 11 'zsolab' 0 3 'solab' 0 2)

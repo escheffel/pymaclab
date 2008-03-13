@@ -1,0 +1,201 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is the model based on the paper "Money Velocity
+in a Business Cycle with Credit
+Shocks"(2007) by Benk, Gillman, Kejak.
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = CreditModel2;
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+# other
+eta             = 2.0;
+# Time preference
+betta           = 0.96;
+# Physical capital depreciation
+delta         = 0.025;
+# Gross Steady State Money Growth Rate;
+Theta            = 1.0125;;
+# Labour share goods production
+alpha         = 0.6;
+# Credit prod param 1
+gamma1        = 0.1;
+# Credit prod param 2
+gamma2        = 0.1;
+# Credit prod param
+gam           = 1-gamma1-gamma2;
+# Factor Prod. goods production
+A_g           = 1.0;
+# Factor Prod. goods production
+A_f           = 1.0;
+# Leisure Steady State
+x_bar         = 0.7;
+# Autocorrelation good shock
+phi_z         = 0.90;
+# Autocorrelation money shock
+phi_u         = 0.65;
+# Correlation money with good shock
+phi_uz        = 0.02;
+# Correlation money with credit shock
+phi_uv        = 0.10;
+# Autocorrelation credit shock
+phi_v         = 0.40;
+# Correlation credit with good shock
+phi_vz        = 0.80;
+# Standard Deviation of iid shock good
+sigma_ez      = 0.02;
+# Standard Deviation of iid shock money
+sigma_eu      = 0.04;
+# Standard Deviation of iid shock credit
+sigma_ev      = 0.05;
+# Correlation good money
+corr_zu       = -0.03;
+# Correlation good credit
+corr_zv       = -0.24;
+# Correlation money credit
+corr_uv       = 0.01;
+# ss prod
+z_bar        = 1.0;
+# ss money
+u_bar        = 1.0;
+# ss credshock
+v_bar        = 1.0;
+
+sf_bar       = 0.008;
+lf_bar       = 0.0008;
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+
+[1]  k(t):capital{endo}[log,hp]
+[2]  m(t):money{endo}[log,hp]
+[3]  c(t):consumption{con}[log,hp]
+[4]  x(t):leisure{con}[log,hp]
+[4]  lam(t):lambda{con}[log,hp]
+[7]  lamf1(t):lambdaf1{con}[log,hp]
+[6]  Inf(t):inflation{con}[log,hp]
+[7]  I(t):gnrate{con}
+[6]  d(t):deposit{con}[log,hp]
+# [8]  lf(t):labourf{con}[log,hp]
+# [9]  sf(t):capf{con}[log,hp]
+[18] z(t):epsz(t):productivity{exo}[log,hp]
+[19] u(t):epsu(t):moneyg{exo}[log,hp]
+[20] v(t):epsv(t):creditsh{exo}[log,hp]
+[22] @E(t)|R(t+1):grrate
+[23] @f(t):credit[log,hp]
+[43] @y(t):output[log,hp]
+[34] @inv(t):investment[log,hp]
+[23] @mvel(t):monvel[log,hp]
+
+
+%Boundary conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+[1]  @U1(t) = c(t)**(-eta)*x(t)**(Psi*(1-eta));
+[2]  @U2(t) = Psi*c(t)**(1-eta)*x(t)**(Psi*(1-eta)-1);
+[4]  @lg(t) = 1-x(t)-lf_bar;
+[5]  @E(t)|lg(t+1) = 1-E(t)|x(t+1)-lf_bar;
+[4]  @sg(t) = 1-sf_bar;
+[5]  @E(t)|sg(t+1) = 1-sf_bar;
+[1]  @w(t) = (1-alpha)*z(t)*A_g*(@sg(t)*k(t-1))**alpha*@lg(t)**(-alpha);
+[2]  @rk(t) = alpha*z(t)*A_g*(@sg(t)*k(t-1))**(alpha-1)*@lg(t)**(1-alpha);
+[3]  @E(t)|rk(t+1) = alpha*E(t)|z(t+1)*A_g*(@E(t)|sg(t+1)*k(t))**(alpha-1)*@E(t)|lg(t+1)**(1-alpha);
+[6]  @R(t) = 1+@rk(t)-delta;
+[6]  @E(t)|R(t+1) = 1+@E(t)|rk(t+1)-delta;
+[5]  @y(t) = z(t)*A_g*(@sg(t)*k(t-1))**alpha*@lg(t)**(1-alpha);
+#[6]  @f(t) = v(t)*A_f*(sf_bar*k(t-1))**gamma1*lf_bar**gamma2*d(t)**gam;
+[6]  @f(t) = (v(t)*A_f)*(1/gam)*(I(t)-1)**((gamma1+gamma2)/gam)*(gamma1/@R(t))**(gamma1/gam)*(gamma2/@w(t))**(gamma2/gam)*d(t);
+[6]  @inv(t) = k(t)-(1-delta)*k(t-1);
+[6]  @mvel(t) = c(t)/m(t);
+
+
+
+%Non-linear first-order conditions+++++++++++++++++++
+
+# Consumption FOC
+[1]  @U1(t)-lam(t)*I(t) = 0;
+# Leisure FOC
+[2]  @U2(t)-lam(t)*@w(t) = 0;
+# Capital FOC
+[3]  betta*E(t)|lam(t+1)*@E(t)|R(t+1)-lam(t) = 0;
+# resource constraint
+[5]  @y(t)-c(t)-k(t)+(1-delta)*k(t-1) = 0;
+# capital market equil.
+# [6]  alpha*@y(t)/@sg(t)-gamma1*(I(t)-1)*@f(t)/sf_bar = 0;
+# labour market equil.
+# [6]  (1-alpha)*@y(t)/@lg(t)-gamma2*(I(t)-1)*@f(t)/lf(t) = 0;
+# Fisher
+[6]  @E(t)|R(t+1)-E(t)|I(t+1)/E(t)|Inf(t+1) = 0;
+# exchange constraint
+[6]  m(t)+@f(t)-c(t) = 0;
+# deposits constraint
+[7]  d(t)-c(t) = 0;
+# forward lambda
+[8]  lamf1(t) - E(t)|lam(t+1) = 0;
+# money evolution
+[6]  m(t)-(Theta+u(t)-1)*m(t-1)/Inf(t) = 0;
+# prod. shock
+[7]  LOG(E(t)|z(t+1))-phi_z*LOG(z(t)) = 0;
+# money shock
+[8]  LOG(E(t)|u(t+1))-phi_u*LOG(u(t)) = 0;
+# credit shock
+[9]  LOG(E(t)|v(t+1))-phi_v*LOG(v(t)) = 0;
+
+
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++
+Inf_bar = Theta;
+sg_bar = 1-sf_bar;
+lg_bar = 1-lf_bar-x_bar;
+R_bar = 1/betta;
+r_bar = R_bar - 1;
+I_bar = R_bar*Inf_bar;
+i_bar = I_bar - 1;
+rk_bar = r_bar+delta;
+yk_bar = (1/alpha)*rk_bar*sg_bar;
+ky_bar = 1/yk_bar;
+lg_o_k = yk_bar**(1/(1-alpha))*A_g**(-1/(1-alpha))*sg_bar**(-alpha/(1-alpha));
+k_o_lg = 1/lg_o_k;
+k_bar = k_o_lg*lg_bar;
+y_bar = A_g*(sg_bar*k_bar)*alpha*lg_bar**(1-alpha);
+inv_bar = delta*k_bar;
+c_bar = y_bar-inv_bar;
+w_bar = (1-alpha)*y_bar/lg_bar;
+f_bar = A_f*(sf_bar*k_bar)**gamma1*lf_bar**gamma2*c_bar*gam;
+m_bar = c_bar - f_bar;
+Psi  = ROOT(Psi*c_bar**(1-eta)*x_bar**(Psi*(1-eta)-1)-c_bar**(-eta)*x_bar**(Psi*(1-eta))/I_bar*w_bar,Psi=1.0,fail=3.2);
+lam_bar = c_bar**(-eta)*x_bar**(Psi*(1-eta))/I_bar;
+lamf1_bar = lam_bar;
+mu_bar = lam_bar*i_bar;
+is_bar = i_bar*gam*f_bar/c_bar;
+Is_bar = 1+is_bar;
+ssep   = i_bar-is_bar;
+mvel_bar = c_bar/m_bar;
+d_bar = c_bar-f_bar;
+
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+None
+
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+Sigma = [sigma_ez 0  0;
+         0   sigma_eu  0;
+         0  0  sigma_ev];
+
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++
+none
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++

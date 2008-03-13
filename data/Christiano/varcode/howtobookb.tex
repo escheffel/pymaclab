@@ -1,0 +1,938 @@
+
+\documentclass{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+%TCIDATA{OutputFilter=LATEX.DLL}
+%TCIDATA{Created=Fri Apr 02 13:03:44 1999}
+%TCIDATA{LastRevised=Thu Sep 21 12:25:18 2000}
+%TCIDATA{<META NAME="GraphicsSave" CONTENT="32">}
+%TCIDATA{<META NAME="DocumentShell" CONTENT="General\Blank Document">}
+%TCIDATA{Language=American English}
+%TCIDATA{CSTFile=LaTeX article (bright).cst}
+
+\input {tcilatex}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{-.5in}
+\setlength{\textheight}{9in}
+
+\begin{document}
+
+
+\noindent {\LARGE How to Estimate Structural Vector Autoregressions\ using
+Matlab}
+
+{\Large by Robert Vigfusson\footnote{{\Large My email address is
+r-vigfusson@nwu.edu. Updates to these programs will be made available on my
+webpage htttp://pubweb.nwu.edu/\symbol{126}rjv541. }}}
+
+{\large May 10, 1999}
+
+\bigskip
+
+I have written a set of Matlab M-files to estimate structural vector
+autoregressions (VAR). This note describes how to use these files.
+
+Each of the following sections is divided into two subsections: Theory and
+Matlab Code . The theory is a condensed description of the main concepts of
+structural VARs. The descriptions borrow heavily from Christiano, Eichenbaum
+and Evans (1998) Handbook chapter and Hamilton (1994)'s time series text.%
+\footnote{%
+One therefore should see these two sources for a more complete treatment. Of
+course, comments on how to improve the exposition here are welcome.} The
+Matlab Code subsection should give the user enough information to use the
+procedures for his own work. \ At the end of the paper, I give examples of
+how to estimate specific structural VARs using the functions described here.
+
+The sections are the following
+
+\begin{itemize}
+\item  \qquad\ Set up and Estimation of Reduced Form VAR
+
+\item  \qquad Fundamental Shocks and The Structural VAR
+
+\item  \qquad Impulse Responses
+
+\item  \qquad Constructing Confidence Intervals for Impulse Responses
+
+\item  \qquad Variance Decomposition
+
+\item  \qquad Examples
+\end{itemize}
+
+\textbf{Software Requirements} These programs require Matlab 5.
+Non-recursive estimation requires the optimization toolbox. The current code
+is written for optimization toolbox version 1.5. 
+
+\section{Set up and Estimation of Reduced Form VAR}
+
+\subsection{Theory}
+
+The basic building block is a vector time series $Z_{t}$ with $nvars$
+elements (variables). The vector $Z_{t}$ evolves over time according to:.
+
+\begin{equation*}
+Z_{t}=B_{0}+B_{1}Z_{t-1}+B_{2}Z_{t-2}+...+B_{q}Z_{t-q}+u_{t}
+\end{equation*}
+where $Eu_{t}u_{t}^{\prime }=V.$ The vector $u_{t}$ is assumed to be
+uncorrelated with past values of $Z_{t}.$
+
+Estimation of the VAR's coefficients $\left\{ B_{j}\right\} _{j=0}^{q}$ can
+be done equation by equation by OLS. The matrix $V$ can be estimated from
+the sample residuals $\left( 1/T\right) \sum \hat{u}_{t}\hat{u}_{t}^{\prime
+} $.
+
+\subsection{Matlab Code}
+
+The first step is to prepare the data. In a spreadsheet or statistical
+program, enter the data such that each column is a variable and each row is
+an observation. There should be no missing observations. Save this file to
+an ascii text file. In order that Matlab can read the file, each row should
+have the same number of entries. Also, do not include variable names with
+the data -- just numbers. (I'll assume the file is named \emph{datrep.txt.) }%
+Next start Matlab and enter the following two commands. (Of course, this can
+be done in a script m-file.) 
+\begin{equation*}
+\text{\texttt{load datrep.txt}}
+\end{equation*}
+\begin{equation*}
+\text{\texttt{data = datrep;}}
+\end{equation*}
+
+The next step is to define a variable for the number of lags in the VAR. If
+the number of lags $q$ is 4 then we define
+
+\begin{equation*}
+\text{nlags \ }\mathtt{=4;}
+\end{equation*}
+
+By default, the program includes a constant in the VAR. If the VAR\ doesn't
+have a constant then define a variable $hascon$ and set it equal to zero.
+
+\begin{equation*}
+\text{\texttt{hascon}}=0
+\end{equation*}
+If $hascon$ is set equal to one, then a constant is included in the VAR.
+
+The next line estimates the VAR. The syntax is
+
+\begin{equation*}
+\text{\texttt{\lbrack betaz,sigma,residuals]}}=\text{\texttt{%
+estimatevar(data,nlags,hascon);}}
+\end{equation*}
+
+The procedure \texttt{estimatevar} returns three variables. The first $\
+betaz$ is the coefficients of the VAR. The second $sigma$ is the variance
+covariance matrix. The third \ $residuals$ is a matrix of the residuals from
+the VAR. The $residuals$ are organized the same way as the data matrix is
+organized. Each column is a variable and each row is an observation.
+
+The matrix $betaz$ has $nvars$ rows and $nlags$ times $nvars$+$hascon$
+columns. When a constant is included, the first column is the constant.
+Columns two to $nvars+1$ are the estimated coefficients for the variables $%
+Z_{t-1}$. The next $nvars$ columns would be the estimated \ coefficients for
+the $Z_{t-2}.$Without a constant, the first nvars columns are the estimated
+coefficients for the variables $Z_{t-1}.$
+
+For a 2 variable (bivariate) VAR with 3 lags, $betaz$ would equal 
+\begin{equation*}
+\text{betaz}=\left[ 
+\begin{array}{cccc}
+B_{0} & B_{1} & B_{2} & B_{3}
+\end{array}
+\right]
+\end{equation*}
+where $B_{j}$ is defined above.
+
+The procedure is written with a default to include a constant. Therefore one
+does not have to include the $hascon$ variable if you want to estimate the
+VAR\ with a constant. 
+\begin{equation*}
+\text{\texttt{\lbrack betaz,sigma]=estimatevar(data,nlags);}}
+\end{equation*}
+
+\subparagraph{General Notes on Using Matlab}
+
+The position and value of a variable and not its name is what is important
+when using a Matlab function. For example, $nlags$, the number of lags, was
+used in the \texttt{estimatevar} command. 
+\begin{equation*}
+\text{\texttt{\lbrack betaz,sigma]=estimatevar(data,nlags);}}
+\end{equation*}
+The value and not the name, however, is what is important. If $nlags$ were
+equal to four then 
+\begin{equation*}
+\mathtt{\lbrack betaz,sigma]=estimatevar(data,4);}
+\end{equation*}
+would produce exactly the same output. I define the variable $nlags$ as I
+use it in subsequent procedures.
+
+Another thing to keep in mind is that one can use the command\texttt{\ help}
+to find out more about a function in Matlab. For example \texttt{help min }$%
+\ $\ will give instructions on how to use Matlab's \texttt{min }command. The
+commands described here also have help comments. For example 
+\begin{equation*}
+\text{\texttt{help estimatevar}}
+\end{equation*}
+returns
+\begin{verbatim}
+ESTIMATEVAR Estimates a Vector Autoregression.
+ [Beta,Sigma,UZ]=ESTIMATEVAR(DATA,nlags,hasconstant);
+ Finds coefficients estimates BETA, variance covariance matrix SIGMA, and residuals UZ
+ that are the results of estimate by OLS a VAR on the matrix DATA.
+ The matrix DATA has each row being an observations
+ from all the variables. NLAGS is the number of lags.
+ HASCONSTANT is equal to one for a VAR with a constant and equal to zero otherwise.
+\end{verbatim}
+
+\section{Fundamental Shocks and The Structural VAR}
+
+\subsection{Theory}
+
+The next step is to calculate the structural matrix $A_{0}$. The values of $%
+u_{t}$ are not the standard structural shocks. Instead we assume that the
+relationship between the VAR disturbances $u_{t}$ and the fundamental
+economic shocks $\varepsilon _{t}$ is given by
+
+\begin{equation*}
+A_{o}u_{t}=\varepsilon _{t}
+\end{equation*}
+
+\begin{eqnarray*}
+A_{o}Z_{t}
+&=&A_{o}B_{1}Z_{t-1}+A_{o}B_{2}Z_{t-2}+...+A_{o}B_{q}Z_{t-q}+A_{o}u_{t} \\
+&=&A_{o}B_{1}Z_{t-1}+A_{o}B_{2}Z_{t-2}+...+A_{o}B_{q}Z_{t-q}+\varepsilon _{t}
+\end{eqnarray*}
+
+We need to know the value of $A_{o}$ in order to calculate impulse responses
+and variance decompositions. To find a unique $A_{o}$\ however requires
+further assumptions. Many matrices might solve the equation
+
+\begin{equation*}
+A_{o}^{-1}\left( A_{o}^{\prime }\right) ^{-1}=V
+\end{equation*}
+
+In general one can choose between two different approaches. The simpler and
+more common is the recursiveness assumption. One implements this assumption
+by defining the matrix $A_{o}^{-1}$ to be the lower Cholesky decomposition
+of $V.$
+
+The other approach is to not to assume recursiveness but rather assume that
+enough entries are zero or otherwise constrained that only a unique $A_{o}$
+solves the above equation and satisfies these further assumptions. However
+the uniqueness of this $A_{o}$ can be difficult to establish.
+
+\subsection{Matlab Code}
+
+\subsubsection{$A_{0}$ with the Recursive Assumption}
+
+Finding the value of $A_{0}$ is much easier with the recursiveness
+assumption than with the non-recursiveness assumptions. Recursiveness is
+straightforward. We just define $A_{0}$ to be
+
+\begin{equation*}
+\text{\texttt{a0}}=\text{\texttt{inv(chol(sigma)');}}
+\end{equation*}
+
+The transpose operator is necessary since Matlab's \texttt{chol }command
+creates an upper rather than lower triangular matrix. The inverse is used in
+order to define $A_{0}$ rather than $A_{0}^{-1}.$
+
+\subsubsection{$A_{0}$ without the Recursive Assumption}
+
+Non-recursiveness is not as straightforward. \ The matrix $A_{0}$ is found
+as the matrix that maximize the likelihood function (Hamilton p. 332)
+
+\begin{equation*}
+L\left( A_{o},V\right) =-\frac{T}{2}\log \left( 2\pi \right) +\frac{T}{2}%
+\log \left| A_{o}\right| ^{2}-\frac{T}{2}\text{trace}(A_{o}VA_{o}^{\prime })
+\end{equation*}
+
+The solution is found by using the constrained minimization routine \texttt{%
+constr}\footnote{%
+The computer solves the maximization problem by minimizing $-1\ast
+L(A_{0},V).$}. I use \texttt{constr} rather than \texttt{fminu} in order to
+impose the constraint that the diagonal elements of $A_{o}$ are non-negative%
+\footnote{%
+A user who understands the constr function could add additional constraints
+by modifying the matlab function that calculates the likelihood and the
+constraints.}.
+
+To estimate the matrix $A_{o}$, the user must write two functions. The first
+function forms the desired matrix $A_{o}$ from a vector of parameters $x$.
+The second function generates a vector $x$ of starting values that satisfy
+the constraints placed on $A_{0}.$ This vector $x$ will be used as starting
+values in the numerical optimization procedure.
+
+An example of the first function that creates the $A_{o}$ matrix of Sims and
+Zha is below.
+\begin{verbatim}
+function [azero]=mkmatrix(x);
+x=x';
+azero=[x(1:7); 0 x(8:9) 0 -x(8) 0 -x(8); x(10:12)zeros(1,4); x(13) . . .
+zeros(1,2) x(14:17);x(18) zeros(1,3) x(19:21) ;x(22) zeros(1,4) x(23:24);x(25) ...
+zeros(1,5) x(26)];
+\end{verbatim}
+
+This function creates a matrix that looks like
+
+\begin{equation*}
+A= 
+\begin{array}{ccccccc}
+x(1) & x(2) & x(3) & x(4) & x(5) & x(6) & x(7) \\ 
+0 & x(8) & x(9) & 0 & -x(8) & 0 & -x(8) \\ 
+x(10) & x(11) & x(12) & 0 & 0 & 0 & 0 \\ 
+x(13) & 0 & 0 & x(14) & x(15) & x(16) & x(17) \\ 
+x(18) & 0 & 0 & 0 & x(19) & x(20) & x(21) \\ 
+x(22) & 0 & 0 & 0 & 0 & x(23) & x(24) \\ 
+x(25) & 0 & 0 & 0 & 0 & 0 & x(26)
+\end{array}
+\end{equation*}
+
+The second function creates a vector $x$ that will be used as the initial
+guess to the maximization routine. An example for the Sims Zha matrix is
+below:
+
+\texttt{function avec = mkstart}
+
+\%Generate Random Starting Values
+
+\texttt{avec=2*randn(26,1); \%random starting values}
+
+\texttt{\%making the diagonal elements non-negative}
+
+\texttt{avec([1 8 12 14 19 23 26]) = abs(avec([1 8 12 14 19 23 26]));}
+
+Numerical Maximization can be difficult. Common problems include failing to
+converge or converging at a local rather than a global maximum. To overcome
+these problems, I recommend to estimate the matrix $A_{0}$ many times using
+random starting values and then choose the estimate with the greatest
+likelihood value. The procedure \texttt{estnonreca} implements this
+strategy. Given the variance covariance matrix $sigma$ and the user supplied
+procedures \texttt{mkmatrix} and \texttt{mkstart} supplied above, \texttt{%
+estnonreca} estimates the $A_{0}$ matrix $numtries$ times and returns the
+best estimate out of the set\textbf{. \ }
+
+\begin{equation*}
+\mathtt{a0best=estnonreca(sigma,numtries,\prime mkmatrix\prime ,\prime
+mkstart\prime )}
+\end{equation*}
+
+\section{Impulse Responses}
+
+\subsection{Theory}
+
+Having found the $A_{0}$ matrix, the next step is to calculate the impulse
+responses to a fundamental shock. The basic idea is the following. Suppose
+that the VAR has the following form.
+
+\begin{equation*}
+Z_{t}=B_{1}Z_{t-1}+B_{2}Z_{t-2}+...+B_{q}Z_{t-q}+A_{o}^{-1}\varepsilon _{t}
+\end{equation*}
+
+We suppose that the $j-th$ fundamental errors take on the value one while
+the other fundamental errors are set equal to zero. The impulse response is
+how the variables in the VAR respond to this shock. The impulse response in
+the first period is 
+\begin{equation*}
+\Gamma _{j}(1)=A_{o}^{-1}e_{j}
+\end{equation*}
+where the j-th element of $e_{j}$ is equal to one and all other elements are
+zero. The vector $\Gamma _{j}(1)$ has length $nvars$ with the same ordering
+as $Z_{t}.$ The second period impulse response is
+
+\begin{equation*}
+\Gamma _{j}(2)=B_{1}A_{o}^{-1}e_{j}
+\end{equation*}
+
+The third is
+
+\begin{equation*}
+\Gamma _{j}(3)=B_{1}B_{1}A_{o}^{-1}e_{j}+B_{2}A_{o}^{-1}e_{j}
+\end{equation*}
+
+Note that if the matrix $A_{o}$ were the identity matrix, then the impulse
+response functions for all shocks would be the moving average representation
+of the VAR.
+
+\subsection{Matlab Code}
+
+The Matlab syntax for calculating the impulse response function is the
+following. Define a variable that determines which error term will receive
+the shock. Define another variable for how many periods to calculate the
+impulse responses.
+
+\begin{eqnarray*}
+\text{errshk} &=&\text{4;} \\
+\text{nstep} &=&\text{15;}
+\end{eqnarray*}
+
+The next step calls the procedure that actually calculate the impulse
+responses. The procedure returns a $nstep$ by $nvars$ matrix with each
+column corresponding to a variable in the original VAR and each row by the
+period.
+
+\begin{equation*}
+\text{impzmat = mkimprep(betaz,a0,nlags,errshk,nstep);}
+\end{equation*}
+
+After discussing confidence intervals, I will describe how to plot these
+impulse responses.
+
+\section{Constructing Confidence Intervals for Impulse Responses}
+
+The procedures use simulation to calculate the confidence intervals around
+the impulse response functions. \ These confidence intervals are pointwise
+confidence intervals.
+
+The procedure \texttt{mkimpci }constructs the confidence interval with the
+following steps. The first step is to generate the artificial data under the
+null hypothesis that the estimated model correctly represents the data. The
+artificial data is created by using the estimated coefficients for $beta$
+along with error terms. These error terms can be generated using either of
+two possible methods: Bootstrap or Monte Carlo. For the Bootstrap method,
+the error terms are generated by sampling randomly with replacement from the
+residuals of the original vector autoregression. (Note that the $nvars$
+residuals for a single time period are chosen together.) For the Monte Carlo
+method, the error terms are generated by multiplying random vectors drawn
+from a N(0,I) distribution by $A_{o}^{-1}$.
+
+Having generated the artificial data, the next step is to estimate a VAR on
+this data. Using the estimated variance covariance matrix, estimate a new $%
+A_{0}$ matrix. The impulse response is calculated using these new estimates$%
+. $ These impulse responses are then stored in memory.\footnote{%
+If memory constraints were a problem, the impulse responses could be stored
+to disk instead. This would require\ a modification of the \texttt{mkimpci}
+procedure.}
+
+The above steps are repeated many times to generate a large sample of
+impulse responses. The procedure then calculates the confidence intervals
+using two different methods. The first uses $\alpha $ and $1-\alpha $
+percentile values of the sample for the lower and upper bounds. The second
+relies on the normal approximation and calculates the confidence intervals
+as two times the square root of the sample variance around the estimated
+impulse response function.
+
+\subsection{Matlab code}
+
+Before calling the mkimpci procedure three variables need to be defined. The
+first variable $ndraws$ defines how many simulations to use in constructing
+the confidence intervals. The second variable $nobs$ defines how many
+observations each simulated time series should have. Typically this is taken
+to be the number of observations in the actual data. (To eliminate the
+effects of initial conditions, the procedure generates $2nobs$ observations
+and then uses only the last $nobs$ of data.) The third variable $pctg$ gives
+the value of $\alpha $ to be used in constructing the confidence intervals.
+
+\begin{eqnarray*}
+\text{pctg} &=&0.05; \\
+\text{ndraws} &=&100 \\
+\text{nobs} &=&120;
+\end{eqnarray*}
+
+\subsubsection{Recursive}
+
+The confidence intervals are constructed by calling the procedure \texttt{%
+mkimpci}. The first five input variables are the same as the \texttt{mkimprep%
+}'s inputs.\ These are followed by the three defined above. The procedure
+returns the percentile lower and upper bounds first, followed by the upper
+and lower standard deviation bounds, and finally the sample variance of the
+impulse responses. Each matrix is organized the same way as the impulse
+responses (variables columns, periods rows).
+
+\begin{equation*}
+\text{\lbrack cilmc,ciumc,cilvarm,ciuvarm,varm]}=\text{%
+mkimpci(betaz,a0,nlags,errshk,nstep,ndraws,nobs,pctg);}
+\end{equation*}
+
+This first call will calculate the confidence intervals based upon the Monte
+Carlo simulated data. If the matrix of residuals from the \texttt{estimatevar%
+} command is included as an input then the function calculates the
+confidence intervals based upon the Boot Strapped simulated data.
+
+\begin{equation*}
+\text{\lbrack
+cilbt,ciubt,cilvarb,ciuvarb,varb]=mkimpci(betaz,a0,nlags,errshk,nstep,ndraws,nobs,pctg,residuals);%
+}
+\end{equation*}
+
+\subsubsection{Non-recursive}
+
+The non-recursive system is identical except that the four additional
+parameters from the \texttt{estnonreca} procedure are also included as
+inputs. In practice, one may want to use a much smaller value of $numtries$
+for the confidence intervals than the one used in the \texttt{estnonreca}
+procedure. Using the same number of $numtries$ would be time consuming; as
+one would be making $ndraws\ast numtries$ maximization attempts.
+
+To get Monte-Carlo-based confidence intervals pass an empty matrix [] for
+the $residuals$.
+
+\begin{eqnarray*}
+\text{\lbrack cilmc,ciumc,cilvar,ciuvar,var]} &=&\text{%
+mkimpci(betaz,a0,nlags,errshk,nstep, ...} \\
+&&\text{ndraws,nobs,pctg,[],sigma,numtries,'mkmatrix','mkstart');}
+\end{eqnarray*}
+
+\begin{eqnarray*}
+\text{\lbrack cilbt,ciubt,cilvar,ciuvar,var]} &=&\text{%
+mkimpci(betaz,a0,nlags,errshk,nstep,...} \\
+&&\text{ndraws,nobs,pctg,residuals,sigma,numtries,'mkmatrix','mkstart');}
+\end{eqnarray*}
+
+Note that the procedure calls should be one line, however, in order to fit
+the page I put in a line break.
+
+\subsection{Making Plots In Matlab with An Application to Confidence
+Intervals}
+
+Matlab graphics can be very basic and easy to make. To plot the first series
+in data just type 
+\begin{equation*}
+\text{plot(data(:,1))}
+\end{equation*}
+A new figure window that contains the plot of the first column of data will
+appear. This graph however is somewhat plain.
+
+\begin{center}
+\begin{tabular}{c}
+A Plain Graph \\ 
+\FRAME{itbpF}{3.0096in}{2.3947in}{0in}{}{}{plain.eps}{\special{language
+"Scientific Word";type "GRAPHIC";maintain-aspect-ratio TRUE;display
+"USEDEF";valid_file "F";width 3.0096in;height 2.3947in;depth
+0in;original-width 6.6271in;original-height 5.2607in;cropleft "0";croptop
+"1";cropright "1";cropbottom "0";filename 'plain.eps';file-properties
+"NPEU";}}
+\end{tabular}
+\end{center}
+
+I have included a series of commands below that will make a graph that looks
+like this
+
+\begin{center}
+\begin{tabular}{c}
+A More Interesting Graph \\ 
+\FRAME{itbpF}{3.0536in}{2.4898in}{0in}{}{}{fig1.eps}{\special{language
+"Scientific Word";type "GRAPHIC";maintain-aspect-ratio TRUE;display
+"USEDEF";valid_file "F";width 3.0536in;height 2.4898in;depth
+0in;original-width 6.7239in;original-height 5.4691in;cropleft "0";croptop
+"1";cropright "1";cropbottom "0";filename 'fig1.eps';file-properties "NPEU";}%
+}
+\end{tabular}
+\end{center}
+
+This first step is to create a vector of series names. Using the Matlab
+command \texttt{char, we} will create a series vector $varnames$ 
+\begin{equation*}
+\text{\texttt{varnames=char('Y','P','PCOM','FF','TOTR','NBR','M');}}
+\end{equation*}
+
+The next command \texttt{figure} creates a fresh graphics window. 
+\begin{equation*}
+\text{\texttt{figure}}
+\end{equation*}
+
+The next command \texttt{for} begins the loop 
+\begin{equation*}
+\text{\texttt{for zr = 1:4; }}
+\end{equation*}
+
+The next command \texttt{subplot} divides the page into pieces with 2 rows
+and 2 columns. The third argument tells Matlab where to put the current
+graph. 
+\begin{equation*}
+\text{\texttt{subplot(2,2,zr)}}
+\end{equation*}
+
+The next command \texttt{hold on} causes the \texttt{plot} command to put
+one plot on top of another without erasing the other plots. 
+\begin{equation*}
+\text{\texttt{hold on}}
+\end{equation*}
+
+The next two lines plot the confidence intervals and the impulse response
+for the $zr$ variable. The third line just sets the axis limits to the range
+of the data. 
+\begin{eqnarray*}
+\text{\texttt{plot([100*cilvarb(}} &:&\text{\texttt{%
+,zr)100*ciuvarb(:,zr)100*impzmat(:,zr)]);}} \\
+\text{\texttt{plot([100*cilb(}} &:&\text{\texttt{,zr)100*ciub(:,zr)],'x-');}}
+\\
+&&\text{axis tight}
+\end{eqnarray*}
+
+The \texttt{title} command creates a title. The variable $varnames$ is used
+to label the graph. 
+\begin{equation*}
+\text{\texttt{title(['Response by' varnames(zr,:)]);}}
+\end{equation*}
+
+The end command ends the loop. 
+\begin{equation*}
+\text{end;}
+\end{equation*}
+
+The final command suptitle is not a built in Matlab function but is included
+with the VAR programs\footnote{%
+The program \texttt{suptitle} was written by Drea Thomas of Mathworks.}. .
+This function \texttt{suptitle} puts a title above the subplots. 
+\begin{equation*}
+\text{\texttt{suptitle('Shock to Fed Funds')}}
+\end{equation*}
+
+The Matlab manuals describes how to make graphs in much more detail.
+
+\section{Variance Decomposition}
+
+The variance decomposition is concerned with identifying the error in
+forecasting a VAR $s$ periods into the future.
+
+\begin{equation*}
+Z_{t+s}-Z_{t+s|s}=u_{t+s}+\Psi _{1}u_{t+s-1}+\Psi _{2}u_{t+s-2}+...+\Psi
+_{s-1}u_{t+1}
+\end{equation*}
+where $\Psi _{j}$ are the moving average coefficients and $Z_{t+s|s}$ is the
+forecast at time $t$ of the value of $Z_{t+s}.$
+
+The mean square error of the $s$-period forecast error is therefore
+
+\begin{equation*}
+\text{MSE}\left( Z_{t+s|s}\right) =V+\Psi _{1}V\Psi _{1}^{\prime }+\Psi
+_{2}V\Psi _{2}^{\prime }+...+\Psi _{s-1}V\Psi _{s-1}^{\prime }
+\end{equation*}
+
+We are interested in knowing how much does each of the fundamental errors
+contributes to this error term.
+
+\begin{equation*}
+Z_{t+s}-Z_{t+s|s}=A_{o}^{-1}\varepsilon _{t+s}+\Psi
+_{1}A_{o}^{-1}\varepsilon _{t+s-1}+\Psi _{2}A_{o}^{-1}\varepsilon
+_{t+s-2}+...+\Psi _{s-1}A_{o}^{-1}\varepsilon _{t+1}
+\end{equation*}
+
+Define $a_{j}$ to be the jth column of $A_{o}^{-1}$ then since $%
+A_{o}^{-1}A_{o}^{-1\prime }$ equals V we can decompose the MSE as 
+\begin{equation*}
+\text{MSE}\left( Z_{t+s|s}\right) =\sum a_{j}a_{j}^{\prime }+\Psi
+_{1}a_{j}a_{j}^{\prime }\Psi _{1}^{\prime }+\Psi _{2}a_{j}a_{j}^{\prime
+}\Psi _{2}^{\prime }+...+\Psi _{s-1}a_{j}a_{j}^{\prime }\Psi _{s-1}^{\prime }
+\end{equation*}
+so the contribution of any one shock can be defined as 
+\begin{equation*}
+a_{j}a_{j}^{\prime }+\Psi _{1}a_{j}a_{j}^{\prime }\Psi _{1}^{\prime }+\Psi
+_{2}a_{j}a_{j}^{\prime }\Psi _{2}^{\prime }+...+\Psi
+_{s-1}a_{j}a_{j}^{\prime }\Psi _{s-1}^{\prime }
+\end{equation*}
+
+The percentage of the $s$-period ahead forecast error explained by a
+particular shock can be easier to interpret\textbf{. \ }So for the
+confidence intervals we will calculate.
+
+\begin{equation*}
+100\ast \frac{a_{j}a_{j}^{\prime }+\Psi _{1}a_{j}a_{j}^{\prime }\Psi
+_{1}^{\prime }+\Psi _{2}a_{j}a_{j}^{\prime }\Psi _{2}^{\prime }+...+\Psi
+_{s-1}a_{j}a_{j}^{\prime }\Psi _{s-1}^{\prime }}{\text{MSE}\left(
+Z_{t+s|s}\right) }
+\end{equation*}
+
+\subsection{Matlab Code}
+
+This code consists of two procedures. The first \texttt{vardecomp}
+calculates the mean squared error and one error shock's contribution to the
+mean squared error. The second \texttt{mkvdci } calculates a confidence
+interval of the percentage contribution to the MSE.
+
+The \texttt{vardecomp} procedure has the same inputs as the impulse response
+function \texttt{mkimprep} has:. the VAR coefficients, the factorization of
+the variance covariance matrix, the number of lags in the VAR, the choice of
+error term, and the number of forecast period steps. The vardecomp procedure
+returns two matrices. Both matrices $ms$ and msdec are a three dimensional
+matrix. with dimensions $nvars$ by $nvars$ by $nstep$. The value $ms(j,k,s)$
+is the $s$-period forecast covariance of the $j$-th and $k$-th elements of $%
+Z_{t+s}.$ The value of $msdecomp(j,k,s)$ is how much the $errshk$-th
+fundamental error contributes to the value of $ms(j,k,s)$. The procedure
+call is
+
+\begin{equation*}
+\text{\lbrack ms,msdec]}=\text{vardecomp(betaz,a0,nlags,errshk,nstep);}
+\end{equation*}
+
+\subsubsection{Confidence Intervals}
+
+Constructing confidence intervals for the variance decomposition is
+identical to how they are constructed for the impulse responses. The only
+difference is that the main procedure is \texttt{mkvdci} rather than \texttt{%
+mkimpci} and the returns are different. Each gives the percentage of
+variance explained by the $errshk$. The returns are three dimensional
+matrices. with dimensions $nvars$ by $nvars$ by $nstep.$
+
+\paragraph{Recursive}
+
+Monte Carlo
+
+\begin{equation*}
+\text{\lbrack vdcilmc,vdciumc,vdcilvarmc,vdciuvarmc,vdvarmc]}=\text{%
+mkvdci(betaz,a0,nlags,errshk,nstep,ndraws,nobs,pctg);}
+\end{equation*}
+
+Bootstrap
+
+\begin{equation*}
+\text{\lbrack
+vdcilbt,vdciubt,vdcilvarbt,vdciuvarbt,vdvarbt]=mkvdci(betaz,a0,nlags,errshk,nstep,ndraws,nobs,pctg,residuals);%
+}
+\end{equation*}
+
+\paragraph{Non-recursive}
+
+Monte Carlo
+
+\begin{eqnarray*}
+\text{\lbrack vdcilmc,vdciumc,vdcilvarmc,vdciuvarmc,vdvarmc]} &=&\text{%
+mkvdci(betaz,a0,nlags,errshk,nstep, ...} \\
+&&\text{ndraws,nobs,pctg,[],sigma}{\tiny ,}\mathtt{numtries,\prime
+mkmatrix\prime ,\prime mkstart\prime }\text{)};
+\end{eqnarray*}
+
+Bootstrap
+
+\begin{eqnarray*}
+\text{\lbrack vdcilbt,vdciubt,vdcilvarbt,vdciuvarbt,vdvarbt] } &=&\text{
+mkvdci(betaz,a0,nlags,errshk,nstep, ...} \\
+&&\text{ndraws,nobs,pctg,residuals,}\mathtt{sigma,numtries,\prime
+mkmatrix\prime ,\prime mkstart\prime }\text{);}
+\end{eqnarray*}
+
+\section{Examples}
+
+\subsection{Recursive example}
+
+We want to estimate a model with 7 variables with 4 lags. The data has
+already been prepared. We are interested in the impulse response to the
+fourth shock. and want to have the 5 and 95\% confidence intervals. We also
+want to create the first column of Table 3 which shows the Variance
+Decomposition.
+\begin{verbatim}
+load datrep;
+data=datrep;
+%('Y','P','PCOM','FF','TOTR','NBR','M');
+ 
+nlags  = 4;
+hasconst = 1;
+ 
+[betaz,sigma,residuals]=estimatevar(data,nlags,hasconst);
+ 
+a0rec=inv(chol(sigma)');
+ 
+errshk = 4;
+nstep = 15;
+ 
+impzmat=mkimprep(betaz,a0rec,nlags,errshk,nstep);
+pctg=0.05;
+ndraws=100;
+nobs=120;
+%[cilmc,ciumc,cilvar,ciuvar,var]=mkimpci(betaz,a0rec,nlags,errshk,nstep,ndraws,nobs,pctg);
+[cilb,ciub,cilvarb,ciuvarb,varb]=mkimpci(betaz,a0rec,nlags,errshk,nstep,ndraws,...
+nobs,pctg,residuals);
+ 
+[mse,msedecomp]=vardecomp(betaz,a0rec,nlags,errshk,nstep);
+ 
+vdpctg = msedecomp./mse;
+ 
+[cilvd,ciuvd,cilvarbv,ciuvarbv,varbv]=mkvdci(betaz,a0rec,nlags,errshk,nstep,ndraws,nobs,pctg,residuals);
+kstep = [2 4 8 12];
+ 
+for zk=1:4;
+   lowci(:,zk) = diag(squeeze(cilvd(:,:,kstep(zk))));
+   lowvar(:,zk) = diag(squeeze(cilvarbv(:,:,kstep(zk))));
+ 
+table(:,zk) = diag(squeeze(vdpctg(:,:,kstep(zk))));
+highci(:,zk) = diag(squeeze(ciuvd(:,:,kstep(zk))));
+highvar(:,zk) = diag(squeeze(ciuvarbv(:,:,kstep(zk))));
+ 
+end;
+ 
+%The first column of Table 3 from CEE
+100*[lowci(:,1) table(:,1) highci(:,1)]
+ 
+varnames=char('Y','P','PCOM','FF','TOTR','NBR','M');
+ 
+figure
+for zr=1:4;
+   subplot(2,2,zr)
+   hold on
+   plot([ 100*cilvarb(:,zr) 100*ciuvarb(:,zr) 100*impzmat(:,zr)]);
+   plot([100*cilb(:,zr) 100*ciub(:,zr)],'x-');
+   title(['Response by ' varnames(zr,:)]);
+   axis tight
+end;
+ 
+suptitle('Shock to Fed Funds')
+figure
+for zr=5:7;
+   subplot(2,2,zr-4)
+   hold on
+      plot([ 100*cilvarb(:,zr) 100*ciuvarb(:,zr) 100*impzmat(:,zr)]);
+   plot([100*cilb(:,zr) 100*ciub(:,zr)],'x-');
+   title(['Response by ' varnames(zr,:)]);
+   axis tight
+end;
+suptitle('Shock to Fed Funds')
+ 
+\end{verbatim}
+
+The result is the following impulse responses.
+
+\begin{tabular}{cc}
+\FRAME{itbpF}{2.7172in}{2.2157in}{0in}{}{}{fig1.eps}{\special{language
+"Scientific Word";type "GRAPHIC";maintain-aspect-ratio TRUE;display
+"USEDEF";valid_file "F";width 2.7172in;height 2.2157in;depth
+0in;original-width 6.7239in;original-height 5.4691in;cropleft "0";croptop
+"1";cropright "1";cropbottom "0";filename 'fig1.eps';file-properties "NPEU";}%
+} & \FRAME{itbpF}{2.7172in}{2.2157in}{0in}{}{}{fig2.eps}{\special{language
+"Scientific Word";type "GRAPHIC";maintain-aspect-ratio TRUE;display
+"USEDEF";valid_file "F";width 2.7172in;height 2.2157in;depth
+0in;original-width 6.7239in;original-height 5.4691in;cropleft "0";croptop
+"1";cropright "1";cropbottom "0";filename 'fig2.eps';file-properties "NPEU";}%
+}
+\end{tabular}
+
+{\Large Modification}. Change the ordering with the first variable being
+interchanged with the fifth and the sixth variable being interchanged with
+the seventh. This is very easy to do in Matlab. Replace the line \texttt{%
+data=datrep; }with the line \texttt{data=datrep(:,[5 2 3 4 1 7 6];}. Nothing
+else in the program needs to be modified. Of course, the results will be
+different.
+
+{\Large Modification}: Suppose we wanted to interchange the third and fourth
+variables but were still interested in following the effects of the shock to
+what is currently the fourth shock. First replace \texttt{data=datrep; }with
+the line \texttt{data=datrep(:,[1:2 4 3 5:7]);}. Second the line \texttt{%
+errshk = 4}; needs to be changed to \texttt{errshk = 3;}. Again that is all.
+
+{\Large Modification }Only using a subperiod of the data. Suppose instead of
+using the 1+nlags to nobs observations you only wanted to use a subset of
+the data from say abeg to aend. As long as abeg is greater than or equal to
+1+ $nlags$ and aend is less than or equal to $nobs$ then this modification
+can be again made at the data statement. \ Insert the line \texttt{%
+data=datrep(abeg-nlags:aend,:);}
+
+{\Large Modification }Only using a subset of the variables. want to exclude
+the 2nd and the 6th variables Set \texttt{data=datrep(:,[1 3 4 5 7]); Change
+errshk = 3.}
+
+\subsubsection{Nonrecursive example}
+
+We now estimate the Sims Zha model described in CEE. Keep in mind that
+nonrecursive models take much much longer to estimate than recursive models.
+This program assumes that you have created the two files \texttt{mksimzha}
+and \texttt{svsz} to create the $A_{0}$ matrix and the starting values. A
+listingof these two files is below the current file.
+
+{\Large nonrecmain.m}
+
+\texttt{load c:\TEXTsymbol{\backslash}robswork\TEXTsymbol{\backslash}%
+identeich\TEXTsymbol{\backslash}szdat\_dm.dat;}
+
+\texttt{data=szdat\_dm;}
+
+\texttt{data(:,1)=data(:,1)./sqrt(10.0); }
+
+\texttt{nl = 4;}
+
+\texttt{[bz,sig,rz]=estimatevar(data,nl);}
+
+\texttt{a0=estnonreca(sig,20,'mksimzha','svsz')}
+
+\texttt{eshk=3;}
+
+\texttt{nstp = 15;}
+
+\texttt{\ }
+
+\texttt{\ }
+
+\texttt{\ impz=mkimprep(bz,a0,nl,eshk,nstp);}
+
+\texttt{pc=0.05;}
+
+\texttt{nd=10; \%should be more like a 100}
+
+\texttt{nb=120;}
+
+\texttt{%
+[lp,up,lv,uv]=mkimpci2(bz,a0,nl,eshk,nstp,nd,nb,pc,rz,sig,3,'mksimzha','svsz');%
+}
+
+\texttt{[mse,msed]=vardecomp(bz,a0,nl,eshk,nstp);}
+
+\texttt{vdpctg = msed./mse;}
+
+\texttt{%
+[vlp,vup,vlv,vuv]=mkvdci(bz,a0,nl,eshk,nstp,nd,nb,pc,rz,sig,3,'mksimzha','svsz');%
+}
+
+\texttt{kstep = [2 4 8 12];}
+
+\texttt{for zk=1:4;}
+
+\texttt{\ lowci(:,zk) = diag(squeeze(vlp(:,:,kstep(zk))));}
+
+\texttt{\ lowvar(:,zk) = diag(squeeze(vlv(:,:,kstep(zk))));}
+
+\texttt{table(:,zk) = diag(squeeze(vdpctg(:,:,kstep(zk))));}
+
+\texttt{highci(:,zk) = diag(squeeze(vup(:,:,kstep(zk))));}
+
+\texttt{highvar(:,zk) = diag(squeeze(vuv(:,:,kstep(zk))));}
+
+\texttt{end;}
+
+\texttt{\ }
+
+\texttt{\ }
+
+\texttt{varnames=char('Y','P','PCOM','FF','TOTR','NBR','M');}
+
+\texttt{for zr=1:7;}
+
+\texttt{\ subplot(4,2,zr)}
+
+\texttt{\ hold on}
+
+\texttt{\ plot([impz(:,zr) cilb(:,zr) ciub(:,zr)],'.');}
+
+\texttt{\ \% title(['Response by ' varnames(zr,:)]); }
+
+\texttt{\ axis tight}
+
+\texttt{end;}
+
+\bigskip
+
+\bigskip
+
+{\Large mksimzha.m}
+
+function [azero]=mksimzha(x);
+
+x=x';
+
+azero=[x(1:7); 0 x(8:9) -x(8) 0 -x(8) 0; x(10:12)zeros(1,4); x(13)
+zeros(1,2) x(14:17);...
+
+x(18) zeros(1,3) x(19:21) ;x(22) zeros(1,4) x(23:24);x(25) zeros(1,5) x(26)];
+
+\bigskip
+
+{\Large svsz.m}
+
+function avec=svsz;
+
+avec=2*randn(26,1);
+
+avec([1 8 12 14 19 23 26]) = abs(avec([1 8 12 14 19 23 26]));
+
+\end{document}

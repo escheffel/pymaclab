@@ -1,0 +1,67 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is just a standard RBC model, as you can see.
+
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = RBC2 Model;
+
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+rho                              = 0.95;
+delta                            = 0.025;
+betta                            = 0.99;
+alpha                            = 0.4;
+sigma                            = 2.0;
+z_bar                            = 1.0;
+sigma_eps                        = 0.712; 
+
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,hp]
+[2]  c(t):consumption{con}[log,hp]
+[3]  z(t):eps(t):productivity{exo}[log,hp]
+
+
+%Boundary conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+None
+
+
+%Non-linear first-order conditions+++++++++++++++++++
+None
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++
+k_bar = ((1/alpha)*((1/betta)-1+delta))**(1/(alpha-1));
+y_bar = k_bar**alpha;
+c_bar = y_bar-delta*k_bar;
+ky_bar = k_bar/y_bar;
+cy_bar = c_bar/y_bar;
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+[1]   -sigma*c(t)=-sigma*E(t)|c(t+1)+...
+      (1-betta*(1-delta))*(alpha-1)*k(t)...
+      +(1-betta*(1-delta))*E(t)|z(t+1);
+[2]   z(t)+(alpha+(1-delta)*ky_bar)*k(t-1)...
+      -cy_bar*c(t)=ky_bar*k(t);
+[3]   z(t+1)=rho*z(t)+eps(t+1);
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+Sigma = [sigma_eps**2];
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++
+None
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+MACLAB=/home/escheffel/workspace
+LD_LIBRARY_PATH=/home/escheffel/workspace/pymaclab/libs
+export MACLAB
+export LD_LIBRARY_PATH
+
+cd /home/escheffel/workspace/pymaclab
+ipython -pylab -wthread -nobanner

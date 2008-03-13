@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ipython $MACLAB/mac_ipython.py

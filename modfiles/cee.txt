@@ -1,0 +1,267 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is the canonical Christian, Evans and Eichenbaum NK model.
+
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = CEE New Keynesian model;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Policy parameter on Inflation in Taylor Rule
+alpha_Pi                = 1.125;
+# Policy parameter on output gap in Taylor Rule 
+alpha_y                 = -0.0625;
+# Policy paremeter in interest in Taylor Rule
+alpha_r                 = 0.0;
+# Interest Rate Rule param current
+crule                   = 1.0;
+# Interest Rate Rule param backward
+brule                   = 0.0;
+# Interest Rate Rule param forward
+frule                   = 0.0;
+# steady state labour demand
+hd_bar                  = 1.0;
+# steady state capital utilisation
+u_bar                   = 1.0;
+# subjective discount factor
+betta                   = 1.03**(-(1/4));
+# share of capital in value added
+Theta                   = 0.36;
+# Fixed Cost parameter
+Psi                     = 0.5827;
+# Depreciation Rate
+delta                   = 0.025;
+# fraction of wage bill subject to CIA constraint
+nu                      = 1.0;
+# price-elasticity of demand for a specific good variety
+eta                     = 6.0;
+# wage-elasticity of demand for a specific labour variety
+etatil                  = 21.0;
+# fraction of firms NOT able to reset prices optimally each period
+alpha                   = 0.6;
+# fraction of labour markets NOT able to reset wages optimally each period
+alphatil                = 0.64;
+# Inflation target
+pai_star                = 1.042**(1/4);
+# Steady State Inflation
+pai_bar                 = pai_star;
+# Degree of habit formation
+B                       = 0.65;
+# Money demand parameter
+sigmam                  = 10.62;
+# Preference parameter money in utility function
+phi_1                   = 0.5392564909446074;
+# Cost of capital utilisation
+gama2_o_gama1           = 0.01;
+# Capital adjustment cost
+kappa                   = 2.48;
+# degree of indexation
+chi                     = 1.0;
+# degree of wage indexation
+chitil                  = 1.0;
+# steady state share of government expenditure in gdp
+sg                      = 0.18;
+# steady state technology
+z_bar                   = 1.0;
+# Tobin's q
+qq_bar                  = 1.0;
+# Parameter scaling standard deviations of exog shocks
+siga                    = 0.1797;
+# serial correlation of technology shock
+rho_z                   = 0.979;
+# serial correlation of government consumption shock
+rho_g                   = 0.96;
+# standard deviation of innovation on technology shock
+sigma_z                 = 0.0072;
+# standard deviation of innovation on government consumption shock
+sigma_g                 = 0.02;
+
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  z(t):eps_z(t):techshock{exo}[log,hp]
+[2]  qq(t):tobinq{con}[log,hp]
+[3]  r(t):nrate{con}
+[4]  s(t):distoy{endo}[log,hp]
+[5]  hd(t):labdemand{con}[log,hp]
+[6]  stil(t):distoh{endo}[log,hp]
+[7]  k(t):aggcap{endo}[log,hp]
+[8]  output(t):output{con}[log,hp]
+[17] iv(t):investment{con}[log,hp]
+[2]  w(t):rwage{con}[log,hp]
+[9]  g(t):eps_g(t):govspending{exo}[log,hp]
+[10] c(t):consumption{con}[log,hp]
+[11] la(t):marutilc{con}[log,hp]
+[12] pai(t):inflation{con}[log,hp]
+[13] u(t):caputil{con}[log,hp]
+[14] f2(t):prec2{con}[log,hp]
+[15] x2(t):wrec2{con}[log,hp]
+
+
+%Boundary conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  @pf(t) = z(t)*(u(t)*k(t-1))**Theta*hd(t)**(1-Theta)-Pssi;
+[2]  @E(t)|pf(t+1) = E(t)|z(t+1)*(E(t)|u(t+1)*k(t))**Theta*E(t)|hd(t+1)**(1-Theta)-Pssi;
+[3]  @a(t) = gama1*(u(t)-1)+gama2/2*(u(t)-1)**2;
+[4]  @E(t)|a(t+1) = gama1*(E(t)|u(t+1)-1)+gama2/2*(E(t)|u(t+1)-1)**2;
+[7]  @qiv(t) = iv(t)*(1-kappa/2*(iv(t)/iv(t-1)-1)**2);
+[8]  @d1qiv(t) = @qiv(t)/iv(t)-kappa*(iv(t)/iv(t-1)-1)*iv(t)/iv(t-1);
+[9]  @E(t)|d2qiv(t+1) = (E(t)|iv(t+1)/iv(t))**2*kappa*(E(t)|iv(t+1)/iv(t)-1);
+[10] @rk(t) = gama1+gama2*(u(t)-1);
+[11] @E(t)|rk(t+1) = gama1+gama2*(E(t)|u(t+1)-1);
+[12] @mh(t) = ((la(t)-betta*E(t)|la(t+1)/E(t)|pai(t+1))/phi1)**(-1/sigmam);
+[13] @mc(t) = @rk(t)/(z(t)*Theta*(u(t)*k(t-1)/hd(t))**(Theta-1));
+[14] @E(t)|mc(t+1) = @E(t)|rk(t+1)/(E(t)|z(t+1)*Theta*(E(t)|u(t+1)*k(t)/E(t)|hd(t+1))**(Theta-1));
+[17] @ptil(t) = ((1-alpha*pai(t)**(eta-1)*pai(t-1)**(chi*(1-eta)))/(1-alpha))**(1/(1-eta));
+[18] @E(t)|ptil(t+1) = ((1-alpha*E(t)|pai(t+1)**(eta-1)*pai(t)**(chi*(1-eta)))/(1-alpha))**(1/(1-eta));
+[19] @x1(t) = (eta-1)/eta*x2(t);
+[20] @E(t)|x1(t+1) = (eta-1)/eta*E(t)|x2(t+1);
+[21] @wtil(t) = ((w(t)**(1-etatil)-alphatil*w(t-1)**(1-etatil)*(pai(t-1)**chitil/pai(t))**(1-etatil))/(1-alphatil))**(1/(1-etatil));
+[22] @E(t)|wtil(t+1) = ((E(t)|w(t+1)**(1-etatil)-alphatil*w(t)**(1-etatil)*(pai(t)**chitil/E(t)|pai(t+1))**(1-etatil))/(1-alphatil))**(1/(1-etatil));
+[23] @htil(t) = (@wtil(t)/w(t))**(-etatil)*hd(t);
+[24] @E(t)|htil(t+1) = (@E(t)|wtil(t+1)/E(t)|w(t+1))**(-etatil)*E(t)|hd(t+1);
+[25] @h(t) = stil(t)*hd(t);
+[26] @mutil(t) = la(t)*w(t)/(phi0*@h(t));
+[27] @f1(t) = -etatil*f2(t)/((1-etatil)*@wtil(t));
+[28] @E(t)|f1(t+1) = -etatil*E(t)|f2(t+1)/((1-etatil)*@E(t)|wtil(t+1));
+
+
+
+%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# def investment
+[1]  iv(t)-output(t)+c(t)+g(t)+@a(t)*k(t-1) = 0;
+# wage rate
+[1] w(t)-@mc(t)*z(t)*(1-Theta)*(u(t)*k(t-1)/hd(t))**(Theta)/(1+nu*(r(t)-1)/r(t)) = 0;
+# investment foc ?
+[1] (1-delta)*k(t-1)-k(t)+@qiv(t) = 0;
+# foc consumption
+[2] 1/(c(t)-B*c(t-1))-betta*B/(E(t)|c(t+1)-B*c(t))-la(t) = 0;
+# foc capital ?
+[3] -la(t)*qq(t)+betta*E(t)|la(t+1)*(@E(t)|rk(t+1)*E(t)|u(t+1)-@E(t)|a(t+1)+E(t)|qq(t+1)*(1-delta)) = 0;
+# foc capital util?
+[4] -la(t)+la(t)*qq(t)*@d1qiv(t)+betta*E(t)|la(t+1)*E(t)|qq(t+1)*@E(t)|d2qiv(t+1) = 0;
+# definition of f1 ?
+[5] -@f1(t)+la(t)*@htil(t)+alphatil*betta*...
+     (E(t)|pai(t+1)/pai(t)**chitil)**(etatil-1)*@E(t)|f1(t+1)*(@E(t)|wtil(t+1)/@wtil(t))**etatil = 0;
+# definition of f2 ?
+[6] -f2(t)+la(t)/@mutil(t)*w(t)**(1+etatil)*hd(t)/@wtil(t)**etatil+alphatil*betta*...
+     (E(t)|pai(t+1)/pai(t)**chitil)**etatil*E(t)|f2(t+1)*(@E(t)|wtil(t+1)/@wtil(t))**etatil = 0;
+# Interest Rate Rule
+[7] -LOG(r(t)/r_bar)+alpha_r*LOG(r(t-1)/r_bar)+...
+     crule*(alpha_Pi*LOG(pai(t)/pai_bar)+alpha_y*LOG(output(t)/output_bar))+...
+     brule*(alpha_Pi*LOG(pai(t-1)/pai_bar)+alpha_y*LOG(output(t-1)/output_bar))+...
+     frule*(alpha_Pi*LOG(E(t)|pai(t+1)/pai_bar)+alpha_y*LOG(E(t)|output(t+1)/output_bar)) = 0;
+# Euler equation
+[8] -la(t)+betta*r(t)*E(t)|la(t+1)/E(t)|pai(t+1) = 0;
+# x1 recursion
+[9] -@x1(t)+output(t)*@mc(t)*@ptil(t)**(-eta-1)+alpha*betta*E(t)|la(t+1)/la(t)*...
+     (@ptil(t)/@E(t)|ptil(t+1))**(-eta-1)*(pai(t)**chi/E(t)|pai(t+1))**(-eta)*@E(t)|x1(t+1) = 0;
+# x2 recursion
+[10] -x2(t)+output(t)*@ptil(t)**(-eta)+alpha*betta*E(t)|la(t+1)/la(t)*...
+     (pai(t)**chi/E(t)|pai(t+1))**(1-eta)*(@ptil(t)/@E(t)|ptil(t+1))**(-eta)*E(t)|x2(t+1) = 0;
+# Resource constraint
+[11] -@pf(t)+output(t)*s(t) = 0;
+# s distortion recursion
+[12] -s(t)+(1-alpha)*@ptil(t)**(-eta)+alpha*(pai(t)/pai(t-1)**chi)**eta*s(t-1) = 0;
+# stil recursion
+[13] -stil(t)+(1-alphatil)*(@wtil(t)/w(t))**(-etatil)+alphatil*...
+     (w(t-1)/w(t))**(-etatil)*(pai(t)/pai(t-1)**chitil)**etatil*stil(t-1) = 0;
+# government purchase law of motion (shock)
+[14] LOG(E(t)|g(t+1)/g_bar)-rho_g*LOG(g(t)/g_bar) = 0;
+# technology shock evolution
+[15] LOG(E(t)|z(t+1))-rho_z*LOG(z(t)) = 0;
+
+
+%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+
+%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Steady State Gross Real Interest Rate
+rr_bar         = 1/betta;
+# Steady State Gross Nominal Interest Rate
+r_bar          = pai_bar/betta;
+# Steady State Relative Price of optimizing firms
+ptil_bar       = ((1-alpha*pai_bar**((eta-1)*(1-chi)))/(1-alpha))**(1/(1-eta));
+# wtil over w
+wtil_o_w       = ((1-alphatil*pai_bar**((chitil-1)*(1-etatil)))/(1-alphatil))**(1/(1-etatil));
+# Steady State rental rate (pure return) in capital
+rk_bar         = (1/betta-1+delta)*qq_bar;
+# Steady State inverse of wage markup
+mutil_bar      = (etatil/(etatil-1))*((1-alphatil*betta*pai_bar**((1-chitil)*(etatil-1)))/...
+                 (1-alphatil*betta*pai_bar**((1-chitil)*etatil)))*(1/wtil_o_w);
+# Steady State marginal cost of producing a unit of final good
+mc_bar         = ptil_bar*(eta-1)*(1-alpha*betta*pai_bar**(eta*(1-chi)))/...
+                 (eta*(1-alpha*betta*pai_bar**((chi-1)*(1-eta))));
+# steady state distortion between output and total production
+s_bar          = ((1-alpha)*ptil_bar**(-eta))/(1-alpha*pai_bar**((1-chi)*eta));
+# ss hours supplied by those who can reset wage this period
+htil_bar       = wtil_o_w**(-etatil);
+#  ss distortion between hours supplied and hours used as factor input
+stil_bar       = (1-alphatil)*wtil_o_w**(-etatil)/(1-alphatil*pai_star**((1-chitil)*etatil));
+# parameter of the cost of utilization function a(u)=gama1*(u-1)+gama2/2(u-1)**2
+gama1          = rk_bar;
+# parameter of the cost of utilization function
+gama2          = gama2_o_gama1*gama1;
+# steady state aggregate capital input factor
+k_bar          = (rk_bar/mc_bar/Theta)**(1/(Theta-1));
+# steady state number of hours supplied (more than this actually used at firm level)
+h_bar          = stil_bar;
+# steady state investment
+iv_bar         = delta*k_bar;
+# steady state real average wage
+w_bar          = mc_bar*(1-Theta)*k_bar**Theta/(1+nu*(1-1/r_bar));
+# Steady state wage charged by optimizing unions
+wtil_bar       = wtil_o_w*w_bar;
+# Steady state fixed cost
+Pssi           = k_bar**Theta-s_bar*(rk_bar*k_bar+mc_bar*(1-Theta)*k_bar**Theta);
+# Steady state output (aggregate demand = c + i + g)
+output_bar     = (k_bar**Theta-Pssi)/s_bar;
+# Steady state consumption (one should subtract a(u)k, but this is zero)
+c_bar          = output_bar*(1-sg)-iv_bar;
+# Steady state government consumption
+g_bar          = sg*output_bar;
+# Steady state marginal utility of income
+la_bar         = (1-B*betta)/c_bar /(1-B);
+# preference parameter, weight on h_t**2 in util function
+phi0           = la_bar*w_bar/h_bar/mutil_bar;
+# preference parameter, weight on money in util function
+phi1           = 0.5392564909446074;
+# steady state of real balances held by households
+mh_bar         = (la_bar*(1-betta/pai_bar)/phi1)**(-1/sigmam);
+# steady state of wage recursion parameter f1
+f1_bar         = (la_bar*wtil_bar**etatil*htil_bar/...
+                 (1-alphatil*betta*pai_bar**((1-chitil)*(etatil-1))))/wtil_bar**etatil;
+# steady state of wage recursion parameter f2
+f2_bar         = (etatil-1)/etatil*wtil_bar*f1_bar;
+# steady state of price recursion parameter x2
+x2_bar         = output_bar*ptil_bar**(-eta)/(1-alpha*betta*pai_bar**((chi-1)*(1-eta)));
+# steady state of price recursion parameter x1
+x1_bar         = (eta-1)/eta*x2_bar;
+# Steady state utility
+uf             = LOG(c_bar*(1-B))-phi0/2*h_bar**2+phi1*mh_bar**(1-sigmam)/(1-sigmam);
+# Steady state value function
+vf             = uf/(1-betta);
+# Steady state exp of value function
+vf_exp         = EXP(vf);
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_z 0;
+         0 sigma_g];
+
+
+%Minford Model Evaluation++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

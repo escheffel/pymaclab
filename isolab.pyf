@@ -1,0 +1,20 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module isolab ! in 
+    interface  ! in :isolab
+        subroutine isolab(g,q,x,y,m,l,retcon) ! in :isolab:isolab.f90
+            use solab
+            real(kind=8) dimension(m-l,l),intent(out),depend(m,l,l) :: g
+            real(kind=8) dimension(l,l),intent(out),depend(l,l) :: q
+            real(kind=8) dimension(m,m),intent(in) :: x
+            real(kind=8) dimension(m,m),intent(in),depend(m,m) :: y
+            integer optional,intent(in),check(shape(x,0)==m),depend(x) :: m=shape(x,0)
+            integer intent(in) :: l
+            integer retcon
+        end subroutine isolab
+    end interface 
+end python module isolab
+
+! This file was auto-generated with f2py (version:2_4422).
+! See http://cens.ioc.ee/projects/f2py2e/

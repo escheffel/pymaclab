@@ -1,0 +1,57 @@
+\documentclass[a4paper,11pt]{article}
+\title{RBC1}
+\author{Eric Scheffel}
+\begin{document}
+
+\maketitle
+
+
+The problem is set up as a social planner's problem in the following way:
+
+\begin{eqnarray*}
+L & = & E_0\sum_{t=0}^\infty\beta^t\left\lbrace\frac{c_t^{\left(1-\eta\right)}}{1-\eta}\right\rbrace\\
+  & + & \lambda_t\left[{z_t}{k_t}^\rho-c_t+\left(1-\delta\right)k_t-k_{t+1}\right]
+\end{eqnarray*}
+The shock process is given by:
+\[z_{t+1}=\bar{z}^{1-\psi}z_t^\psi\epsilon_{t+1}\]
+Market equilibrium requires:
+\[{z_t}{k_t}^\rho = c_t+k_{t+1}-\left(1-\delta\right)k_t\]
+which is just a repetition of the budget constraint.
+The first order conditions to this problem are:
+\[
+c_t^{-\eta}=\lambda_t;
+\]
+\[
+\beta E_t\lambda_{t+1}\left[z_{t+1}\rho k_{t+1}^{\rho-1}+\left(1-\delta\right)\right]=\lambda_t;
+\]
+But using the following definition for the gross real interest rate:
+\[
+R_t=z_t\rho k_t^{\rho-1}+\left(1-\delta\right)
+\]
+and recalling market equilibrium and the error process, the whole system is equal to:
+\begin{equation}
+{z_t}{k_t}^\rho-c_t-k_{t+1}+\left(1-\delta\right)k_t=0;
+\end{equation}
+which is market equilibrium
+\begin{equation}
+z_t\rho k_t^{\rho-1}+\left(1-\delta\right)-R_t=0;
+\end{equation}
+which is the definition of the gross real interest rate
+\begin{equation}
+c_t^\eta\beta E_t c_{t+1}^{-\eta}R_{t+1}-1=0;
+\end{equation}
+which is the consumption Euler equation
+\begin{equation}
+{z_t}{k_t}^\rho-y_t=0;
+\end{equation}
+which is the definition for output
+\begin{equation}
+\bar{z}^{1-\psi}z_t^\psi\epsilon_{t+1}-z_{t+1}=0;
+\end{equation}
+which is the shock process. Notice that the steady state is numerically
+calculated according to the following system
+\[\bar{z}\bar{k}^\rho-\bar{c}-\delta \bar{k}=0;\]
+\[\bar{z}\rho\bar{k}^{\rho-1}+\left(1-\delta\right)-\bar{R}=0;\]
+\[\beta\bar{R}-1=0;\]
+\[\bar{z}\bar{k}^\rho-\bar{y}=0;\]
+\end{document}

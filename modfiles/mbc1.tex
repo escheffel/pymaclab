@@ -1,0 +1,66 @@
+\documentclass[a4paper,11pt]{article}
+\title{Monetary Business Cycle Model}
+\author{Eric Scheffel}
+\begin{document}
+
+\maketitle
+
+
+The problem is set up as a social planner's problem in the following way:
+
+\begin{eqnarray*}
+L & = & E_0\sum_{t=0}^\infty\beta^t\Biggl\lbrace\frac{\left[c_t\left(1-l_t\right)^A\right]^{\left(1-\eta\right)}}{1-\eta}\\
+  & + & \lambda_t\Bigl[w_tl_t+r_t^Kk_{t-1}+\left(1-\delta\right)k_{t-1}+\frac{1}{1-\pi_t}m_{t-1}+\frac{1+i_t}{1-\pi_t}b_{t-1}\\
+  &   & -m_t-b_t-c_t-k_t\Bigr]\\
+  & + & \Bigl[\frac{1}{1+\pi_t}m_{t-1}+\tau_t-c_t\Bigr]\Biggr\rbrace
+\end{eqnarray*}
+The first-order conditions to this problem are as follows:
+\begin{eqnarray*}
+c_t: & & c_t^{-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)}-\lambda_t-\mu_t = 0;\\
+l_t: & & Ac_t^{1-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)-1}-\lambda_tw_t = 0;\\
+k_t: & & \beta\lambda_{t+1}\left(r_{t+1}^K+1-\delta\right)-\lambda_t = 0;\\
+m_t: & & \frac{\beta\lambda_{t+1}}{1+\pi_{t+1}}+\frac{\beta\mu_{t+1}}{1+\pi_{t+1}}-\lambda_t = 0;\\
+b_t: & & \beta\frac{1+i_{t+1}}{1+\pi_{t+1}}-\lambda_t = 0;
+\end{eqnarray*}
+Notice that the FOCs for capital,money and bonds, imply the following:
+\[\frac{\lambda\left(1+\pi_{t+1}\right)}{\beta\lambda_{t+1}}=1+\frac{\mu_{t+1}}{\lambda_{t+1}}=1+i_{t+1}=\left(1+r_{t+1}^K-\delta\right)\left(1+\pi_{t+1}\right)\]
+or
+\[1+\frac{\mu_{t+1}}{\lambda_{t+1}}=1+i_{t+1}=\left(1+r_{t+1}\right)\left(1+\pi_{t+1}\right)\]
+which is a Fisher equation type relationship. Also, this means that the money and bond FOCs are really only helpful
+in deriving this Fisherian relationship. We can re-write the FOCs as follows:
+\[c_t^{-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)}-\lambda_t\left(1+r_t\right)\left(1+\pi_t\right) = 0;\]
+\[Ac_t^{1-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)-1}-\lambda_tw_t = 0;\]
+\[\beta\lambda_{t+1}\left(r_{t+1}^K+1-\delta\right)-\lambda_t = 0;\]
+or, using gross rates and eliminating consumption, using money:
+\[m_t^{-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)}-\lambda_tR_t\Pi_t = 0;\]
+\[Am_t^{1-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)-1}-\lambda_tw_t = 0;\]
+\[\beta\lambda_{t+1}R_{t+1}-\lambda_t = 0;\]
+We can therefore write down the following non-linear system of equations:
+\begin{equation}
+z_tk_t^{\rho}l_t^{1-\rho}-m_{t+1}-k_{t+1}+\left(1-\delta\right)k_t = 0;
+\end{equation}
+\begin{equation}
+\frac{1-l_t}{Ac_t}-\frac{R_t\Pi_t}{w_t} = 0;
+\end{equation}
+\begin{equation}
+\frac{U_{1,t}}{R_t\Pi_t}-\frac{E_tU_{1,t+1}}{E_t\Pi_{t+1}} = 0;
+\end{equation}
+where we have that:
+\[U_{1,t} = m_{t+1}^{-\eta}\left(1-l_t\right)^{A\left(1-\eta\right)}\]
+\[E_tU_{1,t+1} = \left[E_tm_{t+2}\right]^{-\eta}\left(1-E_tl_{t+1}\right)^{A\left(1-\eta\right)};\]
+\[E_tm_{t+2} = \left(1+\left(\Theta+E_tu_{t+1}-1\right)\right)m_{t+1}/E_t\Pi_{t+1} \]
+continuing with the system of equations \ldots
+\begin{equation}
+m_{t+1}-\left(1+\left(\Theta+u_t-1\right)\right)\frac{m_t}{\Pi_t} = 0;
+\end{equation}
+\begin{equation}
+m_{t+1}-c_t = 0;
+\end{equation}
+\begin{equation}
+E_tz_{t+1}-z^{1-\psi_z}z_t^{\psi_z}\epsilon_{z,t} = 0;
+\end{equation}
+\begin{equation}
+E_tu_{t+1}-u^{1-\psi_u}u_t^{\psi_u}\epsilon_{u,t} = 0;
+\end{equation}
+
+\end{document}
