@@ -4,11 +4,11 @@ import wx.grid as gridlib
 import trace
 import time
 import datetime
-import f77mods
-import f90mods
+#import f77mods
+#import f90mods
 import subprocess
-import numpy.core.ma as MA
-from numpy.core.ma import nomask
+import numpy.ma as MA
+from numpy.ma import nomask
 from scikits import timeseries as TSS
 import copy as COP
 import os as OPS
@@ -27,17 +27,22 @@ from numpy import matlib as MAT
 from scipy import linalg as LIN
 from scipy import stats as STA
 from scikits.timeseries.lib import plotlib as TPL
-import mlabraw
 import macrolab as MACLAB
 import errors
 from errors import *
 import tempfile as TMF
 import threading as THR
 import glob
-import sympy as SP
-import sympycore as SPC
+try:
+    import sympy as SP
+    import sympy.core as SPC
+except:
+    print "You need to install sympy"
 import popen2
-import pp as PP
+try:
+    import pp as PP
+except:
+    print "You need to install pp"
 
 #Define a list of the Greek Alphabet for Latex
 greek_alph = ['alpha','beta','gamma','delta','epsilon',
@@ -61,7 +66,13 @@ lapackpath = ''
 lapackname = ''
 mlabpath = ''
 # Is matlab installed and can it therefore be used?
-use_matlab = True
+#TODO: this is not safe at all if matlab is not installed
+try:
+    import mlabraw
+    use_matlab = True
+except:
+    use_matlab = False
+    sess1 = None
 # Should the Model Jacobian and Hessian be calculated symbolically?
 use_anaderiv = True
 # Should the Hessian be computed at all? (For 2nd order accurate methods)
@@ -5876,8 +5887,10 @@ class Minford:
 		self.test = 'tester'
 """***********************************************************"""
 ######################ERROR (EXCEPTION) CLASSES####################
-class MyErr(mlabraw.error):
-	pass
+#class MyErr(mlabraw.error):
+#	pass
+class MyErr(ValueError):
+    pass
 """***********************************************************"""
 ###########################GUI CLASSES#########################
 class SimpleGrid(gridlib.Grid): 

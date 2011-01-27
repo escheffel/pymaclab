@@ -1,0 +1,10 @@
+#!/bin/bash
+
+MACLAB=/home/skipper/pymaclab
+LD_LIBRARY_PATH=/home/skipper/pymaclab/libs
+export MACLAB
+export LD_LIBRARY_PATH
+
+cd /home/skipper/pymaclab
+clear
+ipython -pylab -wthread
