@@ -4,7 +4,7 @@ import wx.grid as gridlib
 import trace
 import time
 import datetime
-#import f77mods
+from src.hpfilter import hpfilt
 #import f90mods
 import subprocess
 import numpy.ma as MA
@@ -581,8 +581,7 @@ class TSDataBase:
 	def mkhpf(self,tsname,tsout,lam=1600):
 		tsinf = self.datdic[tsname]['infile']
 		tsin = self.datdic[tsname]
-		tsoutf = f77mods.hpfilt\
-		       (tsinf,N.zeros((N.shape(tsinf)[0],3)),
+		tsoutf = hpfilt(tsinf,N.zeros((N.shape(tsinf)[0],3)),
 			N.shape(tsinf)[0],lam,0)
 		tsoutf = TSS.time_series\
 		       (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])
@@ -4705,14 +4704,14 @@ class PyKlein2D:
 			yy = osim_y[i1,:].__array__().T
 			woy = N.zeros((osim_y.shape[1],3))
 			lam = 1600
-			yyf = MAT.matrix(f77mods.hpfilt(yy,woy,osim_y.shape[1],1600,0))
+			yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
 			osim_y[i1,:] = yyf
 		# Now filter the state variables!
 		for i1 in xrange(osim_x.shape[0]):
 			xx = osim_x[i1,:].__array__().T
 			wox = N.zeros((osim_x.shape[1],3))
 			lam = 1600
-			xxf = MAT.matrix(f77mods.hpfilt(xx,wox,osim_x.shape[1],1600,0))
+			xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
 			osim_x[i1,:] = xxf
 
 		if self.oswitch:
@@ -4722,7 +4721,7 @@ class PyKlein2D:
 				oo = osim_o[i1,:].__array__().T
 				woo = N.zeros((osim_o.shape[1],3))
 				lam = 1600
-				oof = MAT.matrix(f77mods.hpfilt(oo,woo,osim_o.shape[1],1600,0))
+				oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
 				osim_o[i1,:] = oof
 
 		# Stack all matrices into one
@@ -4781,14 +4780,14 @@ class PyKlein2D:
 			yy = osim_y[i1,:].__array__().T
 			woy = N.zeros((osim_y.shape[1],3))
 			lam = 1600
-			yyf = MAT.matrix(f77mods.hpfilt(yy,woy,osim_y.shape[1],1600,0))
+			yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
 			osim_y[i1,:] = yyf
 		# Now filter the state variables!
 		for i1 in xrange(osim_x.shape[0]):
 			xx = osim_x[i1,:].__array__().T
 			wox = N.zeros((osim_x.shape[1],3))
 			lam = 1600
-			xxf = MAT.matrix(f77mods.hpfilt(xx,wox,osim_x.shape[1],1600,0))
+			xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
 			osim_x[i1,:] = xxf
 
 		sim_x = osim_x[:,lags:-leads]
@@ -4805,7 +4804,7 @@ class PyKlein2D:
 				oo = osim_o[i1,:].__array__().T
 				woo = N.zeros((osim_o.shape[1],3))
 				lam = 1600
-				oof = MAT.matrix(f77mods.hpfilt(oo,woo,osim_o.shape[1],1600,0))
+				oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
 				osim_o[i1,:] = oof
 			sim_o = osim_o[:,lags:-leads]
 			sim_of = osim_o[:,leads+1:]
@@ -4937,7 +4936,7 @@ class PyKlein2D:
 				yy = sim_y[i1,:].__array__().T
 				woy = N.zeros((tlen,3))
 				lam = 1600
-				yyf = MAT.matrix(f77mods.hpfilt(yy,woy,tlen,1600,0))
+				yyf = MAT.matrix(hpfilt(yy,woy,tlen,1600,0))
 				sim_y[i1,:] = yyf
 		# Now filter the state variables!
 		for i1 in xrange(sim_x.shape[0]):
@@ -4946,7 +4945,7 @@ class PyKlein2D:
 				xx = sim_x[i1,:].__array__().T
 				wox = N.zeros((tlen,3))
 				lam = 1600
-				xxf = MAT.matrix(f77mods.hpfilt(xx,wox,tlen,1600,0))
+				xxf = MAT.matrix(hpfilt(xx,wox,tlen,1600,0))
 				sim_x[i1,:] = xxf
 			# Now hp filter the other variables!
 		if self.oswitch:
@@ -4956,7 +4955,7 @@ class PyKlein2D:
 					oo = sim_o[i1,:].__array__().T
 					woo = N.zeros((tlen,3))
 					lam = 1600
-					oof = MAT.matrix(f77mods.hpfilt(oo,woo,tlen,1600,0))
+					oof = MAT.matrix(hpfilt(oo,woo,tlen,1600,0))
 					sim_o[i1,:] = oof
 
 		if indx and indy and indo:
