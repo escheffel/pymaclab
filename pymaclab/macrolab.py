@@ -5,7 +5,13 @@ import trace
 import time
 import datetime
 from src.hpfilter import hpfilt
+# compiled hpfilter with 
+# f2py -c hpfilter.f -m hpfilter
 #import f90mods
+# compiled isolab with
+# f2py -c isolab.pyf -m isolab solab.f90 isolab.f90 -llapack
+from src.isolab import isolab
+
 import subprocess
 import numpy.ma as MA
 from numpy.ma import nomask
@@ -4228,7 +4234,7 @@ class MatKleinD:
 		A = self.AA
 		B = self.BB
 		tstates = len(self.varvecs['k'])+len(self.varvecs['z'])
-		(F,P,retcon) = f90mods.isolab(A,B,tstates,MAT.shape(A)[0])
+		(F,P,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
 		if MAT.sum(P.reshape(-1,1)) == 0.0:
 			return
 		else:
@@ -4436,7 +4442,7 @@ class ForKlein:
 		A = self.A
 		B = self.B
 		tstates = MAT.shape(self.AA)[1] + MAT.shape(self.DD)[1]
-		(F,P,retcon) = f90mods.isolab(A,B,tstates,MAT.shape(A)[0])
+		(F,P,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
 		if MAT.sum(P.reshape(-1,1)) == 0.0:
 			return
 		else:
@@ -5332,7 +5338,7 @@ class ForKleinD(PyKlein2D):
 		A = self.A
 		B = self.B
 		tstates = self.tstates
-		(F,P,retcon) = f90mods.isolab(A,B,tstates,MAT.shape(A)[0])
+		(F,P,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
 		if MAT.sum(P.reshape(-1,1)) == 0.0:
 			return
 		else:
