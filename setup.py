@@ -2,14 +2,14 @@
 
 from datetime import datetime
 
-from numpy.distutils.misc_util import Configuration
 from numpy.distutils.core import setup
+from numpy import get_include
 
 DESCRIPTION=""
 LONG_DESCRIPTION="""
 """
 
-DISTNAME = 'pandas'
+DISTNAME = 'pymaclab'
 LICENSE = 'BSD'
 AUTHOR = "Skipper Seabold, E.M. Scheffel"
 MAINTAINER = "Skipper Seabold"
@@ -39,9 +39,10 @@ version = '%s'
     finally:
         a.close()
 
-def configuration(parent_package='', top_path=None):
-    write_version_py()
+def configuration(parent_package='', top_path=None, package_name=DISTNAME):
+#    write_version_py()
 
+    from numpy.distutils.misc_util import Configuration
     config = Configuration(None, parent_package, top_path,
                            version=FULLVERSION)
     config.set_options(ignore_setup_xxx_py=True,
@@ -50,6 +51,18 @@ def configuration(parent_package='', top_path=None):
                        quiet=True)
 
     config.add_subpackage('pymaclab')
+#    config.add_data_dir('pymaclab/src')
+#    config.add_library('pymaclab/src', sources=['pymaclab/src/hpfilter.f'])
+
+    # include Fortran stuff
+#    config.add_extension('hpfilter',
+#                sources=['pymaclab/hpfilter/src/hpfilter.f'])
+                
+#    config.add_extension('/src/isolab',
+#                sources = ['pymaclab/src/isolab.pyf', 'pymaclab/src/solab.f90',
+#                            'pymaclab/src/isolab.f90'],
+#                            include_dirs = [get_include()],
+#                            libraries='lapack')
     return config
 
 if __name__ == '__main__':

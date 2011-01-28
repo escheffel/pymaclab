@@ -1,0 +1,3 @@
+!/bin/bash
+
+ipython cruft/mac_ipython.py

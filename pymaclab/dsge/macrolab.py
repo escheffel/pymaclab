@@ -4,14 +4,13 @@ import wx.grid as gridlib
 import trace
 import time
 import datetime
-from src.hpfilter import hpfilt
+from .._hpfilter import hpfilt
 # compiled hpfilter with 
 # f2py -c hpfilter.f -m hpfilter
 #import f90mods
 # compiled isolab with
 # f2py -c isolab.pyf -m isolab solab.f90 isolab.f90 -llapack
-from src.isolab import isolab
-
+from ..isolab import isolab
 import subprocess
 import numpy.ma as MA
 from numpy.ma import nomask
@@ -41,9 +40,13 @@ import threading as THR
 import glob
 try:
     import sympy as SP
-    import sympy.core as SPC
 except:
     print "You need to install sympy"
+try:
+    import sympycore as SPC
+except:
+    print "You need to install sympycore"
+    print "svn checkout http://sympycore.googlecode.com/svn/trunk/ sympycore"
 import popen2
 try:
     import pp as PP
@@ -84,7 +87,10 @@ use_anaderiv = True
 # Should the Hessian be computed at all? (For 2nd order accurate methods)
 mk_hessian = True
 # Number of cores used for calculations
-ncpus = 2
+#ncpus = 2
+from multiprocessing import cpu_count
+ncpus = cpu_count()
+ncpus = 1 # debug without parallel stuff
 '''Model init level, 0 just pars, 1 pars and also steady state,
 2 Jacobian (and perhaps Hessian)'''
 initlev = 2
@@ -674,7 +680,7 @@ class DSGEmodel:
 		# Attach the data from database
 		if self.dbase != None:
 			self.getdata(dbase=self.dbase)
-		if initlev == 0: return
+		if initlev == 0: return #NOTE: this is a global variable. get rid of.
 ################## STEADY STATE CALCULATIONS !!! ####################
 		self.sssolvers = SSsolvers()
 		# Solve for steady-state using fsolve

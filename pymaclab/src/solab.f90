@@ -13,14 +13,22 @@ contains
     real(kind=8), intent(in)  :: a(n,n), b(n,n)
     real(kind=8), intent(out) :: f(n-k,k), p(k,k)
     real(kind=8) rwork(8*n)
-    complex*16 s(n,n), t(n,n)
-    complex*16 alpha(n),beta(n),vsl(n,n),vsr(n,n)
-    complex*16 tempwork(1)
-    complex*16, allocatable :: work(:)
-    complex*16 z11work(8*k)
-    complex*16 z11(k,k), z11i(k,k)
-    complex*16 s11i(k,k), t11(k,k), pp(k,k)
-    complex*16 z21(n-k,k), eyek(k,k)
+!    complex*16 s(n,n), t(n,n)
+    complex(kind=8) s(n,n), t(n,n)
+!    complex*16 alpha(n),beta(n),vsl(n,n),vsr(n,n)
+    complex(kind=8) alpha(n),beta(n),vsl(n,n),vsr(n,n)
+!    complex*16 tempwork(1)
+    complex(kind=8) tempwork(1)
+!    complex*16, allocatable :: work(:)
+    complex(kind=8), allocatable :: work(:)
+!    complex*16 z11work(8*k)
+    complex(kind=8) z11work(8*k)
+!    complex*16 z11(k,k), z11i(k,k)
+    complex(kind=8) z11(k,k), z11i(k,k)
+!    complex*16 s11i(k,k), t11(k,k), pp(k,k)
+    complex(kind=8) s11i(k,k), t11(k,k), pp(k,k)
+!    complex*16 z21(n-k,k), eyek(k,k)
+    complex(kind=8) z21(n-k,k), eyek(k,k)
 
     retco = 0
     lwork = -1
@@ -64,7 +72,8 @@ contains
 
 
     logical function funcg(sii,tii)
-     complex*16 sii,tii
+!     complex*16 sii,tii
+     complex(kind=8) sii,tii
      funcg = abs(sii)>abs(tii)
     end function
 
