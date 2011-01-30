@@ -11,7 +11,7 @@ python module isolab ! in
             real(kind=8) dimension(m,m),intent(in),depend(m,m) :: y
             integer optional,intent(in),check(shape(x,0)==m),depend(x) :: m=shape(x,0)
             integer intent(in) :: l
-            integer retcon
+            integer intent(out) :: retcon
         end subroutine isolab
     end interface 
 end python module isolab
