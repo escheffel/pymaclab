@@ -2,6 +2,7 @@
 
 from datetime import datetime
 
+import setuptools # have to do this to be able to setup.py develop
 from numpy.distutils.core import setup
 from numpy import get_include
 
