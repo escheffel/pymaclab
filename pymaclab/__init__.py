@@ -13,6 +13,7 @@ __revision__ = "$Revision: 1001 $"
 __date__ = '$Date: 2007-08-05$'
 
 import os as OPS
+from dsge import macrolab
 
 # Some helper functions
 def db_graph(dbase,tseries):
