@@ -1,0 +1,36 @@
+Depends
+-------
+ipython
+numpy
+scipy
+pp
+sympy
+sympycore
+mlabwrap
+scikits.timeseries
+wxwidgets
+
+Installation
+------------
+python setup.py build
+sudo python setup.py install
+
+Usage
+-----
+import pymaclab as pm
+
+
+# Model Instantiation with data
+rbc1 = pm.newMOD('modfiles/rbc1.txt',db1)
+
+# Model instantiation without data
+rbc2 = pm.newMOD('modfiles/rbc2.txt')
+
+# Solve the models using different methods
+rbc1.modsolvers.forkleind.solve()
+rbc2.modsolvers.pyklein2d.solve()
+
+# Simulate the models after they have been solved
+rbc1.modsolvers.forkleind.sim(400)
+rbc2.modsolvers.pyklein2d.sim(1000)
+
