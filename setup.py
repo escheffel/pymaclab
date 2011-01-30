@@ -51,18 +51,6 @@ def configuration(parent_package='', top_path=None, package_name=DISTNAME):
                        quiet=True)
 
     config.add_subpackage('pymaclab')
-#    config.add_data_dir('pymaclab/src')
-#    config.add_library('pymaclab/src', sources=['pymaclab/src/hpfilter.f'])
-
-    # include Fortran stuff
-#    config.add_extension('hpfilter',
-#                sources=['pymaclab/hpfilter/src/hpfilter.f'])
-                
-#    config.add_extension('/src/isolab',
-#                sources = ['pymaclab/src/isolab.pyf', 'pymaclab/src/solab.f90',
-#                            'pymaclab/src/isolab.f90'],
-#                            include_dirs = [get_include()],
-#                            libraries='lapack')
     return config
 
 if __name__ == '__main__':

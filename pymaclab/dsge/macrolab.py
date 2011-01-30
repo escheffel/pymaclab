@@ -4,7 +4,7 @@ import wx.grid as gridlib
 import trace
 import time
 import datetime
-from .._hpfilter import hpfilt
+from pymaclab.filters._hpfilter import hpfilt
 # compiled hpfilter with 
 # f2py -c hpfilter.f -m hpfilter
 #import f90mods
