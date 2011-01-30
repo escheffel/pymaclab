@@ -7,7 +7,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('filters')
     config.add_subpackage('dsge')
     config.add_subpackage('stats')
-#    config.add_extension('_hpfilter', sources=['hpfilter/hpfilt.f'])
+    config.add_data_dir('modfiles')
     lapack = dict(get_info('lapack_opt'))
     config.add_extension('isolab', sources=['src/isolab.pyf', 
             'src/solab.f90', 'src/isolab.f90'], libraries=['lapack'],
