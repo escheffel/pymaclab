@@ -1,4 +1,4 @@
-from __future__ import division
+#from __future__ import division
 import wx
 import wx.grid as gridlib
 import trace
@@ -89,8 +89,11 @@ use_anaderiv = True
 mk_hessian = True
 # Number of cores used for calculations
 #ncpus = 2
-from multiprocessing import cpu_count
-ncpus = cpu_count()
+try:    # no mp in 2.5
+    from multiprocessing import cpu_count
+    ncpus = cpu_count()
+except:
+    ncpus = 1
 ncpus = 1 # debug without parallel stuff
 #NOTE: also see when this would actually speed things up.  doesn't seem to 
 # now
@@ -1992,6 +1995,11 @@ class DSGEmodel:
         for x in dicli.values():
             symdic[x] = SPC.Symbol(x)
         locals().update(symdic)
+#NOTE: don't do this?
+# or don't modify _existing_ contents?
+# see: http://docs.python.org/library/functions.html#locals
+#also locals() is no longer a dictionary in Python 3
+#NOTE: just use the dictionary itself
         for x in self.paramdic.keys():
             locals()[x] = SPC.Symbol(x)
         for x in self.sstate.keys():
