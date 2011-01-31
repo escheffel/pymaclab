@@ -1,11 +1,10 @@
 """
 THE STEADY STATE SOLVER CLASS AND IT'S SUBCLASSES
 """
-import re as RE
-import scipy as S
-import numpy as N
-import copy as COP
-
+import re
+import numpy as npo
+import copy
+from scipy import optimize
 
 class SSsolvers(object):
     def __init__(self):
@@ -17,23 +16,23 @@ class Manss(SSsolvers):
         self.paramdic = intup[1]
 
     def solve(self):
-        list_tmp1 = COP.deepcopy(self.manss_sys)
+        list_tmp1 = copy.deepcopy(self.manss_sys)
         # Create manual (closed-form) steady state dictionary
         _rlog = 'LOG\('
         _rexp = 'EXP\('
         _fsolve = 'ROOT\((?P<nlexp>.*),\s*(?P<vari>.*)\s*=\s*(?P<init>.*)\s*,\s*fail\s*=\s*(?P<fval>.*)\);'
-        rlog = RE.compile(_rlog)
-        rexp = RE.compile(_rexp)
-        fexp = RE.compile(_fsolve)
+        rlog = re.compile(_rlog)
+        rexp = re.compile(_rexp)
+        fexp = re.compile(_fsolve)
         manss={}
         locals().update(self.paramdic)
         globals().update(self.paramdic)
         for x in list_tmp1:
             str_tmp3 = x[:]
             while rlog.search(str_tmp3):
-                str_tmp3 = RE.sub(rlog,'N.log(',str_tmp3)
+                str_tmp3 = re.sub(rlog,'np.log(',str_tmp3)
             while rexp.search(str_tmp3):
-                str_tmp3 = RE.sub(rexp,'N.exp(',str_tmp3)           
+                str_tmp3 = re.sub(rexp,'np.exp(',str_tmp3)           
 
             # Do fsolve root finding, if ROOT detected
             if fexp.search(str_tmp3):
@@ -41,9 +40,11 @@ class Manss(SSsolvers):
                 ma = fexp.search(str_tmp3)
                 nlexp = ma.group('nlexp')
                 vari = ma.group('vari')
-                init = N.float(ma.group('init'))
-                fval = N.float(ma.group('init'))
-                solu,infodict,ier,mesg = O.fsolve(eval('lambda '+vari+':'+nlexp),init,full_output=1)
+                init = np.float(ma.group('init'))
+                fval = np.float(ma.group('init'))
+                solu,infodict,ier,mesg = \
+                    optimize.fsolve(eval('lambda '+vari+':'+nlexp),
+                                        init,full_output=1)
                 if ier == 1:
                     manss[asvari] = solu
                     locals()[asvari] = solu
@@ -77,10 +78,10 @@ class Fsolve(SSsolvers):
         subdic = {}
         for y,z in zip(ssi.items(),range(len(ssi.items()))):
             subdic[y[0]] = (y[0],y[1],z)
-        list_tmp1 = COP.deepcopy(self.ssm)
+        list_tmp1 = copy.deepcopy(self.ssm)
         for var in self.ssi.keys():
             _mreg = '(\+|\*|-|/|^|[(])'+var
-            mreg = RE.compile(_mreg)
+            mreg = re.compile(_mreg)
             for i1,line in enumerate(list_tmp1):
                 while mreg.search(list_tmp1[i1]):
                     ma = mreg.search(list_tmp1[i1])
@@ -99,7 +100,7 @@ class Fsolve(SSsolvers):
         # to fsolve
         def func(invar):
             locals().update(self.paramdic)
-            fdot = S.zeros((len(func_repr)),'d')
+            fdot = np.zeros((len(func_repr)),float)
             i1=0
             for x in func_repr:
                 fdot[i1] = eval(x)
@@ -113,7 +114,8 @@ class Fsolve(SSsolvers):
             inlist.append([x[2],x[1],x[0]])
         inlist.sort()
         init_val = [x[1] for x in inlist]
-        (output,infodict,ier,mesg) = O.fsolve(func,init_val,full_output=1)
+        (output,infodict,ier,mesg) = optimize.fsolve(func,init_val,
+                                                full_output=1)
         # Attach the outputs of the solver as attributes
         self.fsout={}
         for x,y in zip(output,inlist):
