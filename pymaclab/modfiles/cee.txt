@@ -25,7 +25,7 @@ hd_bar                  = 1.0;
 # steady state capital utilisation
 u_bar                   = 1.0;
 # subjective discount factor
-betta                   = 1.03**(-(1/4));
+betta                   = 1.03**(-(1/4.));
 # share of capital in value added
 Theta                   = 0.36;
 # Fixed Cost parameter
@@ -43,7 +43,7 @@ alpha                   = 0.6;
 # fraction of labour markets NOT able to reset wages optimally each period
 alphatil                = 0.64;
 # Inflation target
-pai_star                = 1.042**(1/4);
+pai_star                = 1.042**(1/4.);
 # Steady State Inflation
 pai_bar                 = pai_star;
 # Degree of habit formation
