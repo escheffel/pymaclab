@@ -12,25 +12,26 @@ from scipy import linalg as LIN
 from numpy.ctypeslib import load_library, ndpointer
 from ctypes import cdll, c_int, c_char, POINTER
 
-def rank(A, eps=1e-15):
-	"""
-	Function to calcute the mathematical rank of matrix.
-	This was coded because NUMPY's rank functions give the
-	matrix rank of a matrix AND NOT the rank in a linear
-	algebra sense of returning the max. amount of linearly
-	independent rows or columns in a matrix.
-
-	Usage:
-	rank = rankm(A,eps)
-
-	where A is some matrix, rank is then returned integer
-	number for rank, and eps is optional machine precision
-	(smallest number).
-	"""
-	u, s, vh = LIN.svd(A)
-	tol = max(A.shape)*eps*abs(max(s))
-	rank = MAT.sum(s > tol)
-	return rank
+#NOTE: numpy now includes linalg.matrix_rank
+#def rank(A, eps=1e-15):
+#	"""
+#	Function to calcute the mathematical rank of matrix.
+#	This was coded because NUMPY's rank functions give the
+#	matrix rank of a matrix AND NOT the rank in a linear
+#	algebra sense of returning the max. amount of linearly
+#	independent rows or columns in a matrix.
+#
+#	Usage:
+#	rank = rankm(A,eps)
+#
+#	where A is some matrix, rank is then returned integer
+#	number for rank, and eps is optional machine precision
+#	(smallest number).
+#	"""
+#	u, s, vh = LIN.svd(A)
+#	tol = max(A.shape)*eps*abs(max(s))
+#	rank = MAT.sum(s > tol)
+#	return rank
 
 def null(A, eps = 1e-15):
 	"""

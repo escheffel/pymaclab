@@ -3,7 +3,9 @@ THE MODSOLVER CLASS AND ITS SUBCLASSES
 """
 from numpy import matlib as MAT
 from numpy import linalg as LIN
+from numpy.linalg import matrix_rank
 from .. import helpers as HLP
+from ....linalg import qz, ordqz
 import numpy as N
 import pylab as P
 import scipy as S
@@ -139,7 +141,8 @@ class PyUhlig(MODsolvers):
         n_endog = N.shape(CC)[1]
         k_exog = min(N.shape(NN))
 
-        if HLP.rank(CC) < n_endog:
+#        if HLP.rank(CC) < n_endog:
+        if matrix_rank(CC) < n_endog:
             raise uhlerr, 'uhlerror: Rank(CC) needs to be at least\n\
                   equal to the number of endogenous variables'
         if l_equ == 0:
@@ -179,11 +182,13 @@ class PyUhlig(MODsolvers):
                       N.concatenate((MAT.zeros((m_states,m_states)),MAT.identity(m_states)),1)\
                   ))
 
-        (Delta_up,Xi_up,UUU,VVV)=\
-         HLP.qz(Delta_mat,Xi_mat,\
-            mode='complex',\
-            lapackname=lapackname,\
-            lapackpath=lapackpath)
+#        (Delta_up,Xi_up,UUU,VVV)=\
+#         HLP.qz(Delta_mat,Xi_mat,\
+#            mode='complex',\
+#            lapackname=lapackname,\
+#            lapackpath=lapackpath)
+        (Delta_up,Xi_up,UUU,VVV) = qz(Delta_mat,Xi_mat)
+        
 
         d_Delta_up = MAT.diag(Delta_up)
         d_Xi_up = MAT.diag(Xi_up)
@@ -242,7 +247,8 @@ class PyUhlig(MODsolvers):
         n_endog = N.shape(CC)[1]
         k_exog = min(N.shape(NN))
 
-        if HLP.rank(CC) < n_endog:
+#        if HLP.rank(CC) < n_endog:
+        if matrix_rank(CC) < n_endog:
             raise uhlerr, 'uhlerror: Rank(CC) needs to be at least\n\
                   equal to the number of endogenous variables'
         if l_equ == 0:
@@ -288,7 +294,8 @@ class PyUhlig(MODsolvers):
         Xi_eigval = tmp_mat
 
 
-        if HLP.rank(Xi_eigvec) < m_states:
+#        if HLP.rank(Xi_eigvec) < m_states:
+        if matrix_rank(Xi_eigvec) < m_states:
             raise uhlerr, 'uhlerror: Xi_mat is not diagonalizable!\n\
                   Cannot solve for PP. Maybe you should try the Schur-Decomposition\n\
                   method instead, use do_QZ()!!'
@@ -318,7 +325,8 @@ class PyUhlig(MODsolvers):
             Lambda_mat[i1,i1] = Xi_sortval[Xi_select][i1]
         Omega_mat = Xi_sortvec[m_states:2*m_states,:].take(Xi_select, axis=1)
 
-        if HLP.rank(Omega_mat) < m_states:
+#        if HLP.rank(Omega_mat) < m_states:
+        if matrix_rank(Omega_mat) < m_states:
             raise uhlerr, 'uhlerror: Omega_mat is not invertible!!\n\
                   Therefore, solution for PP is not available'
 
