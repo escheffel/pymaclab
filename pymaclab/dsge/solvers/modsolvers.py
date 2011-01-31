@@ -9,6 +9,10 @@ from ....linalg import qz, ordqz
 import numpy as N
 import pylab as P
 import scipy as S
+try:
+    import mlabraw
+except:
+    pass
 
 
 class MODsolvers(object):
