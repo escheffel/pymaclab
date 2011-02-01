@@ -1,4 +1,3 @@
-#TODO: regenerate f2py sources to give only one library
 # File setup.py
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
