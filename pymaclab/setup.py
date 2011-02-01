@@ -9,10 +9,6 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('stats')
     config.add_subpackage('linalg')
     config.add_data_dir('modfiles')
-    lapack = dict(get_info('lapack_opt'))
-    config.add_extension('isolab', sources=['src/isolab.pyf', 
-            'src/solab.f90', 'src/isolab.f90'], libraries=['lapack'],
-            library_dirs=lapack['library_dirs'])
     return config
 
 if __name__ == '__main__':
