@@ -2,7 +2,7 @@
 THE STEADY STATE SOLVER CLASS AND IT'S SUBCLASSES
 """
 import re
-import numpy as npo
+import numpy as np
 import copy
 from scipy import optimize
 

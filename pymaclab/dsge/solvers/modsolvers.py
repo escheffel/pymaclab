@@ -5,10 +5,10 @@ from numpy import matlib as MAT
 from numpy import linalg as LIN
 from numpy.linalg import matrix_rank
 from .. import helpers as HLP
-from ....linalg import qz, ordqz
-import numpy as N
+from pymaclab.linalg import qz, ordqz
+import numpy as np
 import pylab as P
-import scipy as S
+from isolab import isolab
 try:
     import mlabraw
 except:
@@ -139,11 +139,11 @@ class PyUhlig(MODsolvers):
         LL = self.LL
         MM = self.MM
         NN = self.NN
-        q_expectational_equ = N.shape(FF)[0]
-        m_states = N.shape(FF)[1]
-        l_equ = N.shape(CC)[0]
-        n_endog = N.shape(CC)[1]
-        k_exog = min(N.shape(NN))
+        q_expectational_equ = np.shape(FF)[0]
+        m_states = np.shape(FF)[1]
+        l_equ = np.shape(CC)[0]
+        n_endog = np.shape(CC)[1]
+        k_exog = min(np.shape(NN))
 
 #        if HLP.rank(CC) < n_endog:
         if matrix_rank(CC) < n_endog:
@@ -156,10 +156,10 @@ class PyUhlig(MODsolvers):
             Gamma_mat = -GG
             Theta_mat = -HH
             Xi_mat = \
-                   N.concatenate((Gamma_mat,Theta_mat,MAT.eye(m_states),\
+                   np.concatenate((Gamma_mat,Theta_mat,MAT.eye(m_states),\
                           MAT.zeros((m_states,m_states))),1)
             Delta_mat = \
-                  N.concatenate((Psi_mat,MAT.zeros((m_states,m_states)),\
+                  np.concatenate((Psi_mat,MAT.zeros((m_states,m_states)),\
                          MAT.zeros((m_states,m_states)),\
                          MAT.zeros((m_states,m_states)),MAT.eye(m_states),1))
 
@@ -169,21 +169,21 @@ class PyUhlig(MODsolvers):
             CC_0 = HLP.null(CC.T)
             if l_equ > n_endog:
                 Psi_mat = \
-                    N.concatenate((MAT.zeros((l_equ-n_endog,m_states)),FF-JJ*CC_plus*AA),1)
+                    np.concatenate((MAT.zeros((l_equ-n_endog,m_states)),FF-JJ*CC_plus*AA),1)
             elif l_equ == n_endog:
-                Psi_mat = N.concatenate((FF-JJ*CC_plus*AA),1)
-            Gamma_mat = N.concatenate((CC_0*AA, JJ*CC_plus*BB-GG+KK*CC_plus*AA))
-            Theta_mat = N.concatenate((CC_0*BB, KK*CC_plus*BB-HH))
+                Psi_mat = np.concatenate((FF-JJ*CC_plus*AA),1)
+            Gamma_mat = np.concatenate((CC_0*AA, JJ*CC_plus*BB-GG+KK*CC_plus*AA))
+            Theta_mat = np.concatenate((CC_0*BB, KK*CC_plus*BB-HH))
             Xi_mat = \
-                   N.concatenate((\
-                       N.concatenate((Gamma_mat,Theta_mat),1),\
-                       N.concatenate((MAT.identity(m_states),MAT.zeros((m_states,m_states))),1)\
+                   np.concatenate((\
+                       np.concatenate((Gamma_mat,Theta_mat),1),\
+                       np.concatenate((MAT.identity(m_states),MAT.zeros((m_states,m_states))),1)\
                    ))
             Psi_mat = Psi_mat.reshape(m_states,m_states)
             Delta_mat = \
-                  N.concatenate((\
-                      N.concatenate((Psi_mat,MAT.zeros((m_states,m_states))),1),\
-                      N.concatenate((MAT.zeros((m_states,m_states)),MAT.identity(m_states)),1)\
+                  np.concatenate((\
+                      np.concatenate((Psi_mat,MAT.zeros((m_states,m_states))),1),\
+                      np.concatenate((MAT.zeros((m_states,m_states)),MAT.identity(m_states)),1)\
                   ))
 
 #        (Delta_up,Xi_up,UUU,VVV)=\
@@ -199,7 +199,7 @@ class PyUhlig(MODsolvers):
         Xi_eigval = MAT.zeros(N.shape(Delta_up))
         for i1 in range(0,N.shape(Delta_up)[0],1):
             Xi_eigval[i1,i1] = d_Xi_up[i1]/d_Delta_up[i1]
-        d_Xi_eigval = N.diag(Xi_eigval)
+        d_Xi_eigval = np.diag(Xi_eigval)
         mat_tmp = MAT.zeros((N.shape(Xi_eigval)[0],3))
         i1=0
         for x in d_Xi_eigval:
@@ -215,18 +215,18 @@ class PyUhlig(MODsolvers):
 
         # Root selection branch with Xi_select
         if Xi_select == 'all':
-            Xi_select = N.arange(0,m_states,1)
+            Xi_select = np.arange(0,m_states,1)
 
         stake = max(abs(Xi_sortval[Xi_select])) + Tol
         (Delta_up,Xi_up,UUU,VVV) = self.qzdiv(stake,Delta_up,Xi_up,UUU,VVV)
-        Lamda_mat = N.diag(Xi_sortval[Xi_select])
+        Lamda_mat = np.diag(Xi_sortval[Xi_select])
         trVVV = VVV.conjugate().T
         VVV_2_1 = trVVV[m_states:2*m_states,0:m_states]
         VVV_2_2 = trVVV[m_states:2*m_states,m_states:2*m_states]
         UUU_2_1 = UUU[m_states:2*m_states,0:m_states]
 
         PP = -(VVV_2_1.I*VVV_2_2)
-        PP = N.real(PP)
+        PP = np.real(PP)
 
         self.PP = PP
         self.CC_plus = CC_plus
@@ -245,10 +245,10 @@ class PyUhlig(MODsolvers):
         LL = self.LL
         MM = self.MM
         NN = self.NN
-        q_expectational_equ = N.shape(FF)[0]
-        m_states = N.shape(FF)[1]
-        l_equ = N.shape(CC)[0]
-        n_endog = N.shape(CC)[1]
+        q_expectational_equ = np.shape(FF)[0]
+        m_states = np.shape(FF)[1]
+        l_equ = np.shape(CC)[0]
+        n_endog = np.shape(CC)[1]
         k_exog = min(N.shape(NN))
 
 #        if HLP.rank(CC) < n_endog:
@@ -262,10 +262,10 @@ class PyUhlig(MODsolvers):
             Gamma_mat = -GG
             Theta_mat = -HH
             Xi_mat = \
-                   N.concatenate((Gamma_mat,Theta_mat,MAT.eye(m_states),\
+                   np.concatenate((Gamma_mat,Theta_mat,MAT.eye(m_states),\
                           MAT.zeros((m_states,m_states))),1)
             Delta_mat = \
-                  N.concatenate((Psi_mat,MAT.zeros((m_states,m_states)),\
+                  np.concatenate((Psi_mat,MAT.zeros((m_states,m_states)),\
                          MAT.zeros((m_states,m_states)),\
                          MAT.zeros((m_states,m_states)),MAT.eye(m_states),1))
 
@@ -275,20 +275,20 @@ class PyUhlig(MODsolvers):
             CC_0 = HLP.null(CC.T)
             if l_equ > n_endog:
                 Psi_mat = \
-                    N.concatenate((MAT.zeros((l_equ-n_endog,m_states)),FF-JJ*CC_plus*AA),1)
+                    np.concatenate((MAT.zeros((l_equ-n_endog,m_states)),FF-JJ*CC_plus*AA),1)
             elif l_equ == n_endog:
-                Psi_mat = N.concatenate((FF-JJ*CC_plus*AA),1)
-            Gamma_mat = N.concatenate((CC_0*AA, JJ*CC_plus*BB-GG+KK*CC_plus*AA))
-            Theta_mat = N.concatenate((CC_0*BB, KK*CC_plus*BB-HH))
+                Psi_mat = np.concatenate((FF-JJ*CC_plus*AA),1)
+            Gamma_mat = np.concatenate((CC_0*AA, JJ*CC_plus*BB-GG+KK*CC_plus*AA))
+            Theta_mat = np.concatenate((CC_0*BB, KK*CC_plus*BB-HH))
             Xi_mat = \
-                   N.concatenate((\
-                       N.concatenate((Gamma_mat,Theta_mat),1),\
-                       N.concatenate((MAT.eye(m_states),MAT.zeros((m_states,m_states))),1)\
+                   np.concatenate((\
+                       np.concatenate((Gamma_mat,Theta_mat),1),\
+                       np.concatenate((MAT.eye(m_states),MAT.zeros((m_states,m_states))),1)\
                    ))
             Delta_mat = \
-                  N.concatenate((\
-                      N.concatenate((Psi_mat,MAT.zeros((m_states,m_states))),1),\
-                      N.concatenate((MAT.zeros((m_states,m_states)),MAT.eye(m_states)),1)\
+                  np.concatenate((\
+                      np.concatenate((Psi_mat,MAT.zeros((m_states,m_states))),1),\
+                      np.concatenate((MAT.zeros((m_states,m_states)),MAT.eye(m_states)),1)\
                   ))
 
         (Xi_eigvec,Xi_eigval) = HLP.eig(Xi_mat,Delta_mat)
@@ -305,7 +305,7 @@ class PyUhlig(MODsolvers):
                   method instead, use do_QZ()!!'
 
 
-        d_Xi_eigval = N.diag(Xi_eigval)
+        d_Xi_eigval = np.diag(Xi_eigval)
         mat_tmp = MAT.zeros((N.rank(Xi_eigval),3))
         i1=0
         for x in d_Xi_eigval:
@@ -321,7 +321,7 @@ class PyUhlig(MODsolvers):
 
         # Root selection branch with Xi_select
         if Xi_select == 'all':
-            Xi_select = N.arange(0,m_states,1)
+            Xi_select = np.arange(0,m_states,1)
 
         #Create Lambda_mat and Omega_mat
         Lambda_mat = MAT.zeros((len(Xi_select),len(Xi_select)))
@@ -389,8 +389,8 @@ class PyUhlig(MODsolvers):
         del self.CC_plus
 
     def qzdiv(self,stake,A,B,Q,Z):
-        n = N.shape(A)[0]
-        root = N.hstack((abs(N.mat(N.diag(A)).T),abs(N.mat(N.diag(B)).T)))
+        n = np.shape(A)[0]
+        root = np.hstack((abs(N.mat(N.diag(A)).T),abs(N.mat(N.diag(B)).T)))
         index_mat = (root[:,0]<1e-13).choose(root[:,0],1)
         index_mat = (index_mat>1e-13).choose(root[:,0],0)
         root[:,0] = root[:,0]-MAT.multiply(index_mat,(root[:,0]+root[:,1]))
@@ -417,17 +417,17 @@ class PyUhlig(MODsolvers):
         e = B[i,i+1]
         c = A[i+1,i+1]
         f = B[i+1,i+1]
-        wz = N.mat(N.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
-        xy = N.mat(N.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
-        n = N.mat(N.sqrt(wz*wz.conjugate().T))
-        m = N.mat(N.sqrt(xy*xy.conjugate().T))
+        wz = np.mat(N.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
+        xy = np.mat(N.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
+        n = np.mat(N.sqrt(wz*wz.conjugate().T))
+        m = np.mat(N.sqrt(xy*xy.conjugate().T))
         if n.all() == 0:
             return
         else:
-            wz = N.mat(wz/n)
-            xy = N.mat(xy/m)
-            wz = N.vstack((wz,N.hstack((-wz[:,1].T,wz[:,0].T))))
-            xy = N.vstack((xy,N.hstack((-xy[:,1].T,xy[:,0].T))))
+            wz = np.mat(wz/n)
+            xy = np.mat(xy/m)
+            wz = np.vstack((wz,N.hstack((-wz[:,1].T,wz[:,0].T))))
+            xy = np.vstack((xy,N.hstack((-xy[:,1].T,xy[:,0].T))))
             A[i:i+2,:] = xy*A[i:i+2,:]
             B[i:i+2,:] = xy*B[i:i+2,:]
             A[:,i:i+2] = A[:,i:i+2]*wz
@@ -577,11 +577,11 @@ class MatUhlig:
         try:
             for x in eval_list:
                 mlabraw.eval(sess1,x)
-            self.PP = N.matrix(mlabraw.get(sess1,'PP'))
-            self.QQ = N.matrix(mlabraw.get(sess1,'QQ'))
-            self.RR = N.matrix(mlabraw.get(sess1,'RR'))
-            self.SS = N.matrix(mlabraw.get(sess1,'SS'))
-            self.WW = N.matrix(mlabraw.get(sess1,'WW'))
+            self.PP = np.matrix(mlabraw.get(sess1,'PP'))
+            self.QQ = np.matrix(mlabraw.get(sess1,'QQ'))
+            self.RR = np.matrix(mlabraw.get(sess1,'RR'))
+            self.SS = np.matrix(mlabraw.get(sess1,'SS'))
+            self.WW = np.matrix(mlabraw.get(sess1,'WW'))
         except MyErr:
             pass
         finally:
@@ -674,9 +674,9 @@ class MatKlein:
         mlabraw.put(sess1,'tstates',tstates)
         try:
             mlabraw.eval(sess1,'[F,P,Z11]=solab(AA,BB,tstates)')
-            self.F = N.matrix(mlabraw.get(sess1,'F'))
-            self.P = N.matrix(mlabraw.get(sess1,'P'))
-            self.Z11 = N.matrix(mlabraw.get(sess1,'Z11'))
+            self.F = np.matrix(mlabraw.get(sess1,'F'))
+            self.P = np.matrix(mlabraw.get(sess1,'P'))
+            self.Z11 = np.matrix(mlabraw.get(sess1,'Z11'))
             self.outdic['P'] = self.P
             self.outdic['F'] = self.F
         except MyErr:
@@ -831,7 +831,7 @@ class MatKleinD:
             if x[-4:] == '_bar':
                 ssdic2[x] = ssdic[x]
         for x in ssdic2.keys():
-            ssdic2[x] = N.log(ssdic2[x])
+            ssdic2[x] = np.log(ssdic2[x])
         vlist2 = []
         for x in self.vlist:
             ma = self.re_var2.search(x)
@@ -847,7 +847,7 @@ class MatKleinD:
         mlabraw.eval(sess1,'cd Klein')
         mlabraw.put(sess1,'x0',invec)
         mlabraw.eval(sess1,"grdm=centgrad('mfunc',x0)")
-        gradm = N.matrix(mlabraw.get(sess1,'grdm'))
+        gradm = np.matrix(mlabraw.get(sess1,'grdm'))
         self.gradm = gradm
 
     def mkAB(self):
@@ -867,8 +867,8 @@ class MatKleinD:
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
-            self.P = N.matrix(P)
-            self.F = N.matrix(F)
+            self.P = np.matrix(P)
+            self.F = np.matrix(F)
 
     def mkhess(self):
         self.mkfunc()
@@ -881,7 +881,7 @@ class MatKleinD:
             if x[-4:] == '_bar':
                 ssdic2[x] = ssdic[x]
         for x in ssdic2.keys():
-            ssdic2[x] = N.log(ssdic2[x])
+            ssdic2[x] = np.log(ssdic2[x])
         vlist2 = []
         for x in self.vlist:
             ma = self.re_var2.search(x)
@@ -897,7 +897,7 @@ class MatKleinD:
         mlabraw.eval(sess1,'cd Klein')
         mlabraw.put(sess1,'x0',invec)
         mlabraw.eval(sess1,"hessm=centhess('mfunc',x0)")
-        hessm = N.matrix(mlabraw.get(sess1,'hessm'))
+        hessm = np.matrix(mlabraw.get(sess1,'hessm'))
         self.hessm = hessm
 
     def solab2(self):
@@ -964,10 +964,10 @@ class MatWood:
         mlabraw.put(sess1,'NY',NY)
         mlabraw.put(sess1,'NK',NK)
         mlabraw.eval(sess1,'[Br,Cr,Lr,NF] = redsf(wAA,wBB,wCC,NY,NX,NK)')
-        self.Br = N.matrix(mlabraw.get(sess1,'Br'))
-        self.Cr = N.matrix(mlabraw.get(sess1,'Cr'))
-        self.Lr = N.matrix(mlabraw.get(sess1,'Lr'))
-        self.NF = N.matrix(mlabraw.get(sess1,'NF'))
+        self.Br = np.matrix(mlabraw.get(sess1,'Br'))
+        self.Cr = np.matrix(mlabraw.get(sess1,'Cr'))
+        self.Lr = np.matrix(mlabraw.get(sess1,'Lr'))
+        self.NF = np.matrix(mlabraw.get(sess1,'NF'))
 
     def solds(self):
         Br = self.Br
@@ -989,10 +989,10 @@ class MatWood:
         mlabraw.put(sess1,'NY',NY)
         mlabraw.put(sess1,'NK',NK)
         mlabraw.eval(sess1,'[D,F,G,H] = soldsf(Br,Cr,Lr,NY,NX,NK,NF)')
-        self.D = N.matrix(mlabraw.get(sess1,'D'))
-        self.F = N.matrix(mlabraw.get(sess1,'F'))
-        self.G = N.matrix(mlabraw.get(sess1,'G'))
-        self.H = N.matrix(mlabraw.get(sess1,'H'))
+        self.D = np.matrix(mlabraw.get(sess1,'D'))
+        self.F = np.matrix(mlabraw.get(sess1,'F'))
+        self.G = np.matrix(mlabraw.get(sess1,'G'))
+        self.H = np.matrix(mlabraw.get(sess1,'H'))
 #----------------------------------------------------------------------------------------------------------------------
 class ForKlein:
 
@@ -1075,8 +1075,8 @@ class ForKlein:
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
-            self.P = N.matrix(P)
-            self.F = N.matrix(F)
+            self.P = np.matrix(P)
+            self.F = np.matrix(F)
 #----------------------------------------------------------------------------------------------------------------------
 class PyKlein2D:
 
@@ -1158,7 +1158,7 @@ class PyKlein2D:
         aa_1 = MAT.kron(MAT.eye(nx),bb4)+MAT.kron(pp.T,bb2*cc1)
         aa_2 = MAT.kron(MAT.eye(nx),bb1+bb2*cc2)
         aa = MAT.hstack((aa_1,aa_2))
-        sol = N.linalg.solve(-aa,HLP.ctr(aa1.flatten(1)))
+        sol = np.linalg.solve(-aa,HLP.ctr(aa1.flatten(1)))
         ee = HLP.ctr(sol[:nx**2*ny].reshape(-1,nx*ny))
         gg = HLP.ctr(sol[nx**2*ny:].reshape(-1,nx**2))
         ma = 2.0*MAT.hstack((f1+f2*ff,f2+f4))
@@ -1219,7 +1219,7 @@ class PyKlein2D:
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))
             else:
                 if count in indx:
-                    ranvec = N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
@@ -1337,14 +1337,14 @@ class PyKlein2D:
         # Now hp filter the simulations before graphing according to filtup
         for i1 in xrange(osim_y.shape[0]):
             yy = osim_y[i1,:].__array__().T
-            woy = N.zeros((osim_y.shape[1],3))
+            woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
             yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
             osim_y[i1,:] = yyf
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
-            wox = N.zeros((osim_x.shape[1],3))
+            wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
             xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
             osim_x[i1,:] = xxf
@@ -1354,7 +1354,7 @@ class PyKlein2D:
             # Now hp filter the other variables!
             for i1 in xrange(osim_o.shape[0]):
                 oo = osim_o[i1,:].__array__().T
-                woo = N.zeros((osim_o.shape[1],3))
+                woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
                 oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
                 osim_o[i1,:] = oof
@@ -1365,12 +1365,12 @@ class PyKlein2D:
             allmat = MAT.vstack((allmat,osim_o))
         varmat = MAT.zeros((allmat.shape[0],1))
         for i1 in range(allmat.shape[0]):
-            varmat[i1,0] = S.stats.var(allmat[i1,:].A.flatten(1))
+            varmat[i1,0] = np.var(allmat[i1,:].A.flatten(1))
 
         if vname:
             relmat = MAT.zeros((allmat.shape[0],1))
             indx = alli.index(vname)
-            varvari = S.stats.var(allmat[indx,:].A.flatten(1))
+            varvari = np.var(allmat[indx,:].A.flatten(1))
             for i1 in range(allmat.shape[0]):
                 relmat[i1,0] = varmat[i1,0]/varvari
             self.cvarm = MAT.hstack((varmat,relmat))
@@ -1413,14 +1413,14 @@ class PyKlein2D:
         # Now hp filter the simulations before graphing according to filtup
         for i1 in xrange(osim_y.shape[0]):
             yy = osim_y[i1,:].__array__().T
-            woy = N.zeros((osim_y.shape[1],3))
+            woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
             yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
             osim_y[i1,:] = yyf
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
-            wox = N.zeros((osim_x.shape[1],3))
+            wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
             xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
             osim_x[i1,:] = xxf
@@ -1437,7 +1437,7 @@ class PyKlein2D:
             # Now hp filter the other variables!
             for i1 in xrange(osim_o.shape[0]):
                 oo = osim_o[i1,:].__array__().T
-                woo = N.zeros((osim_o.shape[1],3))
+                woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
                 oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
                 osim_o[i1,:] = oof
@@ -1458,12 +1458,12 @@ class PyKlein2D:
         for i1 in range(sima.shape[0]):
             # Do lags
             for i2 in range(lags):
-                actm[i1,lags-i2-1] = N.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_l[i1,i2:sima_l.shape[1]-lags+i2+1].A.flatten(1))[1,0],3)
+                actm[i1,lags-i2-1] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_l[i1,i2:sima_l.shape[1]-lags+i2+1].A.flatten(1))[1,0],3)
             # Do current
-            actm[i1,lags] = N.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima[i1,:].A.flatten(1))[1,0],3)
+            actm[i1,lags] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima[i1,:].A.flatten(1))[1,0],3)
             # Do leads
             for i2 in range(leads):
-                actm[i1,lags+1+i2] = N.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_f[i1,i2:sima_f.shape[1]-leads+i2+1].A.flatten(1))[1,0],3)
+                actm[i1,lags+1+i2] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_f[i1,i2:sima_f.shape[1]-leads+i2+1].A.flatten(1))[1,0],3)
 
         self.actm = actm
         self.actname = vname
@@ -1569,7 +1569,7 @@ class PyKlein2D:
             if indy and (i1 in indy) and filtup[list(intup).index(conli[i1])]:
                 conli[i1] = conli[i1]+'(hpf)'
                 yy = sim_y[i1,:].__array__().T
-                woy = N.zeros((tlen,3))
+                woy = np.zeros((tlen,3))
                 lam = 1600
                 yyf = MAT.matrix(hpfilt(yy,woy,tlen,1600,0))
                 sim_y[i1,:] = yyf
@@ -1578,7 +1578,7 @@ class PyKlein2D:
             if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
                 stateli[i1] = stateli[i1]+'(hpf)'
                 xx = sim_x[i1,:].__array__().T
-                wox = N.zeros((tlen,3))
+                wox = np.zeros((tlen,3))
                 lam = 1600
                 xxf = MAT.matrix(hpfilt(xx,wox,tlen,1600,0))
                 sim_x[i1,:] = xxf
@@ -1588,7 +1588,7 @@ class PyKlein2D:
                 if indo and (i1 in indo) and filtup[list(intup).index(otherli[i1])]:
                     otherli[i1] = otherli[i1]+'(hpf)'
                     oo = sim_o[i1,:].__array__().T
-                    woo = N.zeros((tlen,3))
+                    woo = np.zeros((tlen,3))
                     lam = 1600
                     oof = MAT.matrix(hpfilt(oo,woo,tlen,1600,0))
                     sim_o[i1,:] = oof
@@ -1933,12 +1933,12 @@ class MatKlein2D(PyKlein2D):
         mlabraw.put(sess1,'nstates',self.tstates)
         mlabraw.put(sess1,'ssigma',self.ssigma)
         mlabraw.eval(sess1,'[ff,pp,ee,gg,kx,ky] = solab2(jac,hess,ssigma,nstates)')
-        self.F = N.matrix(mlabraw.get(sess1,'ff'))
-        self.P = N.matrix(mlabraw.get(sess1,'pp'))
-        self.E = N.matrix(mlabraw.get(sess1,'ee'))
-        self.G = N.matrix(mlabraw.get(sess1,'gg'))
-        self.KX = N.matrix(mlabraw.get(sess1,'kx'))
-        self.KY = N.matrix(mlabraw.get(sess1,'ky'))
+        self.F = np.matrix(mlabraw.get(sess1,'ff'))
+        self.P = np.matrix(mlabraw.get(sess1,'pp'))
+        self.E = np.matrix(mlabraw.get(sess1,'ee'))
+        self.G = np.matrix(mlabraw.get(sess1,'gg'))
+        self.KX = np.matrix(mlabraw.get(sess1,'kx'))
+        self.KY = np.matrix(mlabraw.get(sess1,'ky'))
 #----------------------------------------------------------------------------------------------------------------------
 class ForKleinD(PyKlein2D):
 
@@ -1971,8 +1971,8 @@ class ForKleinD(PyKlein2D):
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
-            self.P = N.matrix(P)
-            self.F = N.matrix(F)
+            self.P = np.matrix(P)
+            self.F = np.matrix(F)
 
     def sim(self,tlen,sntup=None):
         # Add 1000 observations, as they will be thrown away
@@ -2010,7 +2010,7 @@ class ForKleinD(PyKlein2D):
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))      
             else:
                 if count in indx:
-                    ranvec = N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
@@ -2276,7 +2276,7 @@ class FairTaylor:
             locals().update(self.param)
             locals().update(self.sstate[0])
             locals().update(self.makecur(tpos,self.cur_past,self.cur_pres,self.cur_fut))
-            fdot1 = S.zeros((len(self.modeq3)),'d')
+            fdot1 = np.zeros((len(self.modeq3)),'d')
             i1=0
             for x in self.modeq3:
                 fdot1[i1] = eval(x)
@@ -2288,7 +2288,7 @@ class FairTaylor:
             #locals().update(self.param)
             #locals().update(self.sstate[0])
             #locals().update(self.makecur(tpos,self.cur_past,self.cur_pres,self.cur_fut))
-            #fdot1 = S.zeros((len(self.modeq3)),'d')
+            #fdot1 = np.zeros((len(self.modeq3)),'d')
             #i1=0
             #for x in self.modeq3:
                 #fdot1[i1] = abs(eval(x))
@@ -2296,7 +2296,7 @@ class FairTaylor:
             #return sum(fdot1)
 
         #def fprime(invar):
-            #return N.array(([1,-1]))
+            #return np.array(([1,-1]))
 
 
         # Define the initial values and
@@ -2339,10 +2339,10 @@ class FairTaylor:
             cur_pres_t = {}
             cur_fut_t = {}
             for x1 in self.vardic2.items():
-                cur_past_t[x1[0]] = N.zeros(len(self.cur_pres.items()[0][1]))
+                cur_past_t[x1[0]] = np.zeros(len(self.cur_pres.items()[0][1]))
                 cur_past_t[x1[0]][0] = float(self.cur_past[x1[0]][0].data)
-                cur_pres_t[x1[0]] = N.zeros(len(self.cur_pres.items()[0][1]))
-                cur_fut_t[x1[0]] = N.zeros(len(self.cur_pres.items()[0][1]))
+                cur_pres_t[x1[0]] = np.zeros(len(self.cur_pres.items()[0][1]))
+                cur_fut_t[x1[0]] = np.zeros(len(self.cur_pres.items()[0][1]))
                 cur_fut_t[x1[0]][-1] = float(self.cur_fut[x1[0]][-1].data)
             for i1 in range(0,len(self.cur_pres.items()[0][1])):
                 out_tmp = self.solveone(i1,self.cur_past,self.cur_pres,self.cur_fut)
