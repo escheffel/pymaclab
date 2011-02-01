@@ -1,9 +1,18 @@
+import os
+from numpy import matlib as MAT
+import numpy as np
+import scikits.timeseries as ts
+from scipy import io
+import pymaclab as pm
+import
+
 #Specialize general options
-mac.mk_hessian = True
-mac.ncpus = 2
+#mac.mk_hessian = True
+#mac.ncpus = 2
+#NOTE: ?? use global flags or get rid of for a config file and automatization
 
 # Get Christiano Data and prepare
-input = open(OPS.path.join(datapath,'cee2005data.asc'),'r')
+input = open(os.path.join(datapath,'cee2005data.asc'),'r')
 lines = input.read()
 lines = lines.splitlines()
 lines = lines[:-2]
@@ -20,63 +29,63 @@ for x in lines:
 # Make sure all series are array(1,x)
 linesm = MAT.matrix(lines)
 chr_gdp = linesm[:,0].A.flatten(1)
-chr_gdp = S.exp(chr_gdp/100).flatten(1)
-chr_gdp = S.log(chr_gdp).flatten(1)
+chr_gdp = np.exp(chr_gdp/100).flatten(1)
+chr_gdp = np.log(chr_gdp).flatten(1)
 chr_pi = linesm[:,1].A.flatten(1)
 chr_cons = linesm[:,2].A.flatten(1)
-chr_cons = S.exp(chr_cons/100).flatten(1)
-chr_cons = S.log(chr_cons).flatten(1)
+chr_cons = np.exp(chr_cons/100).flatten(1)
+chr_cons = np.log(chr_cons).flatten(1)
 chr_inv = linesm[:,3].A.flatten(1)
-chr_inv = S.exp(chr_inv/100).flatten(1)
+chr_inv = np.exp(chr_inv/100).flatten(1)
 
 # make capital from investment
-chr_cap = N.zeros((chr_inv.shape[0],))
+chr_cap = np.zeros((chr_inv.shape[0],))
 chr_cap[0] = chr_inv[0]
 for x in xrange(chr_inv.shape[0]-1):
     chr_cap[x+1] = chr_inv[x+1]+chr_cap[x]
 
-chr_cap = S.log(chr_cap).flatten(1)
-chr_inv = S.log(chr_inv).flatten(1)
+chr_cap = np.log(chr_cap).flatten(1)
+chr_inv = np.log(chr_inv).flatten(1)
 chr_rwage = linesm[:,4].A.flatten(1)
-chr_rwage = S.exp(chr_rwage/100).flatten(1)
-chr_rwage = S.log(chr_rwage).flatten(1)
+chr_rwage = np.exp(chr_rwage/100).flatten(1)
+chr_rwage = np.log(chr_rwage).flatten(1)
 chr_prod = linesm[:,5].A.flatten(1)
-chr_prod = S.exp(chr_prod/100).flatten(1)
-chr_prod = S.log(chr_prod).flatten(1)
+chr_prod = np.exp(chr_prod/100).flatten(1)
+chr_prod = np.log(chr_prod).flatten(1)
 chr_ffr = linesm[:,6].A.flatten(1)
 chr_dm = linesm[:,7].A.flatten(1)
 chr_rprof = linesm[:,8].A.flatten(1)
-chr_rprof = S.exp(chr_rprof/100).flatten(1)
-chr_rprof = S.log(chr_rprof).flatten(1)
+chr_rprof = np.exp(chr_rprof/100).flatten(1)
+chr_rprof = np.log(chr_rprof).flatten(1)
 
 
-#chrt_err = TS.time_series\
+#chrt_err = ts.time_series\
          #(err,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_gdp = TS.time_series\
+chrt_gdp = ts.time_series\
          (chr_gdp,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_pi = TS.time_series\
+chrt_pi = ts.time_series\
         (chr_pi,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_cons = TS.time_series\
+chrt_cons = ts.time_series\
         (chr_cons,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_inv = TS.time_series\
+chrt_inv = ts.time_series\
         (chr_inv,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_rwage = TS.time_series\
+chrt_rwage = ts.time_series\
         (chr_rwage,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_prod = TS.time_series\
+chrt_prod = ts.time_series\
         (chr_prod,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_ffr = TS.time_series\
+chrt_ffr = ts.time_series\
         (chr_ffr,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_dm = TS.time_series\
+chrt_dm = ts.time_series\
         (chr_dm,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_rprof = TS.time_series\
+chrt_rprof = ts.time_series\
         (chr_rprof,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
-chrt_cap = TS.time_series\
+chrt_cap = ts.time_series\
         (chr_cap,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
 
 # Load Christiano's VAR data in matlab format
-cdata = S.io.loadmat(OPS.path.join(datapath,'datrep.mat'))
+cdata = io.loadmat(OPS.path.join(datapath,'datrep.mat'))
 cdata = cdata['datrep']
-cdata = N.matrix(cdata)
+cdata = np.matrix(cdata)
 
 # Some VAR Stuff
 Var1 = newVAR(4,cdata[:,:],'const')
