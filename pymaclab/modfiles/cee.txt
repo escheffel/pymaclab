@@ -1,10 +1,6 @@
-%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-This is the canonical Christian, Evans and Eichenbaum NK model.
-
-
-
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Name = CEE New Keynesian model;
+Description = This is the canonical Christian, Evans and Eichenbaum NK model.;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -99,7 +95,7 @@ sigma_g                 = 0.02;
 [15] x2(t):wrec2{con}[log,hp]
 
 
-%Boundary conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
 
 
@@ -131,7 +127,7 @@ None
 
 
 
-%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # def investment
 [1]  iv(t)-output(t)+c(t)+g(t)+@a(t)*k(t-1) = 0;
 # wage rate
@@ -176,12 +172,12 @@ None
 [15] LOG(E(t)|z(t+1))-rho_z*LOG(z(t)) = 0;
 
 
-%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady State Non-Linear System [Manual]++++++++++++++++++++++++++++++++++++++++++++++++
 None
 
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Steady State Gross Real Interest Rate
 rr_bar         = 1/betta;
 # Steady State Gross Nominal Interest Rate
@@ -264,4 +260,4 @@ Sigma = [sigma_z 0;
 None
 
 
-%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%End of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
