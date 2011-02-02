@@ -5,6 +5,7 @@ import re
 import copy
 import numpy.matlib as mat
 
+#TODO: why have these as nested functions?
 def populate_model_stage_one(self, input=None):
     """
     1st stage population of DSGE model.  Does not need Steady State.
@@ -104,18 +105,18 @@ def populate_model_stage_one(self, input=None):
         mkvarinfo()
 
     #Extract the model description into string list
-    def mkdesc():
-        self.mod_desc = input.secs['mod'][0][0]
-    if sum([nreg.search(x)!=None for x in input.secs['mod'][0]]) == 0:
-        mkdesc()
+#    def mkdesc():
+#        self.mod_desc = input.secs['mod'][0][0]
+#    if sum([nreg.search(x)!=None for x in input.secs['mod'][0]]) == 0:
+#        mkdesc()
 
-    # Extract the model name
-    def mkname():
-        for x in input.secs['info'][0]:
-            if 'Name' in x:
-                self.modname = x.split('=')[1].replace(';','').strip()
+    # Extract the model name and description
     if sum([nreg.search(x)!=None for x in input.secs['info'][0]]) == 0:
-        mkname()
+       for x in input.secs['info'][0]:
+            if 'Name' in x:
+                self.mod_name = x.split('=')[1].replace(';','').strip()
+            if 'Desc' in x:
+                self.mod_desc = x.split('=')[1].replace(';','').strip()
 
     # Extract parameters into dictionary
     def mkparam():
