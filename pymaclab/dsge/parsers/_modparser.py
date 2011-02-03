@@ -27,8 +27,8 @@ class MODparser(object):
         self.ffile = fname #TODO: why have both?
         self.filename = fname
         self.secs = {}     #TODO: change to sections
-        input = open(os.path.join(modfpath, fname), 'r')
-        wholefile = input.read()
+        txtinput = open(os.path.join(modfpath, fname), 'r')
+        wholefile = txtinput.read()
         self.filestring = wholefile
         self.lines = self.filestring.splitlines()
         self.numlines = len(self.filestring.splitlines())
