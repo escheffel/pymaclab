@@ -16,12 +16,14 @@ import glob
 try:
     import sympycore
 except:
-    print "You need to install sympycore"
-    print "svn checkout http://sympycore.googlecode.com/svn/trunk/ sympycore"
+    print "You need to get the sympycore source by doing"
+    print "svn checkout http://sympycore.googlecode.com/svn/trunk/ /path/to/sympycore"
+    print "and then installing"
 try:
     import pp
 except:
-    print "You need to install pp"
+    print "You need to install pp (easy_install)"
+    print "this is optional"
 
 #NOTE: Imports from the refactor
 from pymaclab.filters._hpfilter import hpfilt
@@ -73,6 +75,7 @@ mk_hessian = True
 # Number of cores used for calculations
 #ncpus = 2
 try:    # no mp in 2.5
+    import pp
     from multiprocessing import cpu_count
     ncpus = cpu_count()
 except:
