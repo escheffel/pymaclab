@@ -6,18 +6,22 @@ import copy
 import numpy.matlib as mat
 
 #TODO: why have these as nested functions?
-def populate_model_stage_one(self, input=None):
+def populate_model_stage_one(self, txtinput=None):
     """
     1st stage population of DSGE model.  Does not need Steady State.
     """
+    secs = txtinput.secs
+
     _nreg = '^\s*None\s*$'
     nreg = re.compile(_nreg)
 
     # Get all information from the varvec section
-    def mkvarinfo():
-        vtexp = re.compile('^.*?\[.*?\]\s*(?P<vari>.+?)\s*:\s*(?P<varn>.+?)\s*\{(?P<vtype>[^\[]+)}\s*(?P<mod>\[.*?\]){0,1}')
+    if any([False if 'None' in x else True for x in secs['varvec'][0]]):
+        # match something like [1]  z(t):eps_z(t):techshock{exo}[log,hp]
+        vtexp =  re.compile('^.*?\[.*?\]\s*(?P<vari>.+?)\s*:\s*(?P<varn>.+?)\s*\{(?P<vtype>[^\[]+)}\s*(?P<mod>\[.*?\]){0,1}')
+        # match something like [15] x2(t):wrec2{con}[log,hp] OR [1] z(t):eps_z(t):techshock{exo}[log,hp]
         viiexp = re.compile('^.*?\[.*?\]\s*(?P<vari>.+?)\s*:\s*(?P<viid>.+?)\s*:\s*(?P<varn>.+?)\s*\{(?P<vtype>[^\[]+)}\s*(?P<mod>\[.*?\]){0,1}')
-        voexp = re.compile('^.*?\[.*?\]\s*(?P<vari>@.+?):(?P<varn>[^\[]+)\s*(?P<mod>\[.*?\]){0,1}')
+        voexp =  re.compile('^.*?\[.*?\]\s*(?P<vari>@.+?):(?P<varn>[^\[]+)\s*(?P<mod>\[.*?\]){0,1}')
         vardic = {}
         audic = {}
         vardic['endo'] = {}
@@ -42,7 +46,7 @@ def populate_model_stage_one(self, input=None):
         audic['exo']['var'] = []
         audic['exo']['mod'] = []
 
-        for x in input.secs['varvec'][0]:
+        for x in secs['varvec'][0]:
             if viiexp.search(x):
                 ma = viiexp.search(x)
                 vari = ma.group('vari').strip()
@@ -101,40 +105,36 @@ def populate_model_stage_one(self, input=None):
         self.vardic = vardic
         self.audic = audic
 
-    if sum([nreg.search(x)!=None for x in input.secs['varvec'][0]]) == 0:   
-        mkvarinfo()
-
-    #Extract the model description into string list
-#    def mkdesc():
-#        self.mod_desc = input.secs['mod'][0][0]
-#    if sum([nreg.search(x)!=None for x in input.secs['mod'][0]]) == 0:
-#        mkdesc()
-
     # Extract the model name and description
-    if sum([nreg.search(x)!=None for x in input.secs['info'][0]]) == 0:
-       for x in input.secs['info'][0]:
+    if any([False if 'None' in x else True for x in secs['info'][0]]):
+       for x in secs['info'][0]:
             if 'Name' in x:
                 self.mod_name = x.split('=')[1].replace(';','').strip()
             if 'Desc' in x:
                 self.mod_desc = x.split('=')[1].replace(';','').strip()
 
     # Extract parameters into dictionary
-    def mkparam():
+    if any([False if 'None' in x else True for x in secs['para'][0]]):
         param = {}
-        for x in input.secs['para'][0]:
+        # need to do this so users don't have to worry about integer division
+        # but preserves integer division for sympycore stuff
+        safe_div = """
+from __future__ import division
+"""
+        for x in secs['para'][0]:
             list_tmp = x.split(';')
             list_tmp = list_tmp[0].split('=')[:]
             str_tmp1 = list_tmp[0].strip()
             str_tmp2 = list_tmp[1].strip()
-            param[str_tmp1] = eval(str_tmp2)
-            locals()[str_tmp1] = eval(str_tmp2)
-        return param
-    if sum([nreg.search(x)!=None for x in input.secs['para'][0]]) == 0:
-        self.paramdic = mkparam()
+            #NOTE: this *should* be safe, but users should know what's in the .mod file
+            exec(safe_div + "param['"+str_tmp1+"']=" + str_tmp2, {}, {'param' :param})
+            locals()[str_tmp1] = param[str_tmp1]
+        self.paramdic = param
+
     # Collect information on manual (closed-form) steady state
-    def colecmanss():
+    if any([False if 'None' in x else True for x in secs['sss'][0]]):
         # Join multiline steady state definitions
-        mansys = self.txtpars.secs['sss'][0]
+        mansys = secs['sss'][0]
         list_tmp1 = []
         i1=0
         counter=0
@@ -151,12 +151,11 @@ def populate_model_stage_one(self, input=None):
                     list_tmp1.append(str_tmp)
                     counter = 0 
             i1=i1+1
-        return list_tmp1
+        self.manss_sys = list_tmp1
 
-    if sum([nreg.search(x)!=None for x in input.secs['sss'][0]]) == 0:
-        self.manss_sys = colecmanss()
     # Collect info on numerical steady state
-    def colecnumss():
+#    def colecnumss():
+    if any([False if 'None' in x else True for x in secs['ssm'][0]]):
         _mreg = '[a-zA-Z]*_bar\s*=\s*[0-9]*\.[0-9]*'
         _mreg2 = '[a-zA-Z]*\s*=\s*[0-9]*\.[0-9]*'
         mreg = re.compile(_mreg+'|'+_mreg2)
@@ -165,7 +164,7 @@ def populate_model_stage_one(self, input=None):
         list_tmp = []
         i1=0
         counter=0
-        for x in input.secs['ssm'][0]:
+        for x in secs['ssm'][0]:
             if mreg.search(x):
                 ma = mreg.search(x)
                 str1 = ma.group().split('=')[0].strip()
@@ -179,14 +178,16 @@ def populate_model_stage_one(self, input=None):
                     list_tmp.append(x.replace(';','').split(']')[1].split('=')[0].strip())
                 elif counter > 0:
                     str_tmp = ''
-                    for y in input.secs['ssm'][0][i1-counter:i1+1]:
+                    for y in secs['ssm'][0][i1-counter:i1+1]:
                         str_tmp = str_tmp + y.replace('...','').strip()
                     list_tmp.append(str_tmp.split(']')[1].split('=')[0].replace(';','').strip())
                     counter = 0 
             i1=i1+1
-        return (ssidic,list_tmp)
-    if sum([nreg.search(x)!=None for x in input.secs['ssm'][0]]) == 0:
-        self.ssidic,self.ssys_list = colecnumss()
+        self.ssidic = ssidic
+        self.ssys_list = list_tmp
+
+#    if sum([nreg.search(x)!=None for x in secs['ssm'][0]]) == 0:
+#        self.ssidic,self.ssys_list = colecnumss()
 
     return self
 

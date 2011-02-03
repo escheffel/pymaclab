@@ -339,12 +339,12 @@ class DSGEmodel:
         _nreg = '^\s*None\s*$'
         nreg = re.compile(_nreg)
 
-        self.txtpars = parse_mod(self.modfile) # TODO: change to modpars
-                                               # have this return rather 
-                                               # than be an attached instance?
+        txtpars = parse_mod(self.modfile)   # better name than txtpars?
+        self.txtpars = txtpars
 
-        # Start to populate the model from file
-        self.pop(input=self.txtpars)
+        # Initial population method of model, does NOT need steady states
+        self = populate_model_stage_one(self, txtpars)
+
         # Attach the data from database
         if self.dbase != None:
             self.getdata(dbase=self.dbase)
@@ -354,7 +354,7 @@ class DSGEmodel:
 ################## STEADY STATE CALCULATIONS !!! ####################
         self.sssolvers = SSsolvers()
         # Solve for steady-state using fsolve
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['ssm'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in txtpars.secs['ssm'][0]]) == 0:
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
             self.sssolvers.fsolve.solve()
@@ -365,7 +365,7 @@ class DSGEmodel:
             else:
                 self.switches['ss_suc'] = ['1','0']
         # Solve for steady-state using manss
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['sss'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in txtpars.secs['sss'][0]]) == 0:
             if self.switches['ss_suc'] == ['1','1']:
                 alldic = {}
                 alldic.update(self.sstate)
@@ -382,12 +382,12 @@ class DSGEmodel:
         if initlev == 1: return
 
         # No populate more with stuff that needs steady state
-        self.pop2(self.txtpars)
+        self.pop2(txtpars)
 
         # Open the model solution tree branch
         self.modsolvers = MODsolvers()
         ######################## LINEAR METHODS !!! ############################
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['modeq'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in txtpars.secs['modeq'][0]]) == 0:
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -426,7 +426,7 @@ class DSGEmodel:
                  sess1)
             self.modsolvers.forklein = ForKlein(intup)
         ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['focs'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in txtpars.secs['focs'][0]]) == 0:
 
             # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
             if use_anaderiv:
@@ -463,7 +463,7 @@ class DSGEmodel:
                      self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
         ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-            if sum([nreg.search(x)!=None for x in self.txtpars.secs['vcvm'][0]]) == 0 and\
+            if sum([nreg.search(x)!=None for x in txtpars.secs['vcvm'][0]]) == 0 and\
                'numh' in dir(self):
                 # Open the MatKlein2D object
                 if 'nlsubsys' in dir(self):
@@ -493,10 +493,6 @@ class DSGEmodel:
             
         # Wrap the paramdic at the end of model initialization
         self.params = dicwrap(self,initlev,nreg)
-
-    # Initial population method of model, does NOT need steady states
-    def pop(self,input=None):
-        self = populate_model_stage_one(self, input)
 
         # Create None tester regular expression
     # 2dn stage population of model, does NEED the steady state
