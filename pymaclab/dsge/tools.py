@@ -2,22 +2,6 @@
 COLLECTION OF SUPPORTING FUNCTIONS AND CLASSES
 """
 
-def locate(stringlines,varlist):
-    '''
-    A function, takes stringlines (split file) and a varlist
-    and then creates a location dictionary for location of strings in file
-    '''
-    locdic = {}
-    for x in varlist:
-        row_iter=0
-        while row_iter < len(stringlines):
-            if x[0] in stringlines[row_iter]:
-                locdic[x[1]] = row_iter
-                break
-            else:
-                row_iter=row_iter+1
-    return locdic
-
 class dicwrap:
     def __init__(self,other,initlev,nreg):
         self.other = other

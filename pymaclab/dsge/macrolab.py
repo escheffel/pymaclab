@@ -32,7 +32,7 @@ from solvers.steadystate import SSsolvers, Manss, Fsolve
 from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
         MatKleinD, MatWood, ForKlein, PyKlein2D, MatKlein2D, ForKleinD,
         FairTaylor)
-from parsers._modparser import MODparser
+from parsers._modparser import parse_mod
 from parsers._dsgeparser import (populate_model_stage_one, 
         populate_model_stage_two)
 from tools import dicwrap
@@ -339,7 +339,7 @@ class DSGEmodel:
         _nreg = '^\s*None\s*$'
         nreg = re.compile(_nreg)
 
-        self.txtpars = MODparser(self.modfile) # TODO: change to modpars
+        self.txtpars = parse_mod(self.modfile) # TODO: change to modpars
                                                # have this return rather 
                                                # than be an attached instance?
 
@@ -451,7 +451,7 @@ class DSGEmodel:
                      self.ncon,self.sigma,
                      self.jAA,self.jBB,
                      self.vardic,self.vdic,
-                     self.modname,self.audic,
+                     self.mod_name,self.audic,
                      self.numjl,
                      self.nother)
             else:
@@ -460,7 +460,7 @@ class DSGEmodel:
                      self.ncon,self.sigma,
                      self.jAA,self.jBB,
                      self.vardic,self.vdic,
-                     self.modname,self.audic)
+                     self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
         ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
             if sum([nreg.search(x)!=None for x in self.txtpars.secs['vcvm'][0]]) == 0 and\
@@ -472,7 +472,7 @@ class DSGEmodel:
                          self.ncon,self.sigma,
                          self.jAA,self.jBB,
                          self.vardic,self.vdic,
-                         self.modname,self.audic,
+                         self.mod_name,self.audic,
                          self.numjl,self.numhl,
                          self.nother,sess1)
                 else:
@@ -481,7 +481,7 @@ class DSGEmodel:
                          self.ncon,self.sigma,
                          self.jAA,self.jBB,
                          self.vardic,self.vdic,
-                         self.modname,self.audic,
+                         self.mod_name,self.audic,
                          sess1)
                 self.modsolvers.matklein2d = MatKlein2D(intup)
                 # Open the PyKlein2D object
@@ -508,7 +508,7 @@ class DSGEmodel:
         tmplist = glob.glob('tempz*.html')
         for x in tmplist:
             os.remove(x)
-        modname = self.modname
+        modname = self.mod_name
         secs = self.txtpars.secs
         direc = os.getcwd()
         fd,fpath = mkstemp(prefix='tempz',suffix='.html',dir=direc)
@@ -635,7 +635,7 @@ class DSGEmodel:
         if modfname+'.tex' not in os.listdir(modfpath):
             file = open(os.path.join(modfpath,modfname+'.tex'),'wb')
             file.write('\\documentclass[a4paper,11pt]{article}\n')
-            file.write('\\title{%s}\n'% self.modname)
+            file.write('\\title{%s}\n'% self.mod_name)
             file.write('\\author{%s}\n'% self.author)
             file.write('\\begin{document}\n')
             file.write('\\maketitle\n\n')
@@ -1939,7 +1939,7 @@ class DSGEmodel:
                      self.ncon,self.sigma,
                      self.jAA,self.jBB,
                      self.vardic,self.vdic,
-                     self.modname,
+                     self.mod_name,
                      self.numjl,
                      self.nother)
             else:
@@ -1948,7 +1948,7 @@ class DSGEmodel:
                      self.ncon,self.sigma,
                      self.jAA,self.jBB,
                      self.vardic,self.vdic,
-                     self.modname)
+                     self.mod_name)
             self.modsolvers.forkleind = ForKleinD(intup)
         ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
             if sum([nreg.search(x)!=None for x in self.txtpars.secs['vcvm'][0]]) == 0 and\
@@ -1960,7 +1960,7 @@ class DSGEmodel:
                          self.ncon,self.sigma,
                          self.jAA,self.jBB,
                          self.vardic,self.vdic,
-                         self.modname,
+                         self.mod_name,
                          self.numjl,self.numhl,
                          self.nother,sess1)
                 else:
@@ -1969,7 +1969,7 @@ class DSGEmodel:
                          self.ncon,self.sigma,
                          self.jAA,self.jBB,
                          self.vardic,self.vdic,
-                         self.modname,
+                         self.mod_name,
                          sess1)
                 self.modsolvers.matklein2d = MatKlein2D(intup)
                 # Open the PyKlein2D object
