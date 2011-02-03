@@ -1,47 +1,25 @@
 #from __future__ import division
 import wx
 import wx.grid as gridlib
-import trace
-import time
-import datetime
-import subprocess
-import numpy.ma as MA
-from numpy.ma import nomask
-from scikits import timeseries as TSS
-import copy as COP
-import os as OPS
-import re as RE
-import sys as SYST
-import re as RE
-import string as STR
-import scipy as S
-from scipy import io
-import scipy.stats
-import helpers as HLP
-import numpy as N
-import pylab as P
-from numpy import matlib as MAT
-from scipy import linalg as LIN
-from scipy import stats as STA
-from scikits.timeseries.lib import plotlib as TPL
-import macrolab as MACLAB
-import errors
-from errors import *
-import tempfile as TMF
-import threading as THR
+from scikits import timeseries as ts
+from copy import deepcopy
+import os
+import re
+#import scipy as S
+from helpers import now_is
+import numpy as np
+from numpy import matlib as mat
+from scipy.linalg import eig as scipyeig
+#from scikits.timeseries.lib import plotlib as tsplt
+from tempfile import mkstemp
 import glob
 try:
-    import sympy as SP
-except:
-    print "You need to install sympy"
-try:
-    import sympycore as SPC
+    import sympycore
 except:
     print "You need to install sympycore"
     print "svn checkout http://sympycore.googlecode.com/svn/trunk/ sympycore"
-import popen2
 try:
-    import pp as PP
+    import pp
 except:
     print "You need to install pp"
 
@@ -128,14 +106,14 @@ class TSDataBase:
         This imports the DataStream datafile using the
         file's NAME as an argument.
         '''
-        str_tmp1 = open(OPS.path.join(datapath,filename),'r')
+        str_tmp1 = open(os.path.join(datapath,filename),'r')
         flist = str_tmp1.read().splitlines()[:]
         dat_Start = flist[0].split(',')[1].strip()[:]
         dat_End = flist[1].split(',')[1].strip()[:]
-        dat_Freq = RE.sub('"','',flist[2].split(',')[1]).strip()[:]
-        dat_Name = RE.sub('"','',flist[3].split(',')[1]).strip()[:]
-        dat_Code = RE.sub('"','',flist[4].split(',')[1]).strip()[:]     
-        dat_Curr = RE.sub('"','',flist[5].split(',')[1]).strip()[:]
+        dat_Freq = re.sub('"','',flist[2].split(',')[1]).strip()[:]
+        dat_Name = re.sub('"','',flist[3].split(',')[1]).strip()[:]
+        dat_Code = re.sub('"','',flist[4].split(',')[1]).strip()[:]     
+        dat_Curr = re.sub('"','',flist[5].split(',')[1]).strip()[:]
         datadate = flist[6:]
         datacsv = ''
         i1=0
@@ -143,21 +121,22 @@ class TSDataBase:
             str_tmp1 = x.split(',')[1]
             datacsv = datacsv[:] + str_tmp1[:]+'\n'
             i1 = i1 + 1
-        output = open(OPS.getcwd()+'/'+'tmp_001.csv', 'w')
+        output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
         output.write(datacsv)
-        pdata = P.load('tmp_001.csv',delimiter=',')
-        OPS.remove(OPS.getcwd()+'/'+'tmp_001.csv')
+#        pdata = P.load('tmp_001.csv',delimiter=',')
+        pdata = np.loadtxt('tmp_001.csv', delimiter=",")
+        os.remove(os.getcwd()+'/'+'tmp_001.csv')
         if dat_Freq == 'D':
-            tsdata = data = TSS.time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=int(dat_Start[6:10]),
                                           month=int(dat_Start[3:5]),
                                           day=int(dat_Start[0:2])))
         elif dat_Freq == 'M':
-            tsdata = data = TSS.time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=int(dat_Start[6:10]),
                                           month=int(dat_Start[3:5])))
         elif dat_Freq == 'Q':
-            tsdata = data = TSS.time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=int(dat_Start[6:10]),
                                           quarter=int(dat_Start[3:4])))
 
@@ -166,7 +145,7 @@ class TSDataBase:
         self.datdic[dat_Code]['is_DatStr'] = True
         self.datdic[dat_Code]['Dat_Desc'] = dat_Name
         self.datdic[dat_Code]['DatStr_Code'] = dat_Code
-        self.datdic[dat_Code]['imTimeStamp'] = HLP.now_is()
+        self.datdic[dat_Code]['imTimeStamp'] = now_is()
         self.datdic[dat_Code]['start_date'] = tsdata.start_date
         self.datdic[dat_Code]['end_date'] = tsdata.end_date
         self.datdic[dat_Code]['freq'] = tsdata.freqstr[0:1]
@@ -181,14 +160,14 @@ class TSDataBase:
         This imports the DataStream datafile using the
         entire file as a STRING as an argument.
         '''
-        str_tmp1 = COP.deepcopy(csvfile)
+        str_tmp1 = deepcopy(csvfile)
         flist = str_tmp1.splitlines()[:]
         dat_Start = flist[0].split(',')[1].strip()[:]
         dat_End = flist[1].split(',')[1].strip()[:]
-        dat_Freq = RE.sub('"','',flist[2].split(',')[1]).strip()[:]
-        dat_Name = RE.sub('"','',flist[3].split(',')[1]).strip()[:]
-        dat_Code = RE.sub('"','',flist[4].split(',')[1]).strip()[:]     
-        dat_Curr = RE.sub('"','',flist[5].split(',')[1]).strip()[:]
+        dat_Freq = re.sub('"','',flist[2].split(',')[1]).strip()[:]
+        dat_Name = re.sub('"','',flist[3].split(',')[1]).strip()[:]
+        dat_Code = re.sub('"','',flist[4].split(',')[1]).strip()[:]     
+        dat_Curr = re.sub('"','',flist[5].split(',')[1]).strip()[:]
         datadate = flist[6:]
         datacsv = ''
         i1=0
@@ -200,21 +179,22 @@ class TSDataBase:
                 str_tmp1 = x.split(',')[1]
                 datacsv = datacsv + str_tmp1+'\n'
             i1 = i1 + 1
-        output = open(OPS.getcwd()+'/'+'tmp_001.csv', 'w')
+        output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
         output.write(datacsv)
-        pdata = P.load('tmp_001.csv',delimiter=',')
-        OPS.remove(OPS.getcwd()+'/'+'tmp_001.csv')
+#        pdata = P.load('tmp_001.csv',delimiter=',')
+        pdate = np.loadtxt('tmp_001.csv', delimiter=",")
+        os.remove(os.getcwd()+'/'+'tmp_001.csv')
         if dat_Freq == 'D':
-            tsdata = data = time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=dat_Start[0:1],
                                           month=dat_Start[3:4],
                                           day=dat_Start[6:9]))
         elif dat_Freq == 'M':
-            tsdata = data = time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=dat_Start[0:1],
                                           month=dat_Start[3:4]))
         elif dat_Freq == 'Q':
-            tsdata = data = time_series(pdata,start_date=TSS.Date(freq=dat_Freq,
+            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
                                           year=dat_Start[0:1],
                                           quarter=dat_Start[3:4]))
 
@@ -222,7 +202,7 @@ class TSDataBase:
         self.datdic[dat_Name]['infile'] = tsdata
         self.datdic[dat_Name]['is_DatStr'] = True
         self.datdic[dat_Name]['DatStr_Code'] = dat_Code
-        self.datdic[dat_Name]['imTimeStamp'] = HLP.now_is()
+        self.datdic[dat_Name]['imTimeStamp'] = now_is()
 
     def tsim(self,datname,tsdesc,tsin):
         self.datdic[datname]={}
@@ -230,7 +210,7 @@ class TSDataBase:
         self.datdic[datname]['is_DatStr'] = False
         self.datdic[datname]['Dat_Desc'] = tsdesc
         self.datdic[datname]['DatStr_Code'] = None
-        self.datdic[datname]['imTimeStamp'] = HLP.now_is()
+        self.datdic[datname]['imTimeStamp'] = now_is()
         self.datdic[datname]['start_date'] = tsin.start_date
         self.datdic[datname]['end_date'] = tsin.end_date
         self.datdic[datname]['freq'] = tsin.freqstr[0:1]
@@ -241,7 +221,7 @@ class TSDataBase:
         self.datdic[datname]['alias'] = False
 
     def isDatStreamCSV(self,csvfile):
-        str_tmp1 = COP.deepcopy(csvfile)
+        str_tmp1 = deepcopy(csvfile)
         flist = str_tmp1.splitlines()[:]
         if '"Start"' in flist[0] and \
            '"End"' in flist[1] and \
@@ -256,22 +236,22 @@ class TSDataBase:
     def mkhpf(self,tsname,tsout,lam=1600):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = hpfilt(tsinf,N.zeros((N.shape(tsinf)[0],3)),
-            N.shape(tsinf)[0],lam,0)
-        tsoutf = TSS.time_series\
+        tsoutf = hpfilt(tsinf,np.zeros((np.shape(tsinf)[0],3)),
+            np.shape(tsinf)[0],lam,0)
+        tsoutf = ts.time_series\
                (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])
         self.tsim(tsout,tsin['Dat_Desc']+',hp-filtered',tsoutf)
 
     def mklog(self,tsname,tsout):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = N.log(tsinf)
+        tsoutf = np.log(tsinf)
         self.tsim(tsout,tsin['Dat_Desc']+',logarithmic',tsoutf)
 
     def mkexp(self,tsname,tsout):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = N.exp(tsinf)
+        tsoutf = np.exp(tsinf)
         self.tsim(tsout,tsin['Dat_Desc']+',to base e',tsoutf)
 
     def mkalias(self,dbtsname,alname):
@@ -291,8 +271,8 @@ class TSDataBase:
             eval_list = eval_list + [x1[3],]
         max_sval = max(sval_list)
         min_eval = min(eval_list)
-        s_date = TSS.Date(freq,value=max_sval)
-        e_date = TSS.Date(freq,value=min_eval)
+        s_date = ts.Date(freq,value=max_sval)
+        e_date = ts.Date(freq,value=min_eval)
         list_tmp = []
         for x1 in self.datdic.items():
             if x1[1]['alias'] != 'None' and x1[1]['freq'] == freq:
@@ -302,10 +282,10 @@ class TSDataBase:
         tmp_dic={}
         for x1 in varord:
             tmp_dic[x1[0]] = self.modif[x1[0]]
-        dat_mat = MAT.zeros((N.shape(N.mat(tmp_dic.items()[0][1].data).T)[0],len(varord)))
+        dat_mat = mat.zeros((np.shape(np.mat(tmp_dic.items()[0][1].data).T)[0],len(varord)))
         self.datmat = dat_mat
         for x1 in varord:
-            self.datmat[:,x1[1]-1] = N.mat(tmp_dic[x1[0]].data).T
+            self.datmat[:,x1[1]-1] = np.mat(tmp_dic[x1[0]].data).T
         self.VAR = VAR(varlag,self.datmat,useconst)
         self.VAR.ols()
         self.VAR.ols_comp()
@@ -354,7 +334,7 @@ class DSGEmodel:
 
         # Create None tester regular expression
         _nreg = '^\s*None\s*$'
-        nreg = RE.compile(_nreg)
+        nreg = re.compile(_nreg)
 
         self.txtpars = MODparser(self.modfile) # TODO: change to modpars
                                                # have this return rather 
@@ -524,12 +504,12 @@ class DSGEmodel:
     def info(self):
         tmplist = glob.glob('tempz*.html')
         for x in tmplist:
-            OPS.remove(x)
+            os.remove(x)
         modname = self.modname
         secs = self.txtpars.secs
-        direc = OPS.getcwd()
-        fd,fpath = TMF.mkstemp(prefix='tempz',suffix='.html',dir=direc)
-        htmlfile = OPS.fdopen(fd,'w+b')
+        direc = os.getcwd()
+        fd,fpath = mkstemp(prefix='tempz',suffix='.html',dir=direc)
+        htmlfile = os.fdopen(fd,'w+b')
         htmlfile.write('<HTML><BODY BGCOLOR="white">\n')
         htmlfile.write('<H2>%s</H2>\n'%modname)
         htmlfile.write('\n\n')
@@ -555,10 +535,10 @@ class DSGEmodel:
         htmlfile.write('<P>'+'<H4>Uhlig Toolkit Output</H4>\n')
         htmlfile.close()
         cmd = browserpath+' '+fpath
-        OPS.system(cmd)
+        os.system(cmd)
         tmplist = glob.glob('tempz*.html')
         for x in tmplist:
-            OPS.remove(x)
+            os.remove(x)
         return 'Model Website opened!'
     # Set the author of the current model
     def setauthor(self,author=None):
@@ -570,87 +550,87 @@ class DSGEmodel:
     def pdf(self):
         modfile = self.modfile
         modfname = modfile.split('.')[0]
-        if modfname+'.pdf' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.pdf'))
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.aux' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.aux'))
-        if modfname+'.dvi' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.dvi'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
+        if modfname+'.pdf' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.pdf'))
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.aux' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.aux'))
+        if modfname+'.dvi' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.dvi'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
 
         # Does the model tex file even exist?
-        if modfname+'.tex' not in OPS.listdir(modfpath):
+        if modfname+'.tex' not in os.listdir(modfpath):
             print 'Error: The model tex file does not exist!'
             print 'Use model.texed() to create a new one!'
             return
 
         # First check for Chktex syntax errors
-        if 'texer.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),'texer.log'))
+        if 'texer.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),'texer.log'))
         args = '--quiet -v2 -n3 -n25 -n12 -n35'
-        cmd = 'chktex '+args+' '+OPS.path.join(modfpath,modfname+'.tex'+' > texer.log')
-        OPS.system(cmd)
-        file = open(OPS.path.join(OPS.getcwd(),'texer.log'),'rU')
+        cmd = 'chktex '+args+' '+os.path.join(modfpath,modfname+'.tex'+' > texer.log')
+        os.system(cmd)
+        file = open(os.path.join(os.getcwd(),'texer.log'),'rU')
         errlist = file.readlines()
         if len(errlist)== 0:
             file.close()
-            OPS.remove(OPS.path.join(OPS.getcwd(),'texer.log'))
+            os.remove(os.path.join(os.getcwd(),'texer.log'))
         else:
             print 'There were errors in the model tex file! Abort!\n'
 
             for x in errlist:
                 print x
             file.close()
-            OPS.remove(OPS.path.join(OPS.getcwd(),'texer.log'))
+            os.remove(os.path.join(os.getcwd(),'texer.log'))
             return
 
         # PDFLatex the tex file and open
-        cmd = 'pdflatex '+'-output-directory='+modfpath+' '+OPS.path.join(modfpath,modfname+'.tex'+' > out.log')
-        OPS.system(cmd)
-        cmd2 = pdfpath + ' ' + OPS.path.join(modfpath,modfname+'.pdf')
-        OPS.system(cmd2)
-        if modfname+'.pdf' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.pdf'))
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.aux' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.aux'))
-        if modfname+'.dvi' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.dvi'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
+        cmd = 'pdflatex '+'-output-directory='+modfpath+' '+os.path.join(modfpath,modfname+'.tex'+' > out.log')
+        os.system(cmd)
+        cmd2 = pdfpath + ' ' + os.path.join(modfpath,modfname+'.pdf')
+        os.system(cmd2)
+        if modfname+'.pdf' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.pdf'))
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.aux' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.aux'))
+        if modfname+'.dvi' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.dvi'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Opens the model text file for editing
     def txted(self):
         modfile = self.modfile
         modfname = modfile.split('.')[0]
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
-        cmd = txtedpath+' '+OPS.path.join(modfpath,self.modfile+' > out.log')
-        timestamp0 = OPS.stat(OPS.path.join(modfpath,self.modfile))[8]
-        OPS.system(cmd)
-        timestamp1 = OPS.stat(OPS.path.join(modfpath,self.modfile))[8]
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
+        cmd = txtedpath+' '+os.path.join(modfpath,self.modfile+' > out.log')
+        timestamp0 = os.stat(os.path.join(modfpath,self.modfile))[8]
+        os.system(cmd)
+        timestamp1 = os.stat(os.path.join(modfpath,self.modfile))[8]
         if timestamp0 != timestamp1:
             self.__init__(self.modfile,self.dbase)
             self.init2()
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Opens the model latex file for editing
     def texed(self):
         modfile = self.modfile
         modfname = modfile.split('.')[0]
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
-        if modfname+'.tex' not in OPS.listdir(modfpath):
-            file = open(OPS.path.join(modfpath,modfname+'.tex'),'wb')
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
+        if modfname+'.tex' not in os.listdir(modfpath):
+            file = open(os.path.join(modfpath,modfname+'.tex'),'wb')
             file.write('\\documentclass[a4paper,11pt]{article}\n')
             file.write('\\title{%s}\n'% self.modname)
             file.write('\\author{%s}\n'% self.author)
@@ -660,12 +640,12 @@ class DSGEmodel:
             file.write(8*'\n')
             file.write('\\end{document}\n')
             file.close()
-        cmd = texedpath+' '+OPS.path.join(modfpath,self.modfile[:-3]+'tex'+' > out.log')
-        OPS.system(cmd)
-        if modfname+'.log' in OPS.listdir(modfpath):
-            OPS.remove(OPS.path.join(modfpath,modfname+'.log'))
-        if modfname+'.log' in OPS.listdir(OPS.getcwd()):
-            OPS.remove(OPS.path.join(OPS.getcwd(),modfname+'.log'))
+        cmd = texedpath+' '+os.path.join(modfpath,self.modfile[:-3]+'tex'+' > out.log')
+        os.system(cmd)
+        if modfname+'.log' in os.listdir(modfpath):
+            os.remove(os.path.join(modfpath,modfname+'.log'))
+        if modfname+'.log' in os.listdir(os.getcwd()):
+            os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Choose to delete the current model's latex file. Your are asked again whether yes/no
     def deltex(self):
         answ = 0
@@ -674,8 +654,8 @@ class DSGEmodel:
         if answ in ['Y','y']:
             modfile = self.modfile
             modfname = modfile.split('.')[0]
-            if modfname+'.tex' in OPS.listdir(modfpath):
-                OPS.remove(OPS.path.join(modfpath,modfname+'.tex'))
+            if modfname+'.tex' in os.listdir(modfpath):
+                os.remove(os.path.join(modfpath,modfname+'.tex'))
         elif answ in ['N','n']:
             return
     # Change the 'current view' of model solution algorithms
@@ -690,8 +670,8 @@ class DSGEmodel:
     def getdata(self,datafile=None,dbase=None):
         self.data = {}
         if datafile != None:
-            input = open(OPS.path.join(OPS.getcwd(),datafile), 'r')
-            output = open(OPS.path.join(OPS.getcwd(),'tmp_001.csv'), 'w')
+            input = open(os.path.join(os.getcwd(),datafile), 'r')
+            output = open(os.path.join(os.getcwd(),'tmp_001.csv'), 'w')
             wholefile = input.read()
             lines = wholefile.splitlines()
             varnames = lines[0]
@@ -702,8 +682,9 @@ class DSGEmodel:
                 str_tmp = str_tmp + x1+'\n'
             output.write(str_tmp)
             output.close()
-            rawdata = P.load('tmp_001.csv',delimiter=',')
-            OPS.remove(OPS.getcwd()+'/'+'tmp_001.csv')
+#            rawdata = P.load('tmp_001.csv',delimiter=',')
+            rawdata = np.loadtxt('tmp_001.csv', delimiter=",")
+            os.remove(os.getcwd()+'/'+'tmp_001.csv')
             self.rawdata = rawdata
             for x1 in self.dataprop.items():
                 if type(x1[1]) != type('x'):
@@ -711,11 +692,11 @@ class DSGEmodel:
                 elif type(x1[1]) == type('x'):
                     exec(x1[0]+'='+"'"+x1[1]+"'")
 
-            if N.shape(rawdata)[1] != len(self.varnames):
+            if np.shape(rawdata)[1] != len(self.varnames):
                 print 'DAT IMPORT ERR: Len(varnames) != Len(data)'
-                data = TimeSeries(rawdata,start_date=TSS.Date(freq=freq,year=year,month=month))
+                data = TimeSeries(rawdata,start_date=ts.Date(freq=freq,year=year,month=month))
             else:
-                data = TimeSeries(rawdata,start_date=TSS.Date(freq=freq,year=year,month=month))
+                data = TimeSeries(rawdata,start_date=ts.Date(freq=freq,year=year,month=month))
             self.data = TimeSeriesCol(varnlist,data)
         elif dbase != None:
             varnames = []
@@ -742,7 +723,7 @@ class DSGEmodel:
         vars['iid'] = []
         vars['state'] = []
         vars['all'] = []
-        instring = COP.deepcopy(cinstring)
+        instring = deepcopy(cinstring)
 
         for x in self.vardic['con']['var']:
             vars['con'].append(x[0].split('(')[0])
@@ -843,7 +824,7 @@ class DSGEmodel:
             str_tmp = str_tmp[1:]+zswitch*'|.{0,0}'
             ti = '(\(t(?P<time>'+str_tmp[:]+')\))'
 
-        reva = RE.compile('(?P<pre>^[^a-zA-Z^_]{0,1}|[^a-zA-Z^_]{1,1})('+iti+varp+ti+')')
+        reva = re.compile('(?P<pre>^[^a-zA-Z^_]{0,1}|[^a-zA-Z^_]{1,1})('+iti+varp+ti+')')
 
         if reva.search(instring) and iter == False:
             ma = reva.search(instring)
@@ -962,12 +943,12 @@ class DSGEmodel:
         patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = COP.deepcopy(self.nlsys_list)
+        nlsys = deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + COP.deepcopy(self.nlsubsys)
+            nlsys = nlsys + deepcopy(self.nlsubsys)
 
         # Create substitution var list and dictionary
         tmpli = []
@@ -982,7 +963,7 @@ class DSGEmodel:
         subli = []
         symdic = {}
         for x in dicli.values():
-            symdic[x] = SPC.Symbol(x)
+            symdic[x] = sympycore.Symbol(x)
         locals().update(symdic)
 #NOTE: don't do this?
 # or don't modify _existing_ contents?
@@ -990,9 +971,9 @@ class DSGEmodel:
 #also locals() is no longer a dictionary in Python 3
 #NOTE: just use the dictionary itself
         for x in self.paramdic.keys():
-            locals()[x] = SPC.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in self.sstate.keys():
-            locals()[x] = SPC.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1011,18 +992,18 @@ class DSGEmodel:
                     vari = y[0]
                     str_tmp = str_tmp[:pos]+'0'+str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
-            elog = RE.compile('LOG\(')
+            elog = re.compile('LOG\(')
             while elog.search(str_tmp):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'SPC.log('+str_tmp[poe:]
-            eexp = RE.compile('EXP\(')
+                str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
+            eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'SPC.exp('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
             func.append(eval(str_tmp))
         self.func1 = func
 
@@ -1046,7 +1027,7 @@ class DSGEmodel:
             lookli = lookli + [[x[0].split('(t)')[0],x[1]] for x in self.vardic[key]['var']]
         lookdic = dict(lookli)
         _mreg = 'SUB\d{5,5}'
-        mreg = RE.compile(_mreg)
+        mreg = re.compile(_mreg)
         func2 = []
         for i,x in enumerate(func):
             func2.append(func[i])
@@ -1056,7 +1037,7 @@ class DSGEmodel:
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(SPC.Symbol(suba),SPC.exp(SPC.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1070,17 +1051,17 @@ class DSGEmodel:
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = SPC.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
         # Create list with log of steady states
         evalli = []
-        alldic = COP.deepcopy(self.paramdic)
+        alldic = deepcopy(self.paramdic)
         alldic.update(self.sstate)
         for x in intup:
             vma = self.vreg(patup, x, False, 'min')
             vari = vma[2][1]
             if 'log' in moddic[lookdic[vari]]:
-                evalli.append(N.log(alldic[vari+'_bar']))
+                evalli.append(np.log(alldic[vari+'_bar']))
             else:
                 evalli.append(alldic[vari+'_bar'])
         evaldic = {}
@@ -1090,10 +1071,10 @@ class DSGEmodel:
         # Make 2D symbolic and numeric Jacobian
         def mkjac(jrows=jrows,jcols=jcols):
             rdic = dict([[x,'0'] for x in range(jcols)])
-            jdic = dict([[x,COP.deepcopy(rdic)] for x in range(jrows)])
+            jdic = dict([[x,deepcopy(rdic)] for x in range(jrows)])
             jcols = len(jdic[0])
             jrows = len(jdic)
-            numj = MAT.zeros((jrows,jcols))
+            numj = mat.zeros((jrows,jcols))
             alldic = {}
             alldic.update(self.paramdic)
             alldic.update(self.sstate)
@@ -1108,11 +1089,11 @@ class DSGEmodel:
         # Now make 3D symbolic and numeric Hessian
         def mkhes(jrows=jrows,jcols=jcols):
             rdic = dict([[x,'0'] for x in range(jcols)])
-            rdic1 = dict([[x,COP.deepcopy(rdic)] for x in range(jcols)])
-            hdic = dict([[x,COP.deepcopy(rdic1)] for x in range(jrows)])
+            rdic1 = dict([[x,deepcopy(rdic)] for x in range(jcols)])
+            hdic = dict([[x,deepcopy(rdic1)] for x in range(jrows)])
             hcols = len(hdic[0])
             hrows = len(hdic[0])*len(hdic)
-            numh = MAT.zeros((hrows,hcols))
+            numh = mat.zeros((hrows,hcols))
             jdic = self.jdic
             alldic = {}
             alldic.update(self.paramdic)
@@ -1173,12 +1154,12 @@ class DSGEmodel:
         patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = COP.deepcopy(self.nlsys_list)
+        nlsys = deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + COP.deepcopy(self.nlsubsys)
+            nlsys = nlsys + deepcopy(self.nlsubsys)
 
         # Create substitution var list and dictionary
         tmpli = []
@@ -1217,13 +1198,13 @@ class DSGEmodel:
                     vari = y[0]
                     str_tmp = str_tmp[:pos]+'0'+str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
-            elog = RE.compile('LOG\(')
+            elog = re.compile('LOG\(')
             while elog.search(str_tmp):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
                 str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
-            eexp = RE.compile('EXP\(')
+            eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
@@ -1252,7 +1233,7 @@ class DSGEmodel:
             lookli = lookli + [[x[0].split('(t)')[0],x[1]] for x in self.vardic[key]['var']]
         lookdic = dict(lookli)
         _mreg = 'SUB\d{5,5}'
-        mreg = RE.compile(_mreg)
+        mreg = re.compile(_mreg)
         func2 = []
         for i,x in enumerate(func):
             func2.append(func[i])
@@ -1287,7 +1268,7 @@ class DSGEmodel:
             vma = self.vreg(patup, x, False, 'min')
             vari = vma[2][1]
             if 'log' in moddic[lookdic[vari]]:
-                evalli.append(N.log(alldic[vari+'_bar']))
+                evalli.append(np.log(alldic[vari+'_bar']))
             else:
                 evalli.append(alldic[vari+'_bar'])
         evaldic = {}
@@ -1301,7 +1282,7 @@ class DSGEmodel:
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 rdic = dict([[x,'0'] for x in range(jcols)])
-                hdic = dict([[x,copy.deepcopy(rdic)] for x in range(jcols)])
+                hdic = dict([[x,deepcopy(rdic)] for x in range(jcols)])
                 numh = numpy.matlib.zeros((jcols,jcols))
 
             alldic = {}
@@ -1329,7 +1310,7 @@ class DSGEmodel:
         # Start parallel Python job server
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
-        job_server = PP.Server(ncpus,ppservers=ppservers)
+        job_server = pp.Server(ncpus,ppservers=ppservers)
         from sympycore import exp
         from sympycore import log
         from sympycore import FunctionRing
@@ -1359,9 +1340,9 @@ class DSGEmodel:
             numh = job_0()[2]
             hdic[0] = job_0()[3]
             for i1,job in enumerate(jobs[1:len(jobs)]):
-                numj = MAT.vstack((numj,job()[0]))
+                numj = mat.vstack((numj,job()[0]))
                 jdic[i1+1] = job()[1]
-                numh = MAT.vstack((numh,job()[2]))
+                numh = mat.vstack((numh,job()[2]))
                 hdic[i1+1] = job()[3]
             self.numj = numj
             self.jdic = jdic
@@ -1373,7 +1354,7 @@ class DSGEmodel:
             numj = job_0()[0]
             jdic[0] = job_0()[1]
             for i1,job in enumerate(jobs[1:len(jobs)]):
-                numj = MAT.vstack((numj,job()[0]))
+                numj = mat.vstack((numj,job()[0]))
                 jdic[i1+1] = job()[1]
             self.numj = numj
             self.jdic = jdic
@@ -1409,12 +1390,12 @@ class DSGEmodel:
         patup = ('{-10,10}|None','endo|con|exo','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = COP.deepcopy(self.nlsys_list)
+        nlsys = deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + COP.deepcopy(self.nlsubsys)
+            nlsys = nlsys + deepcopy(self.nlsubsys)
 
         tmpli = []
         for i,x in enumerate(intup):
@@ -1444,13 +1425,13 @@ class DSGEmodel:
             func.append(str_tmp)
 
             # Now substitute out exp and log in terms of matlab expressions
-            elog = RE.compile('LOG\(')
+            elog = re.compile('LOG\(')
             while elog.search(str_tmp):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
                 str_tmp = str_tmp[:pos]+'log('+str_tmp[poe:]
-            eexp = RE.compile('EXP\(')
+            eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
@@ -1480,7 +1461,7 @@ class DSGEmodel:
             lookli = lookli + [[x[0].split('(t)')[0],x[1]] for x in self.vardic[key]['var']]
         lookdic = dict(lookli)
         _mreg = 'invar\(\d+\)'
-        mreg = RE.compile(_mreg)
+        mreg = re.compile(_mreg)
         func2 = []
         for i,x in enumerate(func):
             func2.append(func[i])
@@ -1490,7 +1471,7 @@ class DSGEmodel:
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(SPC.Symbol(suba),SPC.exp(SPC.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1504,24 +1485,24 @@ class DSGEmodel:
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = SPC.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = SPC.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
 
         # Transorm python exponentiation into matlab exponentiation
         _mreg='\*{2,2}'
-        mreg=RE.compile(_mreg)
+        mreg=re.compile(_mreg)
         for i,x in enumerate(self.func2):
             self.func2[i] = mreg.sub('^',self.func2[i])
 
         # Create matlab function
-        if 'mfunc.m' in OPS.listdir(OPS.path.join(mlabpath,'Klein')):
-            OPS.remove(OPS.path.join(mlabpath,'Klein/mfunc.m'))
+        if 'mfunc.m' in os.listdir(os.path.join(mlabpath,'Klein')):
+            os.remove(os.path.join(mlabpath,'Klein/mfunc.m'))
 
-        mfunc = open(OPS.path.join(mlabpath,'Klein/mfunc.m'),'w')
+        mfunc = open(os.path.join(mlabpath,'Klein/mfunc.m'),'w')
         mfunc.write('function vecreturn = mfunc(invar);\n\n')
         mfunc.write('%Parameters\n')
         for x in self.paramdic.items():
@@ -1538,7 +1519,7 @@ class DSGEmodel:
         mfunc.close()
 
         #Prepare ln inmatrix (vector)
-        inmat = MAT.zeros((len(tmpli),1))
+        inmat = mat.zeros((len(tmpli),1))
         alldic={}
         alldic.update(self.paramdic)
         alldic.update(self.sstate)
@@ -1547,12 +1528,12 @@ class DSGEmodel:
             vari = vma[2][1]
             inmat[i,0] = alldic[vari+'_bar']
             if 'log' in moddic[lookdic[vari]]:
-                inmat[i,0] = N.log(inmat[i,0])
+                inmat[i,0] = np.log(inmat[i,0])
 
 
         #Make Jacobian and Hessian
         sess1 = msess
-        directory = OPS.path.join(mlabpath,'Klein')
+        directory = os.path.join(mlabpath,'Klein')
         mlabraw.eval(sess1,'clear all;')
         mlabraw.eval(sess1,'cd '+directory)
         mlabraw.put(sess1,'x0',inmat)
@@ -1578,13 +1559,13 @@ class DSGEmodel:
             self.numj = numj
             self.numh = numh
 
-        self.jAA = N.matrix(self.numj[:,:int(len(intup)/2)])
-        self.jBB = N.matrix(-self.numj[:,int(len(intup)/2):])
+        self.jAA = np.matrix(self.numj[:,:int(len(intup)/2)])
+        self.jBB = np.matrix(-self.numj[:,int(len(intup)/2):])
 
         del self.func1
         del self.func2
 
-        OPS.remove(OPS.path.join(mlabpath,'Klein/mfunc.m'))
+        os.remove(os.path.join(mlabpath,'Klein/mfunc.m'))
 
 ###NUMERICAL ONLY JACOBIAN AND HESSIAN METHODS - FOR UPDATING###############
     # The unparallelized Jacobian, Hessian computation method
@@ -1606,12 +1587,12 @@ class DSGEmodel:
         patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = COP.deepcopy(self.nlsys_list)
+        nlsys = deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + COP.deepcopy(self.nlsubsys)
+            nlsys = nlsys + deepcopy(self.nlsubsys)
 
         # Create substitution var list and dictionary
         tmpli = []
@@ -1651,7 +1632,7 @@ class DSGEmodel:
             vma = self.vreg(patup, x, False, 'min')
             vari = vma[2][1]
             if 'log' in moddic[lookdic[vari]]:
-                evalli.append(N.log(alldic[vari+'_bar']))
+                evalli.append(np.log(alldic[vari+'_bar']))
             else:
                 evalli.append(alldic[vari+'_bar'])
         evaldic = {}
@@ -1661,7 +1642,7 @@ class DSGEmodel:
         # Make 2D symbolic and numeric Jacobian
         def mkjac(jrows=jrows,jcols=jcols):
             jdic = self.jdic
-            numj = MAT.zeros((jrows,jcols))
+            numj = mat.zeros((jrows,jcols))
             alldic = {}
             alldic.update(self.paramdic)
             alldic.update(self.sstate)
@@ -1676,7 +1657,7 @@ class DSGEmodel:
         def mkhes(jrows=jrows,jcols=jcols):
             hdic = self.hdic
             hrows = jrows*jcols
-            numh = MAT.zeros((hrows,jcols))
+            numh = mat.zeros((hrows,jcols))
             alldic = {}
             alldic.update(self.paramdic)
             alldic.update(self.sstate)
@@ -1735,12 +1716,12 @@ class DSGEmodel:
         patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = COP.deepcopy(self.nlsys_list)
+        nlsys = deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + COP.deepcopy(self.nlsubsys)
+            nlsys = nlsys + deepcopy(self.nlsubsys)
 
         # Create substitution var list and dictionary
         tmpli = []
@@ -1780,7 +1761,7 @@ class DSGEmodel:
             vma = self.vreg(patup, x, False, 'min')
             vari = vma[2][1]
             if 'log' in moddic[lookdic[vari]]:
-                evalli.append(N.log(alldic[vari+'_bar']))
+                evalli.append(np.log(alldic[vari+'_bar']))
             else:
                 evalli.append(alldic[vari+'_bar'])
         evaldic = {}
@@ -1816,7 +1797,7 @@ class DSGEmodel:
         # Start parallel Python job server
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
-        job_server = PP.Server(ncpus,ppservers=ppservers)
+        job_server = pp.Server(ncpus,ppservers=ppservers)
         from sympycore import exp
         from sympycore import log
         imports = ('numpy','copy','numpy.matlib',)
@@ -1826,15 +1807,15 @@ class DSGEmodel:
             numj = job_0()[0]
             numh = job_0()[1]
             for i1,job in enumerate(jobs[1:len(jobs)]):
-                numj = MAT.vstack((numj,job()[0]))
-                numh = MAT.vstack((numh,job()[1]))
+                numj = mat.vstack((numj,job()[0]))
+                numh = mat.vstack((numh,job()[1]))
             self.numj = numj
             self.numh = numh
         else:
             job_0 = jobs[0]
             numj = job_0()
             for i1,job in enumerate(jobs[1:len(jobs)]):
-                numj = MAT.vstack((numj,job()))
+                numj = mat.vstack((numj,job()))
             self.numj = numj
 
         if 'nlsubsys' in dir(self):
@@ -1862,7 +1843,7 @@ class DSGEmodel:
     def updm(self):
         # Create None tester regular expression
         _nreg = '^\s*None\s*$'
-        nreg = RE.compile(_nreg)
+        nreg = re.compile(_nreg)
 ################## STEADY STATE CALCULATIONS !!! ####################
         self.sssolvers = SSsolvers()
         # Solve for steady-state using fsolve
@@ -2000,7 +1981,7 @@ class DSGEmodel:
         BB = self.jBB
         try:
             CC = BB.I*AA
-            self.eigvals = LIN.eig(CC)[0]
+            self.eigvals = scipyeig(CC)[0]
         except:
             pass
 
