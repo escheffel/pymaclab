@@ -126,8 +126,10 @@ from __future__ import division
             list_tmp = list_tmp[0].split('=')[:]
             str_tmp1 = list_tmp[0].strip()
             str_tmp2 = list_tmp[1].strip()
-            #NOTE: this *should* be safe, but users should know what's in the .mod file
-            exec(safe_div + "param['"+str_tmp1+"']=" + str_tmp2, {}, {'param' :param})
+            #NOTE: this *should* be safe, but users should know what's
+            # in the .mod file
+            # does locals get updated here
+            exec(safe_div + "param['"+str_tmp1+"']=" + str_tmp2, {}, locals())
             locals()[str_tmp1] = param[str_tmp1]
         self.paramdic = param
 
