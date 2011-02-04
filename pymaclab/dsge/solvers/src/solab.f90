@@ -7,7 +7,8 @@ contains
     implicit none
     integer, intent(in) :: n,k
     integer, intent(out) :: retco
-    integer i,j,l,m
+!    integer i,j,l,m
+!   the above aren't used
     integer lda,ldb,sdim,ldvsl,ldvsr,lwork,info,ipiv(k)
     logical bwork(n)
     real(kind=8), intent(in)  :: a(n,n), b(n,n)
@@ -28,7 +29,8 @@ contains
 !    complex*16 s11i(k,k), t11(k,k), pp(k,k)
     complex(kind=8) s11i(k,k), t11(k,k), pp(k,k)
 !    complex*16 z21(n-k,k), eyek(k,k)
-    complex(kind=8) z21(n-k,k), eyek(k,k)
+!    complex(kind=8) z21(n-k,k), eyek(k,k)
+    complex(kind=8) z21(n-k,k)
 
     retco = 0
     lwork = -1
