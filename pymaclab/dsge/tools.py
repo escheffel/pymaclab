@@ -3,10 +3,9 @@ COLLECTION OF SUPPORTING FUNCTIONS AND CLASSES
 """
 
 class dicwrap:
-    def __init__(self,other,initlev,nreg):
+    def __init__(self,other,initlev):
         self.other = other
         self.initlev = initlev
-        self.nreg = nreg
         self.wrapdic = other.paramdic
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
@@ -25,7 +24,8 @@ class dicwrap:
             # Reset switch back to zero
             other.switches['ss_suc'] = ['0','0']
             # Solve for steady-state using fsolve
-            if sum([nreg.search(x)!=None for x in other.txtpars.secs['ssm'][0]]) == 0:
+#            if sum([nreg.search(x)!=None for x in other.txtpars.secs['ssm'][0]]) == 0:
+            if any([False if 'None' in x else True for x in secs['ssm'][0]]):
                 intup = (other.ssys_list,other.ssidic,other.paramdic)
                 other.sssolvers.fsolve = Fsolve(intup)
                 other.sssolvers.fsolve.solve()
@@ -49,7 +49,8 @@ class dicwrap:
                 else:
                     other.switches['ss_suc'] = ['1','0']
             # Solve for steady-state using manss
-            if sum([nreg.search(x)!=None for x in other.txtpars.secs['sss'][0]]) == 0:
+#            if sum([nreg.search(x)!=None for x in other.txtpars.secs['sss'][0]]) == 0:
+            if any([False if 'None' in x else True for x in secs['sss'][0]]):
                 if other.switches['ss_suc'] == ['1','1']:
                     alldic = {}
                     alldic.update(other.sstate)
@@ -94,7 +95,8 @@ class dicwrap:
             # Open the model solution tree branch
             other.modsolvers = MODsolvers()
 ######################## LINEAR METHODS !!! ############################
-            if sum([nreg.search(x)!=None for x in other.txtpars.secs['modeq'][0]]) == 0:
+#            if sum([nreg.search(x)!=None for x in other.txtpars.secs['modeq'][0]]) == 0:
+            if any([False if 'None' in x else True for x in secs['modeq'][0]]):
                 # Open the matlab Uhlig object
                 intup = ((other.nendo,other.ncon,other.nexo),
                      other.eqindx,
@@ -133,7 +135,8 @@ class dicwrap:
                      sess1)
                 other.modsolvers.forklein = ForKlein(intup)
 ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-            if sum([nreg.search(x)!=None for x in other.txtpars.secs['focs'][0]]) == 0:
+#            if sum([nreg.search(x)!=None for x in other.txtpars.secs['focs'][0]]) == 0:
+            if any([False if 'None' in x else True for x in secs['focs'][0]]):
     
                 # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
                 if use_anaderiv:
@@ -170,7 +173,8 @@ class dicwrap:
                          other.modname,other.audic)
                 other.modsolvers.forkleind = ForKleinD(intup)
 ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-                if sum([nreg.search(x)!=None for x in other.txtpars.secs['vcvm'][0]]) == 0 and\
+#                if sum([nreg.search(x)!=None for x in other.txtpars.secs['vcvm'][0]]) == 0 and\
+                if any([False if 'None' in x else True for x in secs['ssm'][0]]) and\
                    'numh' in dir(other):
                     # Open the MatKlein2D object
                     if 'nlsubsys' in dir(other):

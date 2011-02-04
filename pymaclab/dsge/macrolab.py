@@ -29,6 +29,7 @@ except:
 from pymaclab.filters._hpfilter import hpfilt
 from ..stats.var import VAR #TODO: remove for statsmodels version
 from solvers.steadystate import SSsolvers, Manss, Fsolve
+#TODO: delay above and only import if needed
 from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
         MatKleinD, MatWood, ForKlein, PyKlein2D, MatKlein2D, ForKleinD,
         FairTaylor)
@@ -336,14 +337,15 @@ class DSGEmodel:
         initlev = self._initlev
 
         # Create None tester regular expression
-        _nreg = '^\s*None\s*$'
-        nreg = re.compile(_nreg)
+#        _nreg = '^\s*None\s*$'
+#        nreg = re.compile(_nreg)
 
-        txtpars = parse_mod(self.modfile)   # better name than txtpars?
-        self.txtpars = txtpars
+        txtpars = parse_mod(self.modfile)
+        self.txtpars = txtpars  # do we need txtpars attached for anything else?
+        secs = txtpars.secs # do we need txtpars attached for anything else?
 
         # Initial population method of model, does NOT need steady states
-        self = populate_model_stage_one(self, txtpars)
+        self = populate_model_stage_one(self, secs)
 
         # Attach the data from database
         if self.dbase != None:
@@ -354,7 +356,8 @@ class DSGEmodel:
 ################## STEADY STATE CALCULATIONS !!! ####################
         self.sssolvers = SSsolvers()
         # Solve for steady-state using fsolve
-        if sum([nreg.search(x)!=None for x in txtpars.secs['ssm'][0]]) == 0:
+#        if sum([nreg.search(x)!=None for x in txtpars.secs['ssm'][0]]) == 0:
+        if any([False if 'None' in x else True for x in secs['ssm'][0]]):
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
             self.sssolvers.fsolve.solve()
@@ -364,8 +367,10 @@ class DSGEmodel:
                 self.switches['ss_suc'] = ['1','1']
             else:
                 self.switches['ss_suc'] = ['1','0']
+
         # Solve for steady-state using manss
-        if sum([nreg.search(x)!=None for x in txtpars.secs['sss'][0]]) == 0:
+#        if sum([nreg.search(x)!=None for x in txtpars.secs['sss'][0]]) == 0:
+        if any([False if 'None' in x else True for x in secs['sss'][0]]):
             if self.switches['ss_suc'] == ['1','1']:
                 alldic = {}
                 alldic.update(self.sstate)
@@ -382,12 +387,13 @@ class DSGEmodel:
         if initlev == 1: return
 
         # No populate more with stuff that needs steady state
-        self.pop2(txtpars)
+        self = populate_model_stage_two(self, secs)
 
         # Open the model solution tree branch
         self.modsolvers = MODsolvers()
         ######################## LINEAR METHODS !!! ############################
-        if sum([nreg.search(x)!=None for x in txtpars.secs['modeq'][0]]) == 0:
+#        if sum([nreg.search(x)!=None for x in txtpars.secs['modeq'][0]]) == 0:
+        if any([False if 'None' in x else True for x in secs['modeq'][0]]):
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -426,7 +432,9 @@ class DSGEmodel:
                  sess1)
             self.modsolvers.forklein = ForKlein(intup)
         ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-        if sum([nreg.search(x)!=None for x in txtpars.secs['focs'][0]]) == 0:
+
+#        if sum([nreg.search(x)!=None for x in txtpars.secs['focs'][0]]) == 0:
+        if any([False if 'None' in x else True for x in secs['focs'][0]]):
 
             # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
             if use_anaderiv:
@@ -463,7 +471,8 @@ class DSGEmodel:
                      self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
         ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-            if sum([nreg.search(x)!=None for x in txtpars.secs['vcvm'][0]]) == 0 and\
+#            if sum([nreg.search(x)!=None for x in txtpars.secs['vcvm'][0]]) == 0 and\
+            if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
                'numh' in dir(self):
                 # Open the MatKlein2D object
                 if 'nlsubsys' in dir(self):
@@ -492,12 +501,7 @@ class DSGEmodel:
             self.mkeigv()
             
         # Wrap the paramdic at the end of model initialization
-        self.params = dicwrap(self,initlev,nreg)
-
-        # Create None tester regular expression
-    # 2dn stage population of model, does NEED the steady state
-    def pop2(self,input=None):
-        self = populate_model_stage_two(self, input)
+        self.params = dicwrap(self,initlev)
 
     # html info of model opened with webbrowser
     def info(self):
@@ -1866,7 +1870,8 @@ class DSGEmodel:
         if initlev == 1: return
 
         # No populate more with stuff that needs steady state
-        self.pop2(self.txtpars)
+        secs = self.txtpars.secs
+        self = populate_model_stage_two(self, secs)
 
         # Open the model solution tree branch
         self.modsolvers = MODsolvers()
