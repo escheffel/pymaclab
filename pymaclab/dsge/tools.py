@@ -26,7 +26,7 @@ class dicwrap:
             other.switches['ss_suc'] = ['0','0']
             # Solve for steady-state using fsolve
 #            if sum([nreg.search(x)!=None for x in other.txtpars.secs['ssm'][0]]) == 0:
-            if any([False if 'None' in x else True for x in secs['ssm'][0]]):
+            if any([False if 'None' in x else True for x in secs['manualss'][0]]):
                 intup = (other.ssys_list,other.ssidic,other.paramdic)
                 other.sssolvers.fsolve = Fsolve(intup)
                 other.sssolvers.fsolve.solve()
@@ -51,7 +51,7 @@ class dicwrap:
                     other.switches['ss_suc'] = ['1','0']
             # Solve for steady-state using manss
 #            if sum([nreg.search(x)!=None for x in other.txtpars.secs['sss'][0]]) == 0:
-            if any([False if 'None' in x else True for x in secs['sss'][0]]):
+            if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
                 if other.switches['ss_suc'] == ['1','1']:
                     alldic = {}
                     alldic.update(other.sstate)
@@ -175,7 +175,7 @@ class dicwrap:
                 other.modsolvers.forkleind = ForKleinD(intup)
 ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
 #                if sum([nreg.search(x)!=None for x in other.txtpars.secs['vcvm'][0]]) == 0 and\
-                if any([False if 'None' in x else True for x in secs['ssm'][0]]) and\
+                if any([False if 'None' in x else True for x in secs['manualss'][0]]) and\
                    'numh' in dir(other):
                     # Open the MatKlein2D object
                     if 'nlsubsys' in dir(other):

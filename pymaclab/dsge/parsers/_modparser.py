@@ -10,6 +10,8 @@ modfpath = "" #TODO: get rid of these globals, make a config file
 #for instance, in old cee.txt 1.03**(1/4) does int division
 class ParsedMod(object):
     """
+    Bunch pattern ParsedMod object
+
     Attributes
     ----------
     filename : str
@@ -54,8 +56,8 @@ def read_nativefmt(filestring, fname):
                 ['%Variable Substitution Non-Linear System','vsfocs',
                     'VSFO_loc'],
                 ['%Non-Linear First-Order Conditions','focs','FO_loc'],
-                ['%Steady States [Closed Form]','sss','SS_loc'],
-                ['%Steady State Non-Linear System [Manual]','ssm','SSM_loc'],
+                ['%Steady States [Closed Form]','closedformss','SS_loc'],
+                ['%Steady State Non-Linear System [Manual]','manualss','SSM_loc'],
                 ['%Log-Linearized Model Equations','modeq','ME_loc'],
                 ['%Variance-Covariance Matrix','vcvm','VCM_loc'],
                 ['%Minford Model Evaluation','mme','MME_loc']]

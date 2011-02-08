@@ -298,7 +298,7 @@ class TSDataBase:
             self.VAR.IRF_attr['shock_var'] = varord[[x1[1] for x1 in varord].index(spos-1)][0]
 """***********************************************************"""
 ##################THE DSGE MODEL CLASS (WORKS)#####################
-class DSGEmodel:
+class DSGEmodel(object):
     '''
     This is the macrolab DSGEmodel class. It is the main class
     of the packages and creates DSGE model instances which have
@@ -356,8 +356,8 @@ class DSGEmodel:
 ################## STEADY STATE CALCULATIONS !!! ####################
         self.sssolvers = SSsolvers()
         # Solve for steady-state using fsolve
-#        if sum([nreg.search(x)!=None for x in txtpars.secs['ssm'][0]]) == 0:
-        if any([False if 'None' in x else True for x in secs['ssm'][0]]):
+        # check if the Steady-State Non-Linear system .mod section has an entry
+        if any([False if 'None' in x else True for x in secs['manualss'][0]]):
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
             self.sssolvers.fsolve.solve()
@@ -369,8 +369,8 @@ class DSGEmodel:
                 self.switches['ss_suc'] = ['1','0']
 
         # Solve for steady-state using manss
-#        if sum([nreg.search(x)!=None for x in txtpars.secs['sss'][0]]) == 0:
-        if any([False if 'None' in x else True for x in secs['sss'][0]]):
+        # Check if the Steady States [Closed Form] has an entry
+        if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
             if self.switches['ss_suc'] == ['1','1']:
                 alldic = {}
                 alldic.update(self.sstate)
@@ -1850,7 +1850,7 @@ class DSGEmodel:
 ################## STEADY STATE CALCULATIONS !!! ####################
         self.sssolvers = SSsolvers()
         # Solve for steady-state using fsolve
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['ssm'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in self.txtpars.secs['manualss'][0]]) == 0:
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
             self.sssolvers.fsolve.solve()
@@ -1862,7 +1862,7 @@ class DSGEmodel:
             else:
                 self.switches['ss_suc'] = ['1','0']
         # Solve for steady-state using manss
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['sss'][0]]) == 0:
+        if sum([nreg.search(x)!=None for x in self.txtpars.secs['closedformss'][0]]) == 0:
             intup = (self.manss_sys,self.paramdic)
             self.sssolvers.manss = Manss(intup)
             self.sssolvers.manss.solve()
