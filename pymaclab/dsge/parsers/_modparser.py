@@ -50,7 +50,7 @@ def read_nativefmt(filestring, fname):
     Reads native .mod format and return as ParsedMod class.
     """
     secnames = [['%Model Information','info','INF_loc'],
-                ['%Parameters','para','PA_loc'],
+                ['%Parameters','params','PA_loc'],
                 ['%Variable Vectors','varvec','VV_loc'],
                 ['%Boundary Conditions','bocond','BC_loc'],
                 ['%Variable Substitution Non-Linear System','vsfocs',

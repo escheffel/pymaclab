@@ -519,7 +519,7 @@ class DSGEmodel(object):
         for x1 in secs['mod'][1]:
             htmlfile.write('<P>'+x1+'\n')
         htmlfile.write('<P>'+'<H4>Model Parameters</H4>\n')
-        for x1 in secs['para'][1]:
+        for x1 in secs['params'][1]:
             htmlfile.write('<P>'+x1+'\n')
         htmlfile.write('<P>'+'<H4>Nonlinear First-Order Conditions</H4>\n')
         for x1 in secs['focs'][1]:

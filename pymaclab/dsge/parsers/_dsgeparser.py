@@ -113,14 +113,14 @@ def populate_model_stage_one(self, secs):
                 self.mod_desc = x.split('=')[1].replace(';','').strip()
 
     # Extract parameters into dictionary
-    if any([False if 'None' in x else True for x in secs['para'][0]]):
+    if any([False if 'None' in x else True for x in secs['params'][0]]):
         param = {}
         # need to do this so users don't have to worry about integer division
         # but preserves integer division for sympycore stuff
         safe_div = """
 from __future__ import division
 """
-        for x in secs['para'][0]:
+        for x in secs['params'][0]:
             list_tmp = x.split(';')
             list_tmp = list_tmp[0].split('=')[:]
             str_tmp1 = list_tmp[0].strip()
