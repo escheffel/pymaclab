@@ -132,9 +132,9 @@ from __future__ import division
         self.paramdic = param
 
     # Collect information on manual (closed-form) steady state
-    if any([False if 'None' in x else True for x in secs['sss'][0]]):
+    if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
         # Join multiline steady state definitions
-        mansys = secs['sss'][0]
+        mansys = secs['closedformss'][0]
         list_tmp1 = []
         i1=0
         counter=0
@@ -154,7 +154,7 @@ from __future__ import division
         self.manss_sys = list_tmp1
 
     # Collect info on numerical steady state
-    if any([False if 'None' in x else True for x in secs['ssm'][0]]):
+    if any([False if 'None' in x else True for x in secs['manualss'][0]]):
         _mreg = '[a-zA-Z]*_bar\s*=\s*[0-9]*\.[0-9]*'
         _mreg2 = '[a-zA-Z]*\s*=\s*[0-9]*\.[0-9]*'
         mreg = re.compile(_mreg+'|'+_mreg2)
@@ -163,7 +163,7 @@ from __future__ import division
         list_tmp = []
         i1=0
         counter=0
-        for x in secs['ssm'][0]:
+        for x in secs['manualss'][0]:
             if mreg.search(x):
                 ma = mreg.search(x)
                 str1 = ma.group().split('=')[0].strip()
@@ -177,7 +177,7 @@ from __future__ import division
                     list_tmp.append(x.replace(';','').split(']')[1].split('=')[0].strip())
                 elif counter > 0:
                     str_tmp = ''
-                    for y in secs['ssm'][0][i1-counter:i1+1]:
+                    for y in secs['manualss'][0][i1-counter:i1+1]:
                         str_tmp = str_tmp + y.replace('...','').strip()
                     list_tmp.append(str_tmp.split(']')[1].split('=')[0].replace(';','').strip())
                     counter = 0 
