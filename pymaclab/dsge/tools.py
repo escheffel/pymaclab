@@ -1,6 +1,7 @@
 """
 COLLECTION OF SUPPORTING FUNCTIONS AND CLASSES
 """
+from solvers.steadystate import ManualSteadyState
 
 class dicwrap:
     def __init__(self,other,initlev):
@@ -56,7 +57,7 @@ class dicwrap:
                     alldic.update(other.sstate)
                     alldic.update(other.paramdic)
                     intup = (other.manss_sys,alldic)
-                    other.sssolvers.manss = Manss(intup)
+                    other.sssolvers.manss = ManualSteadyState(intup)
                     other.sssolvers.manss.solve()
                     nsstate = other.sssolvers.manss.sstate
                     mreg = RE.compile('(.*?)_bar')
@@ -74,7 +75,7 @@ class dicwrap:
                     other.sstate.update(nsstate)
                 else:
                     intup = (other.manss_sys,other.paramdic)
-                    other.sssolvers.manss = Manss(intup)
+                    other.sssolvers.manss = ManualSteadyState(intup)
                     other.sssolvers.manss.solve()
                     nsstate = other.sssolvers.manss.sstate
                     mreg = RE.compile('(.*?)_bar')

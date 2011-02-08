@@ -1,5 +1,5 @@
 """
-THE STEADY STATE SOLVER CLASS AND IT'S SUBCLASSES
+THE STEADY STATE SOLVER CLASS AND ITS SUBCLASSES
 """
 import re
 import numpy as np
@@ -10,7 +10,10 @@ class SSsolvers(object):
     def __init__(self):
         pass
 
-class Manss(SSsolvers):
+class ManualSteadyState(SSsolvers):
+    """
+    Solve for the steady state manually
+    """
     def __init__(self, intup):
         self.manss_sys = intup[0]
         self.paramdic = intup[1]
@@ -35,6 +38,7 @@ class Manss(SSsolvers):
                 str_tmp3 = re.sub(rexp,'np.exp(',str_tmp3)           
 
             # Do fsolve root finding, if ROOT detected
+            #NOTE: use ROOT() to solve non-linear FOCs (see modfiles/max2.txt)
             if fexp.search(str_tmp3):
                 asvari = str_tmp3.split('=')[0].strip()
                 ma = fexp.search(str_tmp3)

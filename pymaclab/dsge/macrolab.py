@@ -28,7 +28,7 @@ except:
 #NOTE: Imports from the refactor
 from pymaclab.filters._hpfilter import hpfilt
 from ..stats.var import VAR #TODO: remove for statsmodels version
-from solvers.steadystate import SSsolvers, Manss, Fsolve
+from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 #TODO: delay above and only import if needed
 from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
         MatKleinD, MatWood, ForKlein, PyKlein2D, MatKlein2D, ForKleinD,
