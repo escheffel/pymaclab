@@ -4,6 +4,7 @@ Functions to parse the MODparser and attach results to the DSGE Model.
 import re
 from copy import deepcopy
 import numpy.matlib as mat
+import sympycore as SP
 
 #TODO: why have these as nested functions?
 def populate_model_stage_one(self, secs):
@@ -1041,7 +1042,12 @@ def mksymsys(self):
     for x in self.diffli1:
         tmpdic={}
         for y in x.keys():
-            tmpdic[y] = eval(x[y].tostr())
+            print x[y]
+            print type(x[y])
+            print dir(x[y])
+#            tmpdic[y] = eval(x[y].tostr())
+            tmpdic[y] = eval(str(x[y]))
+    
         diffli2.append(tmpdic) 
     self.diffli2 = diffli2
     return self
