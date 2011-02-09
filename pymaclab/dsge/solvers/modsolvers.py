@@ -1,8 +1,8 @@
 """
 THE MODSOLVER CLASS AND ITS SUBCLASSES
 """
+from copy import deepcopy
 from numpy import matlib as MAT
-from numpy import linalg as LIN
 from numpy.linalg import matrix_rank
 from .. import helpers as HLP
 from pymaclab.linalg import qz, ordqz
@@ -105,7 +105,7 @@ class PyUhlig(MODsolvers):
         for argx in argli:
             XX = MAT.zeros(argx[3])
             dic1 = dict([[x,'0'] for x in range(argx[3][1])])
-            sXX = dict([[x,COP.deepcopy(dic1)] for x in range(len(argx[2]))])
+            sXX = dict([[x,deepcopy(dic1)] for x in range(len(argx[2]))])
             for y,x in enumerate(argx[2]):
                 if vreg(argx[4],x,False,'max'):
                     cont=[[z[0],z[1][1]] for z in vreg(argx[4],x,True,'min')]
@@ -139,18 +139,15 @@ class PyUhlig(MODsolvers):
         LL = self.LL
         MM = self.MM
         NN = self.NN
-        q_expectational_equ = np.shape(FF)[0]
-        m_states = np.shape(FF)[1]
-        l_equ = np.shape(CC)[0]
-        n_endog = np.shape(CC)[1]
-        k_exog = min(np.shape(NN))
+        q_expectational_equ, m_states = FF.shape
+        l_equ, n_endog = CC.shape
+        k_exog = min(NN.shape)
 
-#        if HLP.rank(CC) < n_endog:
         if matrix_rank(CC) < n_endog:
             raise uhlerr, 'uhlerror: Rank(CC) needs to be at least\n\
                   equal to the number of endogenous variables'
         if l_equ == 0:
-            CC_plus = LIN.pinv(CC)
+            CC_plus = np.linalg.pinv(CC)
             CC_0 = (HLP.null(CC.T)).T
             Psi_mat = FF
             Gamma_mat = -GG
@@ -165,7 +162,7 @@ class PyUhlig(MODsolvers):
 
 
         else:
-            CC_plus = LIN.pinv(CC)
+            CC_plus = np.linalg.pinv(CC)
             CC_0 = HLP.null(CC.T)
             if l_equ > n_endog:
                 Psi_mat = \
@@ -196,11 +193,11 @@ class PyUhlig(MODsolvers):
 
         d_Delta_up = MAT.diag(Delta_up)
         d_Xi_up = MAT.diag(Xi_up)
-        Xi_eigval = MAT.zeros(N.shape(Delta_up))
-        for i1 in range(0,N.shape(Delta_up)[0],1):
+        Xi_eigval = MAT.zeros(np.shape(Delta_up))
+        for i1 in range(0,np.shape(Delta_up)[0],1):
             Xi_eigval[i1,i1] = d_Xi_up[i1]/d_Delta_up[i1]
         d_Xi_eigval = np.diag(Xi_eigval)
-        mat_tmp = MAT.zeros((N.shape(Xi_eigval)[0],3))
+        mat_tmp = MAT.zeros((np.shape(Xi_eigval)[0],3))
         i1=0
         for x in d_Xi_eigval:
             mat_tmp[i1,0] = d_Xi_eigval[i1]
@@ -249,14 +246,14 @@ class PyUhlig(MODsolvers):
         m_states = np.shape(FF)[1]
         l_equ = np.shape(CC)[0]
         n_endog = np.shape(CC)[1]
-        k_exog = min(N.shape(NN))
+        k_exog = min(np.shape(NN))
 
 #        if HLP.rank(CC) < n_endog:
         if matrix_rank(CC) < n_endog:
             raise uhlerr, 'uhlerror: Rank(CC) needs to be at least\n\
                   equal to the number of endogenous variables'
         if l_equ == 0:
-            CC_plus = LIN.pinv(CC)
+            CC_plus = np.linalg.pinv(CC)
             CC_0 = (HLP.null(CC.T)).T
             Psi_mat = FF
             Gamma_mat = -GG
@@ -271,7 +268,7 @@ class PyUhlig(MODsolvers):
 
 
         else:
-            CC_plus = LIN.pinv(CC)
+            CC_plus = np.linalg.pinv(CC)
             CC_0 = HLP.null(CC.T)
             if l_equ > n_endog:
                 Psi_mat = \
@@ -292,8 +289,8 @@ class PyUhlig(MODsolvers):
                   ))
 
         (Xi_eigvec,Xi_eigval) = HLP.eig(Xi_mat,Delta_mat)
-        tmp_mat = MAT.eye(N.rank(Xi_eigvec))
-        for i1 in range(0,N.rank(Xi_eigvec),1):
+        tmp_mat = MAT.eye(np.rank(Xi_eigvec))
+        for i1 in range(0,np.rank(Xi_eigvec),1):
             tmp_mat[i1,i1] = float(Xi_eigval[0,i1])
         Xi_eigval = tmp_mat
 
@@ -306,7 +303,7 @@ class PyUhlig(MODsolvers):
 
 
         d_Xi_eigval = np.diag(Xi_eigval)
-        mat_tmp = MAT.zeros((N.rank(Xi_eigval),3))
+        mat_tmp = MAT.zeros((np.rank(Xi_eigval),3))
         i1=0
         for x in d_Xi_eigval:
             mat_tmp[i1,0] = d_Xi_eigval[i1]
@@ -380,7 +377,7 @@ class PyUhlig(MODsolvers):
         QQ = QQSS_vec[0:m_states*k_exog,:].reshape(-1,m_states).transpose()
         SS = QQSS_vec[(m_states*k_exog):((m_states+n_endog)*k_exog),:].reshape(-1,n_endog).transpose()
         WW1 = MAT.hstack((MAT.identity(m_states),MAT.zeros((m_states,k_exog))))
-        WW2 = MAT.hstack((RR*LIN.pinv(PP),SS-RR*LIN.pinv(PP)*QQ))
+        WW2 = MAT.hstack((RR*np.linalg.pinv(PP),SS-RR*np.linalg.pinv(PP)*QQ))
         WW3 = MAT.hstack((MAT.zeros((k_exog,m_states)),MAT.identity(k_exog)))
         WW = MAT.vstack((WW1,WW2,WW3))
         self.WW = WW
@@ -390,7 +387,7 @@ class PyUhlig(MODsolvers):
 
     def qzdiv(self,stake,A,B,Q,Z):
         n = np.shape(A)[0]
-        root = np.hstack((abs(N.mat(N.diag(A)).T),abs(N.mat(N.diag(B)).T)))
+        root = np.hstack((abs(np.mat(np.diag(A)).T),abs(np.mat(np.diag(B)).T)))
         index_mat = (root[:,0]<1e-13).choose(root[:,0],1)
         index_mat = (index_mat>1e-13).choose(root[:,0],0)
         root[:,0] = root[:,0]-MAT.multiply(index_mat,(root[:,0]+root[:,1]))
@@ -406,7 +403,7 @@ class PyUhlig(MODsolvers):
             else:
                 for i3 in range(m,i1,1):
                     (A,B,Q,Z) = self.qzswitch(i3,A,B,Q,Z)
-                    tmp = COP.deepcopy(root[i3,1])
+                    tmp = deepcopy(root[i3,1])
                     root[i3,1] = root[i3+1,1]
                     root[i3+1,1] = tmp
 
@@ -417,17 +414,17 @@ class PyUhlig(MODsolvers):
         e = B[i,i+1]
         c = A[i+1,i+1]
         f = B[i+1,i+1]
-        wz = np.mat(N.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
-        xy = np.mat(N.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
-        n = np.mat(N.sqrt(wz*wz.conjugate().T))
-        m = np.mat(N.sqrt(xy*xy.conjugate().T))
+        wz = np.mat(np.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
+        xy = np.mat(np.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
+        n = np.mat(np.sqrt(wz*wz.conjugate().T))
+        m = np.mat(np.sqrt(xy*xy.conjugate().T))
         if n.all() == 0:
             return
         else:
             wz = np.mat(wz/n)
             xy = np.mat(xy/m)
-            wz = np.vstack((wz,N.hstack((-wz[:,1].T,wz[:,0].T))))
-            xy = np.vstack((xy,N.hstack((-xy[:,1].T,xy[:,0].T))))
+            wz = np.vstack((wz,np.hstack((-wz[:,1].T,wz[:,0].T))))
+            xy = np.vstack((xy,np.hstack((-xy[:,1].T,xy[:,0].T))))
             A[i:i+2,:] = xy*A[i:i+2,:]
             B[i:i+2,:] = xy*B[i:i+2,:]
             A[:,i:i+2] = A[:,i:i+2]*wz
@@ -524,7 +521,7 @@ class MatUhlig:
         for argx in argli:
             XX = MAT.zeros(argx[3])
             dic1 = dict([[x,'0'] for x in range(argx[3][1])])
-            sXX = dict([[x,COP.deepcopy(dic1)] for x in range(len(argx[2]))])
+            sXX = dict([[x,deepcopy(dic1)] for x in range(len(argx[2]))])
             for y,x in enumerate(argx[2]):
                 if vreg(argx[4],x,False,'max'):
                     cont=[[z[0],z[1][1]] for z in vreg(argx[4],x,True,'min')]
@@ -712,7 +709,7 @@ class MatKleinD:
         self.solab2()
 
     def mkeqs(self):
-        list_tmp = COP.deepcopy(self.interm3)
+        list_tmp = deepcopy(self.interm3)
         reg2 = RE.compile('\*{2,2}')
         reva2 = self.re_var2
         i1=0
@@ -771,7 +768,7 @@ class MatKleinD:
         nexost = len(self.varvecs['z'])
         nendost = len(self.varvecs['k'])
         nendocon = len(self.varvecs['y'])
-        list_tmp1 = COP.deepcopy(self.interm4)
+        list_tmp1 = deepcopy(self.interm4)
         eq_len = len(self.interm4)
         sub_list2 = self.vlist2
         sub_list = self.vlist
@@ -1214,12 +1211,12 @@ class PyKlein2D:
         for varia in MAT.diag(sigma):
             if locals().has_key('ranvec'):
                 if count in indx:
-                    ranvec = MAT.vstack((ranvec,N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))))
+                    ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
                 else:
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))
             else:
                 if count in indx:
-                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
@@ -1239,21 +1236,21 @@ class PyKlein2D:
                 0.5*MAT.kron(MAT.eye(nother),MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1)).T)*\
                 numhl*MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1))
 
-        x_one_c = COP.deepcopy(x_one_m1)
-        y_one_c = COP.deepcopy(y_one_0)
-        x_two_c = COP.deepcopy(x_two_m1)
-        y_two_c = COP.deepcopy(y_two_0)
+        x_one_c = deepcopy(x_one_m1)
+        y_one_c = deepcopy(y_one_0)
+        x_two_c = deepcopy(x_two_m1)
+        y_two_c = deepcopy(y_two_0)
         if self.oswitch:
-            o_one_c = COP.deepcopy(o_one_0)
-            o_two_c = COP.deepcopy(o_two_0)
+            o_one_c = deepcopy(o_one_0)
+            o_two_c = deepcopy(o_two_0)
 
-        x_one = COP.deepcopy(x_one_c)
-        y_one = COP.deepcopy(y_one_c)
-        x_two = COP.deepcopy(x_two_c)
-        y_two = COP.deepcopy(y_two_c)
+        x_one = deepcopy(x_one_c)
+        y_one = deepcopy(y_one_c)
+        x_two = deepcopy(x_two_c)
+        y_two = deepcopy(y_two_c)
         if self.oswitch:
-            o_one = COP.deepcopy(o_one_c)
-            o_two = COP.deepcopy(o_two_c)
+            o_one = deepcopy(o_one_c)
+            o_two = deepcopy(o_two_c)
 
         for i1 in range(1,ranvec.shape[1],1):
 
@@ -1328,8 +1325,8 @@ class PyKlein2D:
         if vname not in alli:
             return 'Error: '+vname+' is not a valid variable for this model!'
         insim = eval('self.'+insim)
-        osim_x = COP.deepcopy(insim[0])
-        osim_y = COP.deepcopy(insim[1])
+        osim_x = deepcopy(insim[0])
+        osim_y = deepcopy(insim[1])
         nendo = self.nendo
         nexo = self.nexo
         ncon = self.ncon
@@ -1350,7 +1347,7 @@ class PyKlein2D:
             osim_x[i1,:] = xxf
 
         if self.oswitch:
-            osim_o = COP.deepcopy(insim[2])
+            osim_o = deepcopy(insim[2])
             # Now hp filter the other variables!
             for i1 in xrange(osim_o.shape[0]):
                 oo = osim_o[i1,:].__array__().T
@@ -1407,8 +1404,8 @@ class PyKlein2D:
             leads = intup[1]
 
         insim = eval('self.'+insim)
-        osim_x = COP.deepcopy(insim[0])
-        osim_y = COP.deepcopy(insim[1])
+        osim_x = deepcopy(insim[0])
+        osim_y = deepcopy(insim[1])
 
         # Now hp filter the simulations before graphing according to filtup
         for i1 in xrange(osim_y.shape[0]):
@@ -1433,7 +1430,7 @@ class PyKlein2D:
         sim_yl = osim_y[:,:-lags-1]
 
         if self.oswitch:
-            osim_o = COP.deepcopy(insim[2])
+            osim_o = deepcopy(insim[2])
             # Now hp filter the other variables!
             for i1 in xrange(osim_o.shape[0]):
                 oo = osim_o[i1,:].__array__().T
@@ -1479,14 +1476,14 @@ class PyKlein2D:
         naendo = self.naendo
         nacon = self.nacon
         nother = len(self.vardic['other']['var'])
-        respva = COP.deepcopy(self.actname)
+        respva = deepcopy(self.actname)
         if 'actin' in dir(self):
-            lags = COP.deepcopy(int(self.actin[0]))
-            leads = COP.deepcopy(int(self.actin[1]))
+            lags = deepcopy(int(self.actin[0]))
+            leads = deepcopy(int(self.actin[1]))
         else:
             lags = 3
             leads = 3
-        actm = COP.deepcopy(self.actm)
+        actm = deepcopy(self.actm)
         vdic = self.vdic
         allvari = [x[1] for x in vdic['exo']]
         allvari = allvari + [x[1] for x in vdic['endo']]
@@ -1514,11 +1511,11 @@ class PyKlein2D:
         mname = self.modname
         vardic = self.vardic
         insim = eval('self.'+insim)
-        sim_x = COP.deepcopy(insim[0])
-        sim_y = COP.deepcopy(insim[1])
+        sim_x = deepcopy(insim[0])
+        sim_y = deepcopy(insim[1])
         tlen = sim_x.shape[1]
         if self.oswitch:
-            sim_o = COP.deepcopy(insim[2])
+            sim_o = deepcopy(insim[2])
             nother = self.nother
             otherli = [x[1] for x in vardic['other']['var']]
         nexo = self.nexo
@@ -1723,21 +1720,21 @@ class PyKlein2D:
                 0.5*MAT.kron(MAT.eye(nother),MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1)).T)*\
                 numhl*MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1))
 
-        x_one_c = COP.deepcopy(x_one_m1)
-        y_one_c = COP.deepcopy(y_one_0)
-        x_two_c = COP.deepcopy(x_two_m1)
-        y_two_c = COP.deepcopy(y_two_0)
+        x_one_c = deepcopy(x_one_m1)
+        y_one_c = deepcopy(y_one_0)
+        x_two_c = deepcopy(x_two_m1)
+        y_two_c = deepcopy(y_two_0)
         if self.oswitch:
-            o_one_c = COP.deepcopy(o_one_0)
-            o_two_c = COP.deepcopy(o_two_0)
+            o_one_c = deepcopy(o_one_0)
+            o_two_c = deepcopy(o_two_0)
 
-        x_one = COP.deepcopy(x_one_c)
-        y_one = COP.deepcopy(y_one_c)
-        x_two = COP.deepcopy(x_two_c)
-        y_two = COP.deepcopy(y_two_c)
+        x_one = deepcopy(x_one_c)
+        y_one = deepcopy(y_one_c)
+        x_two = deepcopy(x_two_c)
+        y_two = deepcopy(y_two_c)
         if self.oswitch:
-            o_one = COP.deepcopy(o_one_c)
-            o_two = COP.deepcopy(o_two_c)
+            o_one = deepcopy(o_one_c)
+            o_two = deepcopy(o_two_c)
 
         for i1 in range(tlen):
             x_one_n = pp*x_one_c
@@ -1758,10 +1755,10 @@ class PyKlein2D:
                 o_one = MAT.hstack((o_one,o_one_n))
                 o_two = MAT.hstack((o_two,o_two_n))
 
-            x_one_c = COP.deepcopy(x_one_n)
-            y_one_c = COP.deepcopy(y_one_n)
-            x_two_c = COP.deepcopy(x_one_n)
-            y_two_c = COP.deepcopy(y_two_n)
+            x_one_c = deepcopy(x_one_n)
+            y_one_c = deepcopy(y_one_n)
+            x_two_c = deepcopy(x_one_n)
+            y_two_c = deepcopy(y_two_n)
 
         self.irf_x_two = x_two[:,1:-1]
         self.irf_y_two = y_two[:,1:-1]
@@ -1776,13 +1773,13 @@ class PyKlein2D:
         if inirf not in dir(self):
             return 'Error: You have not produced any IRFs yet! Nothing to graph!'
         inirf = eval('self.'+inirf)
-        irf_x = COP.deepcopy(inirf[0])
-        irf_y = COP.deepcopy(inirf[1])
+        irf_x = deepcopy(inirf[0])
+        irf_y = deepcopy(inirf[1])
         mname = self.modname
         vardic = self.vardic
         tlen = irf_x.shape[1]
         if self.oswitch:
-            irf_o = COP.deepcopy(inirf[2])
+            irf_o = deepcopy(inirf[2])
             nother = self.nother
             varother = self.vardic['other']['var']
             otherli = [x[1] for x in varother]
@@ -2005,12 +2002,12 @@ class ForKleinD(PyKlein2D):
         for varia in MAT.diag(sigma):
             if locals().has_key('ranvec'):
                 if count in indx:
-                    ranvec = MAT.vstack((ranvec,N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))))
+                    ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
                 else:
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))      
             else:
                 if count in indx:
-                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
@@ -2025,15 +2022,15 @@ class ForKleinD(PyKlein2D):
             nother = self.nother
             o_one_0 = numjl*MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1))
 
-        x_one_c = COP.deepcopy(x_one_m1)
-        y_one_c = COP.deepcopy(y_one_0)
+        x_one_c = deepcopy(x_one_m1)
+        y_one_c = deepcopy(y_one_0)
         if self.oswitch:
-            o_one_c = COP.deepcopy(o_one_0)
+            o_one_c = deepcopy(o_one_0)
 
-        x_one = COP.deepcopy(x_one_c)
-        y_one = COP.deepcopy(y_one_c)
+        x_one = deepcopy(x_one_c)
+        y_one = deepcopy(y_one_c)
         if self.oswitch:
-            o_one = COP.deepcopy(o_one_c)
+            o_one = deepcopy(o_one_c)
 
         for i1 in range(1,ranvec.shape[1],1):
 
@@ -2105,15 +2102,15 @@ class ForKleinD(PyKlein2D):
             nother = self.nother
             o_one_0 = numjl*MAT.vstack((x_one_0,y_one_0,x_one_m1,y_one_m1))
 
-        x_one_c = COP.deepcopy(x_one_m1)
-        y_one_c = COP.deepcopy(y_one_0)
+        x_one_c = deepcopy(x_one_m1)
+        y_one_c = deepcopy(y_one_0)
         if self.oswitch:
-            o_one_c = COP.deepcopy(o_one_0)
+            o_one_c = deepcopy(o_one_0)
 
-        x_one = COP.deepcopy(x_one_c)
-        y_one = COP.deepcopy(y_one_c)
+        x_one = deepcopy(x_one_c)
+        y_one = deepcopy(y_one_c)
         if self.oswitch:
-            o_one = COP.deepcopy(o_one_c)
+            o_one = deepcopy(o_one_c)
 
         for i1 in range(tlen):
             x_one_n = pp*x_one_c
@@ -2173,7 +2170,7 @@ class FairTaylor:
 
     def prepmodeq(self,modeq=None):
         re_var2 = self.re_var2
-        self.modeq1 = COP.deepcopy(modeq)
+        self.modeq1 = deepcopy(modeq)
         tmp_list = []
         i1 = 0
         for x1 in modeq:
@@ -2195,7 +2192,7 @@ class FairTaylor:
         self.modeq2 = self.modeq1[0:len(modeq)-self.maxshocks]
 
 
-        self.modeq3 = COP.deepcopy(self.modeq2)
+        self.modeq3 = deepcopy(self.modeq2)
         # Create varlist from vardic to establish fixed order
         self.varlist = self.vardic.items()
         # Create ordered vars and varnames
