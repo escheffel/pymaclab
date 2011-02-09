@@ -23,7 +23,7 @@ sigma_eps                        = 0.712;
 [3]  z(t):eps(t):productivity{exo}[log,hp]
 
 
-%Boundary conditions+++++++++++++++++++++++++++++++++
+%Boundary Conditions+++++++++++++++++++++++++++++++++
 None
 
 

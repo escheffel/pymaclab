@@ -92,7 +92,7 @@ IN_bar        = 0.0627;
 [22] v(t):eps_v(t):creditsh{exo}[log,hp]
 
 
-%Boundary conditions+++++++++++++++++++++++++++++++++
+%Boundary Conditions+++++++++++++++++++++++++++++++++
 None
 
 

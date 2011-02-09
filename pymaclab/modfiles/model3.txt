@@ -44,7 +44,7 @@ sigma_v =    ((1-rho_g**2)*(sigma_m)**2-(xi**2/(1-rho_z**2))*sigma_z**2)**(0.5);
 [12] g(t):epsg(t):mgrowth{exo}[log,hp]
 
 
-%Boundary conditions+++++++++++++++++++++++++++++++++
+%Boundary Conditions+++++++++++++++++++++++++++++++++
 None
 
 

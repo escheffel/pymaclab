@@ -87,7 +87,7 @@ lf_bar       = 0.0008;
 [23] @mvel(t):monvel[log,hp]
 
 
-%Boundary conditions+++++++++++++++++++++++++++++++++
+%Boundary Conditions+++++++++++++++++++++++++++++++++
 None
 
 
