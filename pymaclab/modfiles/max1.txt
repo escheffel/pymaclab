@@ -104,11 +104,11 @@ None
 None
 
 
-%Manual entry of sstate non-linear system++++++++++++
+%Steady State Non-Linear System [Manual]++++++++++++
 None
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++
+%Steady States [closed form]++++++++++++++++++++++++++
 # Steady State Gross Real Interest
 R_bar   = 1/beta;
 # Steady State Gross Nominal Interest
