@@ -1,6 +1,6 @@
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Name = CEE New Keynesian model;
-Description = This is the canonical Christian, Evans and Eichenbaum NK model.;
+Description = This is the canonical Christiano, Evans and Eichenbaum NK model.;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
