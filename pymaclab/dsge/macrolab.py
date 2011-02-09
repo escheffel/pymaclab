@@ -376,12 +376,12 @@ class DSGEmodel(object):
                 alldic.update(self.sstate)
                 alldic.update(self.paramdic)
                 intup = (self.manss_sys,alldic)
-                self.sssolvers.manss = Manss(intup)
+                self.sssolvers.manss = ManualSteadyState(intup)
                 self.sssolvers.manss.solve()
                 self.sstate.update(self.sssolvers.manss.sstate)
             else:
                 intup = (self.manss_sys,self.paramdic)
-                self.sssolvers.manss = Manss(intup)
+                self.sssolvers.manss = ManualSteadyState(intup)
                 self.sssolvers.manss.solve()
                 self.sstate = self.sssolvers.manss.sstate
         if initlev == 1: return
@@ -1864,7 +1864,7 @@ class DSGEmodel(object):
         # Solve for steady-state using manss
         if sum([nreg.search(x)!=None for x in self.txtpars.secs['closedformss'][0]]) == 0:
             intup = (self.manss_sys,self.paramdic)
-            self.sssolvers.manss = Manss(intup)
+            self.sssolvers.manss = ManualSteadyState(intup)
             self.sssolvers.manss.solve()
             self.sstate = self.sssolvers.manss.sstate
         if initlev == 1: return
