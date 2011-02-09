@@ -4,7 +4,7 @@ Python drivers for LAPACK's dgges and dtgsen.
 from __future__ import with_statement
 from qz import dgges, zgges
 from ordqz import dtgsen#, ztgsen
-from numpy import zeros, asanyarray, iscomplex, diag, errstate
+from numpy import zeros, asanyarray, iscomplex, diag, errstate, matrix
 from numpy import any as npany
 from numpy.linalg import LinAlgError
 
@@ -20,12 +20,21 @@ def qz(A, B, mode='complex'):
     
     mode : str {'real','complex'}
 
+    Returns
+    -------
+    AA, BB, Q.T, and Z
+
     Notes
     -----
+    If either A or B is a matrix, matrices are returned
     
     """
     A = asanyarray(A)
     B = asanyarray(B)
+    if isinstance(A,matrix) or isinstance(B, matrix):
+        usematrix = True
+    else:
+        usematrix = False
     #NOTE: the first arguments to both are the selector functions but
     #sort = 'N' is hard coded in qz.pyf so both are ignored, but the
     #arguments are checked
@@ -57,6 +66,11 @@ should be correct for j = %s,...,%s" % (str(i),str(n))) # not zero-based
         raise LinAlgError("Something other than QZ iteration failed. \
 Return INFO = %s.  See _GGES.f for more information." % str(info))
     #return Q.T to follow matlab convention
+    if usematrix:
+        AA = matrix(AA)
+        BB = matrix(BB)
+        Q = matrix(Q)
+        Z = matrix(Z)
     return AA,BB,Q.T,Z
 
 def eigwithqz(A,B,mode='complex'):
