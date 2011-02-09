@@ -392,7 +392,7 @@ class DSGEmodel(object):
         # Open the model solution tree branch
         self.modsolvers = MODsolvers()
         ######################## LINEAR METHODS !!! ############################
-#        if sum([nreg.search(x)!=None for x in txtpars.secs['modeq'][0]]) == 0:
+        # see if there are any log-linearized equations
         if any([False if 'None' in x else True for x in secs['modeq'][0]]):
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
@@ -470,6 +470,7 @@ class DSGEmodel(object):
                      self.vardic,self.vdic,
                      self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
+
         ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
 #            if sum([nreg.search(x)!=None for x in txtpars.secs['vcvm'][0]]) == 0 and\
             if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
