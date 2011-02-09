@@ -37,11 +37,12 @@ def locate(stringlines,varlist):
     for x in varlist:
         row_iter=0
         while row_iter < len(stringlines):
-            if x[0] in stringlines[row_iter]:
+            # not case sensitive
+            if x[0].lower() in stringlines[row_iter].lower():
                 locdic[x[1]] = row_iter
                 break
             else:
-                row_iter=row_iter+1
+                row_iter += 1
     return locdic
 
 
