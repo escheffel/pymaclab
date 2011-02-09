@@ -1042,9 +1042,6 @@ def mksymsys(self):
     for x in self.diffli1:
         tmpdic={}
         for y in x.keys():
-            print x[y]
-            print type(x[y])
-            print dir(x[y])
 #            tmpdic[y] = eval(x[y].tostr())
             tmpdic[y] = eval(str(x[y]))
     
