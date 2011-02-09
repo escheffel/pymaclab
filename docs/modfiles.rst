@@ -43,10 +43,11 @@ Non-Linear First-Order Conditions
 Steady State Non-Linear System [Manual]
 ---------------------------------------
 If you want to input multiline equations, you need to use 
-... at the beginning of the following line
+... at the end of the line
 
 Steady States [Closed Form]
 ---------------------------
+ROOT function
 
 Log-Linearized Model Equations
 ------------------------------
