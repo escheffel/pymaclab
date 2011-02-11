@@ -8,7 +8,6 @@ sympy
 sympycore
 mlabwrap
 scikits.timeseries
-wxwidgets
 
 Installation
 ------------
