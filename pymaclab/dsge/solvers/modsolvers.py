@@ -1574,7 +1574,7 @@ class PyKlein2D:
                 woy = np.zeros((tlen,3))
                 lam = 1600
                 yyf = MAT.matrix(hpfilt(yy,woy,tlen,1600,0))
-                sim_y[i1,:] = yyf
+                sim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(sim_x.shape[0]):
             if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
@@ -1583,7 +1583,7 @@ class PyKlein2D:
                 wox = np.zeros((tlen,3))
                 lam = 1600
                 xxf = MAT.matrix(hpfilt(xx,wox,tlen,1600,0))
-                sim_x[i1,:] = xxf
+                sim_x[i1,:] = xxf[0]
             # Now hp filter the other variables!
         if self.oswitch:
             for i1 in xrange(sim_o.shape[0]):
@@ -1593,7 +1593,7 @@ class PyKlein2D:
                     woo = np.zeros((tlen,3))
                     lam = 1600
                     oof = MAT.matrix(hpfilt(oo,woo,tlen,1600,0))
-                    sim_o[i1,:] = oof
+                    sim_o[i1,:] = oof[0]
 
         if indx and indy and indo:
             for x in indx:
@@ -1608,7 +1608,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif not indx and indy and indo:
             for y in indy:
                 leg.append(conli[y])
@@ -1620,7 +1619,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif indx and not indy and indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1632,7 +1630,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif indx and indy and not indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1644,7 +1641,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif indx and not indy and not indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1654,7 +1650,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif not indx and indy and not indo:
             for y in indy:
                 leg.append(conli[y])
@@ -1664,7 +1659,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
         elif not indx and not indy and indo:
             for o in indo:
                 leg.append(otherli[o])
@@ -1674,7 +1668,6 @@ class PyKlein2D:
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
-            P.show()
 
     def irf(self,tlen,sntup):
         tlen = tlen + 1
