@@ -2005,12 +2005,12 @@ class ForKleinD(PyKlein2D):
         for varia in MAT.diag(sigma):
             if locals().has_key('ranvec'):
                 if count in indx:
-                    ranvec = MAT.vstack((ranvec,N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))))
+                    ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
                 else:
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))      
             else:
                 if count in indx:
-                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
