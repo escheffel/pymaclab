@@ -8,6 +8,7 @@ from .. import helpers as HLP
 from pymaclab.linalg import qz, ordqz
 import numpy as np
 import pylab as P
+import copy as COP
 from isolab import isolab
 try:
     import mlabraw
