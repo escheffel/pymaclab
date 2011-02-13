@@ -9,7 +9,7 @@ from pymaclab.linalg import qz, ordqz
 import numpy as np
 import pylab as P
 import copy as COP
-import pymaclab.filters._hpfilter as hpfilt
+from pymaclab.filters._hpfilter import hpfilt
 from isolab import isolab
 try:
     import mlabraw
