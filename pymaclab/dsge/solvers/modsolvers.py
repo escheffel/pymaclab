@@ -1603,7 +1603,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((sim_x.T[:,indx],sim_y.T[:,indy],sim_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1614,7 +1614,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((sim_y.T[:,indy],sim_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1625,7 +1625,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((sim_x.T[:,indx],sim_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1636,7 +1636,7 @@ class PyKlein2D:
             for y in indy:
                 leg.append(conli[y])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((sim_x.T[:,indx],sim_y.T[:,indy])).A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1645,7 +1645,7 @@ class PyKlein2D:
             for x in indx:
                 leg.append(stateli[x])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(sim_x.T[:,indx].A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1654,7 +1654,7 @@ class PyKlein2D:
             for y in indy:
                 leg.append(conli[y])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(sim_y.T[:,indy].A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
@@ -1663,11 +1663,12 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(sim_o.T[:,indo].A)
             P.title(str(tlen)+' simulated periods, '+mname)
             P.xlabel('Time')
             P.legend(leg)
+        return figo
 
     def irf(self,tlen,sntup):
         tlen = tlen + 1
@@ -1820,7 +1821,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1832,7 +1833,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1844,7 +1845,7 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1856,7 +1857,7 @@ class PyKlein2D:
             for y in indy:
                 leg.append(conli[y])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1866,7 +1867,7 @@ class PyKlein2D:
             for x in indx:
                 leg.append(stateli[x])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(irf_x.T[:,indx].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1876,7 +1877,7 @@ class PyKlein2D:
             for y in indy:
                 leg.append(conli[y])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(irf_y.T[:,indy].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
@@ -1886,12 +1887,13 @@ class PyKlein2D:
             for o in indo:
                 leg.append(otherli[o])
             leg = tuple(leg)
-            P.figure()
+            figo = P.figure()
             P.plot(irf_o.T[:,indo].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS, hp-filtered')
             P.legend(leg)
+        return figo
 
     def tester(self):
         import sys
