@@ -1293,13 +1293,13 @@ class PyKlein2D:
                 o_two_c = o_two_n
 
         # Throw away first 1000 obs
-        x_one = x_one[:,1000:]
-        y_one = y_one[:,1000:]
-        y_two = y_two[:,1000:]
-        x_two = x_two[:,1000:]
+        x_one = x_one[:,1000:]*100
+        y_one = y_one[:,1000:]*100
+        y_two = y_two[:,1000:]*100
+        x_two = x_two[:,1000:]*100
         if self.oswitch:
-            o_one = o_one[:,1000:]
-            o_two = o_two[:,1000:]
+            o_one = o_one[:,1000:]*100
+            o_two = o_two[:,1000:]*100
 
         self.sim_y_two = y_two
         self.sim_y_one = y_one
@@ -1378,8 +1378,6 @@ class PyKlein2D:
             self.cvarm = MAT.hstack((varmat,relmat))
         else:
             self.cvarm = varmat
-
-
 
 
 
@@ -1574,7 +1572,7 @@ class PyKlein2D:
                 woy = np.zeros((tlen,3))
                 lam = 1600
                 yyf = MAT.matrix(hpfilt(yy,woy,tlen,1600,0))
-                sim_y[i1,:] = yyf[0]*100
+                sim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(sim_x.shape[0]):
             if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
@@ -1583,7 +1581,7 @@ class PyKlein2D:
                 wox = np.zeros((tlen,3))
                 lam = 1600
                 xxf = MAT.matrix(hpfilt(xx,wox,tlen,1600,0))
-                sim_x[i1,:] = xxf[0]*100
+                sim_x[i1,:] = xxf[0]
             # Now hp filter the other variables!
         if self.oswitch:
             for i1 in xrange(sim_o.shape[0]):
@@ -1593,7 +1591,7 @@ class PyKlein2D:
                     woo = np.zeros((tlen,3))
                     lam = 1600
                     oof = MAT.matrix(hpfilt(oo,woo,tlen,1600,0))
-                    sim_o[i1,:] = oof[0]*100
+                    sim_o[i1,:] = oof[0]
 
         if indx and indy and indo:
             for x in indx:
@@ -1773,12 +1771,12 @@ class PyKlein2D:
             x_two_c = COP.deepcopy(x_one_n)
             y_two_c = COP.deepcopy(y_two_n)
 
-        self.irf_x_two = x_two[:,1:-1]
-        self.irf_y_two = y_two[:,1:-1]
+        self.irf_x_two = x_two[:,1:-1]*100
+        self.irf_y_two = y_two[:,1:-1]*100
         self.inirf = [self.irf_x_two,self.irf_y_two]
         if self.oswitch:
-            self.irf_o_one = o_one[:,2:]
-            self.irf_o_two = o_two[:,2:]
+            self.irf_o_one = o_one[:,2:]*100
+            self.irf_o_two = o_two[:,2:]*100
             self.inirf = self.inirf + [self.irf_o_two,]
 
     def show_irf(self,intup,inirf='inirf'):
@@ -1839,7 +1837,7 @@ class PyKlein2D:
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS')
+            P.ylabel('Percentage Deviation from SS')
             P.grid()
             P.legend(leg)
         elif not indx and indy and indo:
@@ -1852,7 +1850,7 @@ class PyKlein2D:
             P.plot(MAT.hstack((irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS')
+            P.ylabel('Percentage Deviation from SS')
             P.grid()
             P.legend(leg)
         elif indx and not indy and indo:
@@ -1865,7 +1863,7 @@ class PyKlein2D:
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS')
+            P.ylabel('Percentage Deviation from SS')
             P.grid()
             P.legend(leg)
         elif indx and indy and not indo:
@@ -1878,7 +1876,7 @@ class PyKlein2D:
             P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS')
+            P.ylabel('Percentage Deviation from SS')
             P.grid()
             P.legend(leg)
         elif indx and not indy and not indo:
@@ -1889,7 +1887,7 @@ class PyKlein2D:
             P.plot(irf_x.T[:,indx].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS')
+            P.ylabel('Percentage Deviation from SS')
             P.grid()
             P.legend(leg)
         elif not indx and indy and not indo:
@@ -1900,7 +1898,7 @@ class PyKlein2D:
             P.plot(irf_y.T[:,indy].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS, hp-filtered')
+            P.ylabel('Percentage Deviation from SS, hp-filtered')
             P.grid()
             P.legend(leg)
         elif not indx and not indy and indo:
@@ -1911,7 +1909,7 @@ class PyKlein2D:
             P.plot(irf_o.T[:,indo].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
-            P.ylabel('Log-Dev from SS, hp-filtered')
+            P.ylabel('Percentage Deviation from SS, hp-filtered')
             P.grid()
             P.legend(leg)
         return figo
