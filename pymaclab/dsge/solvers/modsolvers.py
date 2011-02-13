@@ -1826,7 +1826,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS')
             P.legend(leg)
-            P.show()
         elif not indx and indy and indo:
             for y in indy:
                 leg.append(conli[y])
@@ -1839,7 +1838,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS')
             P.legend(leg)
-            P.show()
         elif indx and not indy and indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1852,7 +1850,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS')
             P.legend(leg)
-            P.show()
         elif indx and indy and not indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1865,7 +1862,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS')
             P.legend(leg)
-            P.show()
         elif indx and not indy and not indo:
             for x in indx:
                 leg.append(stateli[x])
@@ -1876,7 +1872,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS')
             P.legend(leg)
-            P.show()
         elif not indx and indy and not indo:
             for y in indy:
                 leg.append(conli[y])
@@ -1887,7 +1882,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS, hp-filtered')
             P.legend(leg)
-            P.show()
         elif not indx and not indy and indo:
             for o in indo:
                 leg.append(otherli[o])
@@ -1898,7 +1892,6 @@ class PyKlein2D:
             P.xlabel('Time')
             P.ylabel('Log-Dev from SS, hp-filtered')
             P.legend(leg)
-            P.show()
 
     def tester(self):
         import sys
