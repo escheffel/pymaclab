@@ -1,5 +1,5 @@
 C ----------------------------------------------------------------------
-C  SR: hpfilt
+C  SR: hpfilter
 C  Kalman smoothing routine for HP filter written by E Prescott.
 C   y=data series, d=deviations from trend, t=trend, n=no. obs,
 C   s=smoothing parameter (eg, 1600 for std HP).
@@ -10,7 +10,7 @@ C   time by about 30 percent.  Note that if this option is exercised,
 C   v cannot be used for other purposes between calls.
 C   This version does NOT release the trend in order to save memory.
 C ----------------------------------------------------------------------
-      SUBROUTINE HPFILT(Y,D,V,N,S,IOPT,T)
+      SUBROUTINE HPFILTER(Y,D,V,N,S,IOPT,T)
       INTEGER*2 IOPT,NN,I,I1,IB,N
       REAL*8 Y(N),T(N),V(N,3),D(N),SS
       REAL*8 M1,M2,V11,V12,V22,X,Z,B11,B12,B22,DET,E1,E2,S

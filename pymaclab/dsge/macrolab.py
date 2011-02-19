@@ -3,13 +3,40 @@ from scikits import timeseries as ts
 from copy import deepcopy
 import os
 import re
-#import scipy as S
 from helpers import now_is
 import numpy as np
 from numpy import matlib as mat
 from scipy.linalg import eig as scipyeig
 #from scikits.timeseries.lib import plotlib as tsplt
 from tempfile import mkstemp
+import trace
+import time
+import datetime
+import subprocess
+import numpy.ma as MA
+from numpy.ma import nomask
+from scikits import timeseries as TSS
+import copy as COP
+import os as OPS
+import re as RE
+import sys as SYST
+import re as RE
+import string as STR
+import scipy as S
+from scipy import io
+import scipy.stats
+import helpers as HLP
+import numpy as N
+import pylab as P
+from numpy import matlib as MAT
+from scipy import linalg as LIN
+from scipy import stats as STA
+from scikits.timeseries.lib import plotlib as TPL
+import macrolab as MACLAB
+import errors
+from errors import *
+import tempfile as TMF
+import threading as THR
 import glob
 try:
     import sympycore
@@ -24,7 +51,8 @@ except:
     print "this is optional"
 
 #NOTE: Imports from the refactor
-from pymaclab.filters._hpfilter import hpfilt
+from pymaclab.filters._hpfilter import hpfilter
+from pymaclab.filters._bkfilter import bkfilter
 from ..stats.var import VAR #TODO: remove for statsmodels version
 from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 #TODO: delay above and only import if needed
@@ -238,9 +266,9 @@ class TSDataBase:
     def mkhpf(self,tsname,tsout,lam=1600):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = hpfilt(tsinf,np.zeros((np.shape(tsinf)[0],3)),
-            np.shape(tsinf)[0],lam,0)
-        tsoutf = ts.time_series\
+        tsoutf = hpfilter(tsinf,N.zeros((N.shape(tsinf)[0],3)),
+            N.shape(tsinf)[0],lam,0)
+        tsoutf = TSS.time_series\
                (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])
         self.tsim(tsout,tsin['Dat_Desc']+',hp-filtered',tsoutf)
 
