@@ -44,7 +44,8 @@ except:
     print "You need to install pp"
 
 #NOTE: Imports from the refactor
-from pymaclab.filters._hpfilter import hpfilt
+from pymaclab.filters._hpfilter import hpfilter
+from pymaclab.filters._bkfilter import bkfilter
 from ..stats.var import VAR #TODO: remove for statsmodels version
 from solvers.steadystate import SSsolvers, Manss, Fsolve
 from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
@@ -254,7 +255,7 @@ class TSDataBase:
     def mkhpf(self,tsname,tsout,lam=1600):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = hpfilt(tsinf,N.zeros((N.shape(tsinf)[0],3)),
+        tsoutf = hpfilter(tsinf,N.zeros((N.shape(tsinf)[0],3)),
             N.shape(tsinf)[0],lam,0)
         tsoutf = TSS.time_series\
                (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])

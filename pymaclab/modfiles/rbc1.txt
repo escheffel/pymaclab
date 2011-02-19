@@ -10,18 +10,18 @@ Name = Standard RBC Model;
 rho       = 0.36;
 delta     = 0.025;
 R_bar     = 1.01; 
-eta	    = 2.0; 
-psi	    = 0.95;
+eta	  = 2.0; 
+psi	  = 0.95;
 z_bar     = 1.0;
 sigma_eps = 0.052; 
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  k(t):capital{endo}[log,hp]
-[2]  c(t):consumption{con}[log,hp]
-[4]  y(t):output{con}[log,hp]      
-[5]  z(t):eps(t):productivity{exo}[log,hp]
-[6]  @inv(t):investment[log,hp]
+[1]  k(t):capital{endo}[log,bk]
+[2]  c(t):consumption{con}[log,bk]
+[4]  y(t):output{con}[log,bk]      
+[5]  z(t):eps(t):productivity{exo}[log,bk]
+[6]  @inv(t):investment[log,bk]
 [7]  @R(t):rrate
 
 %Boundary conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

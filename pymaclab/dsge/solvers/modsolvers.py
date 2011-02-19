@@ -8,8 +8,10 @@ from .. import helpers as HLP
 from pymaclab.linalg import qz, ordqz
 import numpy as np
 import pylab as P
+from matplotlib import pyplot as PLT
 import copy as COP
-from pymaclab.filters._hpfilter import hpfilt
+from pymaclab.filters._hpfilter import hpfilter
+from pymaclab.filters._bkfilter import bkfilter
 from isolab import isolab
 try:
     import mlabraw
@@ -22,7 +24,6 @@ class MODsolvers(object):
         pass
 
 class PyUhlig(MODsolvers):
-
     def __init__(self,intup):
         self.ntup = intup[0]
         self.nendo = self.ntup[0]
@@ -1341,14 +1342,14 @@ class PyKlein2D:
             yy = osim_y[i1,:].__array__().T
             woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
-            yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
+            yyf = MAT.matrix(hpfilter(yy,woy,osim_y.shape[1],1600,0))
             osim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
             wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
-            xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
+            xxf = MAT.matrix(hpfilter(xx,wox,osim_x.shape[1],1600,0))
             osim_x[i1,:] = xxf[0]
 
         if self.oswitch:
@@ -1358,7 +1359,7 @@ class PyKlein2D:
                 oo = osim_o[i1,:].__array__().T
                 woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
-                oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
+                oof = MAT.matrix(hpfilter(oo,woo,osim_o.shape[1],1600,0))
                 osim_o[i1,:] = oof[0]
 
         # Stack all matrices into one
@@ -1415,14 +1416,14 @@ class PyKlein2D:
             yy = osim_y[i1,:].__array__().T
             woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
-            yyf = MAT.matrix(hpfilt(yy,woy,osim_y.shape[1],1600,0))
+            yyf = MAT.matrix(hpfilter(yy,woy,osim_y.shape[1],1600,0))
             osim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
             wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
-            xxf = MAT.matrix(hpfilt(xx,wox,osim_x.shape[1],1600,0))
+            xxf = MAT.matrix(hpfilter(xx,wox,osim_x.shape[1],1600,0))
             osim_x[i1,:] = xxf[0]
 
         sim_x = osim_x[:,lags:-leads]
@@ -1439,7 +1440,7 @@ class PyKlein2D:
                 oo = osim_o[i1,:].__array__().T
                 woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
-                oof = MAT.matrix(hpfilt(oo,woo,osim_o.shape[1],1600,0))
+                oof = MAT.matrix(hpfilter(oo,woo,osim_o.shape[1],1600,0))
                 osim_o[i1,:] = oof[0]
             sim_o = osim_o[:,lags:-leads]
             sim_of = osim_o[:,leads+1:]
@@ -1537,6 +1538,8 @@ class PyKlein2D:
                         indx = [z[1] for z in vardic[y]['var']].index(x)
                         if 'hp' in [z for z in vardic[y]['mod']][indx]:
                             filli[i1] = 1
+                        elif 'bk' in [z for z in vardic[y]['mod']][indx]:
+                            filli[i1] = 2
             filtup = tuple(filli)
 
 
@@ -1567,31 +1570,59 @@ class PyKlein2D:
         # Now hp filter the simulations before graphing according to filtup
         for i1 in xrange(sim_y.shape[0]):
             if indy and (i1 in indy) and filtup[list(intup).index(conli[i1])]:
-                conli[i1] = conli[i1]+'(hpf)'
-                yy = sim_y[i1,:].__array__().T
-                woy = np.zeros((tlen,3))
-                lam = 1600
-                yyf = MAT.matrix(hpfilt(yy,woy,tlen,1600,0))
-                sim_y[i1,:] = yyf[0]*100
+                if filtup[list(intup).index(conli[i1])] == 1:
+                    conli[i1] = conli[i1]+'(hpf)'
+                    yy = sim_y[i1,:].__array__().T
+                    woy = np.zeros((tlen,3))
+                    lam = 1600
+                    yyf = MAT.matrix(hpfilter(yy,woy,tlen,1600,0))
+                    sim_y[i1,:] = yyf[0]*100
+                elif filtup[list(intup).index(conli[i1])] == 2:
+                    conli[i1] = conli[i1]+'(bkf)'
+                    yy = sim_y[i1,:].__array__().T
+                    woy = np.zeros((tlen,1))
+                    up = 6
+                    dn = 32
+                    kkl = 12
+                    yyf = MAT.matrix(bkfilter(yy,up,dn,kkl,tlen))
+                    sim_y[i1,:] = yyf[0]*100
         # Now filter the state variables!
         for i1 in xrange(sim_x.shape[0]):
             if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
-                stateli[i1] = stateli[i1]+'(hpf)'
-                xx = sim_x[i1,:].__array__().T
-                wox = np.zeros((tlen,3))
-                lam = 1600
-                xxf = MAT.matrix(hpfilt(xx,wox,tlen,1600,0))
-                sim_x[i1,:] = xxf[0]*100
+                if filtup[list(intup).index(stateli[i1])] == 1:
+                    stateli[i1] = stateli[i1]+'(hpf)'
+                    xx = sim_x[i1,:].__array__().T
+                    wox = np.zeros((tlen,3))
+                    lam = 1600
+                    xxf = MAT.matrix(hpfilter(xx,wox,tlen,1600,0))
+                    sim_x[i1,:] = xxf[0]*100
+                elif filtup[list(intup).index(stateli[i1])] == 2:
+                    stateli[i1] = stateli[i1]+'(bkf)'
+                    xx = sim_x[i1,:].__array__().T
+                    wox = np.zeros((tlen,1))
+                    up = 6
+                    dn = 32
+                    kkl = 12
+                    xxf = MAT.matrix(bkfilter(xx,up,dn,kkl,tlen))
+                    sim_x[i1,:] = xxf[0]*100                  
             # Now hp filter the other variables!
         if self.oswitch:
             for i1 in xrange(sim_o.shape[0]):
                 if indo and (i1 in indo) and filtup[list(intup).index(otherli[i1])]:
-                    otherli[i1] = otherli[i1]+'(hpf)'
-                    oo = sim_o[i1,:].__array__().T
-                    woo = np.zeros((tlen,3))
-                    lam = 1600
-                    oof = MAT.matrix(hpfilt(oo,woo,tlen,1600,0))
-                    sim_o[i1,:] = oof[0]*100
+                    if filtup[list(intup).index(otherli[i1])] == 1:                   
+                        otherli[i1] = otherli[i1]+'(hpf)'
+                        oo = sim_o[i1,:].__array__().T
+                        woo = np.zeros((tlen,3))
+                        lam = 1600
+                        oof = MAT.matrix(hpfilter(oo,woo,tlen,1600,0))
+                    elif filtup[list(intup).index(otherli[i1])] == 2:
+                        otherli[i1] = otherli[i1]+'(bkf)'
+                        oo = sim_o[i1,:].__array__().T
+                        woo = np.zeros((tlen,1))
+                        up = 6
+                        dn = 32
+                        kkl = 12
+                        oof = MAT.matrix(bkfilter(oo,up,dn,kkl,tlen)) 
 
         if indx and indy and indo:
             for x in indx:
@@ -1785,12 +1816,15 @@ class PyKlein2D:
             return 'Error: You have not produced any IRFs yet! Nothing to graph!'
         inirf = eval('self.'+inirf)
         irf_x = COP.deepcopy(inirf[0])
+        tlen = irf_x.shape[1]
+        irf_x = MAT.hstack((MAT.zeros((irf_x.shape[0],20)),irf_x))
         irf_y = COP.deepcopy(inirf[1])
+        irf_y = MAT.hstack((MAT.zeros((irf_y.shape[0],20)),irf_y))
         irf_x = irf_x*100
         irf_y = irf_y*100
         mname = self.modname
         vardic = self.vardic
-        tlen = irf_x.shape[1]
+        time_axis = np.arange(-20,tlen,1)
         if self.oswitch:
             irf_o = COP.deepcopy(inirf[2])
             nother = self.nother
@@ -1836,7 +1870,9 @@ class PyKlein2D:
                 leg.append(otherli[o])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy],irf_o.T[:,indo])).A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS')
@@ -1849,7 +1885,9 @@ class PyKlein2D:
                 leg.append(otherli[o])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(MAT.hstack((irf_y.T[:,indy],irf_o.T[:,indo])).A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_y.T[:,indy],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS')
@@ -1862,7 +1900,9 @@ class PyKlein2D:
                 leg.append(otherli[o])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(MAT.hstack((irf_x.T[:,indx],irf_o.T[:,indo])).A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_o.T[:,indo])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS')
@@ -1875,7 +1915,9 @@ class PyKlein2D:
                 leg.append(conli[y])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy])).A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy])).A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS')
@@ -1886,7 +1928,9 @@ class PyKlein2D:
                 leg.append(stateli[x])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(irf_x.T[:,indx].A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_x.T[:,indx].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS')
@@ -1897,7 +1941,9 @@ class PyKlein2D:
                 leg.append(conli[y])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(irf_y.T[:,indy].A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_y.T[:,indy].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS, hp-filtered')
@@ -1908,7 +1954,9 @@ class PyKlein2D:
                 leg.append(otherli[o])
             leg = tuple(leg)
             figo = P.figure()
-            P.plot(irf_o.T[:,indo].A)
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_o.T[:,indo].A)
             P.title(str(tlen)+' simulated IRF periods, '+mname)
             P.xlabel('Time')
             P.ylabel('Percentage Deviation from SS, hp-filtered')
@@ -1916,13 +1964,6 @@ class PyKlein2D:
             P.legend(leg)
         return figo
 
-    def tester(self):
-        import sys
-        from wx.lib.mixins.inspection import InspectableApp
-        app = InspectableApp(False)
-        frame = TestFrame(None)
-        frame.Show(True)
-        app.MainLoop()
 #----------------------------------------------------------------------------------------------------------------------
 class MatKlein2D(PyKlein2D):
 

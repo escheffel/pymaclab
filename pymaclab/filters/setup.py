@@ -5,6 +5,8 @@ def configuration(parent_package='',top_path=None):
 
     config.add_extension('_hpfilter',
                          sources = ['src/hpfilter.f'])
+    config.add_extension('_bkfilter',
+                         sources = ['src/bkfilter.f90'])
     return config
 
 if __name__ == "__main__":
