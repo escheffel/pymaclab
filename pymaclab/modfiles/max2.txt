@@ -111,7 +111,7 @@ None
 
 
 
-%Non-linear first-order conditions+++++++++++++++++++
+%Non-Linear First-Order Conditions+++++++++++++++++++
 
 # Consumption FOC
 [1]  @U1(t)-lam(t)*I(t) = 0;
@@ -143,14 +143,11 @@ None
 [9]  LOG(E(t)|v(t+1))-phi_v*LOG(v(t)) = 0;
 
 
-
-
 %Manual entry of sstate non-linear system++++++++++++
 None
 
 
-
-%Steady States[closed-form]++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++
 Inf_bar = Theta;
 sg_bar = 1-sf_bar;
 lg_bar = 1-lf_bar-x_bar;
@@ -180,6 +177,9 @@ ssep   = i_bar-is_bar;
 mvel_bar = c_bar/m_bar;
 d_bar = c_bar-f_bar;
 
+
+%Steady State Non-Linear System [Manual]+++++++++++++
+None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++
