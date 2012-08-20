@@ -1,5 +1,6 @@
-GitHub Flavored Markdown
+PyMacLab README
 ================================
+
 About
 -------
 PyMacLab stands for Python Macroeconomics Library which currently primarily serves the purposes of providing
@@ -28,13 +29,15 @@ scikits.timeseries
 
 Installation
 ------------
+```
 python setup.py build
 sudo python setup.py install
+```
 
 Usage
 -----
+```
 import pymaclab as pm
-
 
 # Model Instantiation with data
 rbc1 = pm.newMOD('modfiles/rbc1.txt',db1)
@@ -49,4 +52,4 @@ rbc2.modsolvers.pyklein2d.solve()
 # Simulate the models after they have been solved
 rbc1.modsolvers.forkleind.sim(400)
 rbc2.modsolvers.pyklein2d.sim(1000)
-
+```
