@@ -133,7 +133,7 @@ shock_pos = 2
 # Some dsge stuff
 #TODO Let's not make calls to the DSGE model with a dataset at the moment as it is broken
 #rbc1 = pm.newMOD(os.path.join(datapath,'rbc1.txt'),db1)
-rbc1 = pm.newMOD(os.path.join(modpath,'rbc1.txt'),db1)
+rbc1 = pm.newMOD(os.path.join(modpath,'rbc1.txt'))
 rbc1.ccv('forkleind')
 sims = pm.newMOD(os.path.join(modpath,'sims.txt'))
 sims.ccv('forkleind')
