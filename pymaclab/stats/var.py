@@ -1,6 +1,7 @@
 from numpy import matlib as MAT
 import numpy as N
 import scipy as S
+import copy as COP
 
 
 # Setting standard VAR options
