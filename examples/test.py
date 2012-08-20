@@ -4,7 +4,6 @@ import numpy as np
 import scikits.timeseries as ts
 from scipy import io
 import pymaclab as pm
-import
 
 #Specialize general options
 #mac.mk_hessian = True
