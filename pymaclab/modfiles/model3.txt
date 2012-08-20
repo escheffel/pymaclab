@@ -52,7 +52,7 @@ None
 None
 
 
-%Non-linear first-order conditions+++++++++++++++++++
+%Non-Linear First-Order Conditions+++++++++++++++++++
 None
 
 
@@ -60,7 +60,7 @@ None
 None
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++
 r_bar     = 1/beta;
 yk_bar    = (r_bar - 1 + delta)/alpha;
 ck_bar    = yk_bar - delta;
@@ -84,6 +84,8 @@ gamma     = 1/(1+((1-a)/a)*((mc_bar)**(1-b)));
 A         = gamma*PHI+(1-gamma)*b;
 B         = (b - PHI)*(1-gamma);
 
+%Steady State Non-Linear System [Manual]+++++++++++++
+None
 
 %Log-Linearized Model Equations++++++++++++++++++++++
 [1]   k(t)=(1-delta)*k(t-1)+yk_bar*y(t)-ck_bar*m(t);
