@@ -70,7 +70,7 @@ None
 [7]   @Div(t) = @y(t) - @w(t)*l(t) - @inv(t);
 
 
-%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 
 # Market equilibrium
@@ -102,7 +102,7 @@ A       = 1.0;
 lam_bar = 1.0;
 betta   = 1.0;
 
-%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 R2_bar = betta**(-1);
 R3_bar = betta**(-1);
@@ -113,6 +113,8 @@ R20_bar = betta**(-1);
 inv_bar = delta*k_bar;
 Div_bar = y_bar - w_bar*l_bar - inv_bar;
 
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
