@@ -27,7 +27,7 @@ symbolic computation library sympy-core and not numerically as in other software
 PyMacLab was authored by Eric M. Scheffel and is distributed under the GNU General Public License v3.0.
 When using this Python library please make sure to cite the the project (using Latex) as:
 
-```
+```latex
 @Misc{,
   author =    {Eric M. Scheffel},
   title =     {{PyMacLab}: Open source {Python} Macroeconomics Laboratory},
@@ -50,14 +50,14 @@ scikits.timeseries
 
 Installation
 ------------
-```
+```python
 python setup.py build
 sudo python setup.py install
 ```
 
 Usage
 -----
-```
+```python
 import pymaclab as pm
 
 # Model Instantiation with data
