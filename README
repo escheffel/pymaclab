@@ -15,13 +15,13 @@ cite the the project (using Latex) as:
 
 Dependencies
 -------
-ipython
 numpy
 scipy
-pp
 sympy
 sympycore
-mlabwrap
+ipython (optional)
+pp (optional)
+mlabwrap (optional)
 scikits.timeseries
 
 Installation
