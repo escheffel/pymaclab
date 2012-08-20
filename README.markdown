@@ -4,9 +4,28 @@ PyMacLab - The Python Macroeconomics Library
 About
 -------
 PyMacLab stands for Python Macroeconomics Library which currently primarily serves the purposes of providing
-a convenience framework written in Python to solve non-linear DSGE models. It was authored by Eric M. Scheffel
-and is distributed under the GNU General Public License v3.0. When using this Python library please make sure to
-cite the the project (using Latex) as:
+a convenience framework written in Python to solve non-linear DSGE models. At the time of writing this the library
+supports solving DSGE models using 1st and 2nd order perturbation methods which are computed around the steady state.
+In particular, the library provides wrapper function for Paul Klein's 1st-order accurate method based on the Schur
+Decomposition as well a more recently published method by the same author (co-authored with Paul Gomme) which
+provides 2nd-order accurate solutions without using Tensor Algebra (using the Magnus and Neudecker 1999 definition
+of the Hessian matrix).
+
+The library is extremely user-friendly in the sense of providing a model text file parser similar to that present in
+Dynare which requires users to only write down the original set of non-linear first-order conditions of optimality.
+In addition, users are offered a menu of options of how to provide information required for calculating the steady state
+of the model. Once the model is parsed and read in, several options of solving it exist and users are provided with
+further convenience methods suitable for simulating solved models and obtaining dynamic statistical properties.
+
+It should also be mentioned that because PyMacLab is a convenience library of highly modular nature (using
+a object-oriented programming approach) it is very easy to loop over one model several thousand times each time changing
+the original set of primitive parameters, such as depreciation rates, impatience factors, etc. in order to compute
+solutions of the same model over a large set of conceivable parameterisations. Also, whenever solution methods require
+the calculation of the Jacobian or Hessian, this is always done analytically (symbolically) using the Python
+symbolic computation library sympy-core and not numerically as in other software packages.
+
+PyMacLab was authored by Eric M. Scheffel and is distributed under the GNU General Public License v3.0.
+When using this Python library please make sure to cite the the project (using Latex) as:
 
 ```
 @Misc{,
