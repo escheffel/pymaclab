@@ -10,6 +10,9 @@ import pymaclab as pm
 #mac.ncpus = 2
 #NOTE: ?? use global flags or get rid of for a config file and automatization
 
+#Add a datapath
+datapath = '../data/'
+
 # Get Christiano Data and prepare
 input = open(os.path.join(datapath,'cee2005data.asc'),'r')
 lines = input.read()
