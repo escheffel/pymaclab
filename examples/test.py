@@ -98,7 +98,7 @@ Var1.do_irf(3,15)
 
 # Build database and populate
 db1 = pm.newDB()
-db1.nameimDatStr('USEURSN.csv')
+db1.nameimDatStr(os.path.join(datapath,'USEURSN.csv'))
 #db1.tsim('chr_err','Steady-State error',chrt_err)
 #db1.mkalias('chr_err','err')
 db1.tsim('chr_gdp','GDP series from Christiano',chrt_gdp)
@@ -124,7 +124,8 @@ db1.mkmodif('Q')
 varord = [['output',2],['consumption',1],['interest',3]]
 varlag = 2
 shock_pos = 2
-db1.mkvar(varlag,varord,shock_pos,'const')
+#TODO This does not seem to work at the moment, db has no VAR instance error thrown...
+#db1.mkvar(varlag,varord,shock_pos,'const')
 
 
 # Some dsge stuff
