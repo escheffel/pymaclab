@@ -140,9 +140,8 @@ sims.ccv('forkleind')
 #TDOD rbc2 model appears to be broken for now, needs to be looked into
 #rbc2 = pm.newMOD(os.path.join(modpath,'rbc2.txt'))
 #rbc2.ccv('forkleind')
-#TODO Appears as if non-linear steady state solver is broken for now
-#mbc1 = pm.newMOD(os.path.join(modpath,'mbc1.txt'))
-#mbc1.ccv('forkleind')
+mbc1 = pm.newMOD(os.path.join(modpath,'mbc1.txt'))
+mbc1.ccv('forkleind')
 model2 = pm.newMOD(os.path.join(modpath,'model2.txt'))
 model2.ccv('forkleind')
 model3 = pm.newMOD(os.path.join(modpath,'model3.txt'))
