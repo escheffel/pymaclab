@@ -70,7 +70,7 @@ sudo python setup.py install
 Usage
 -----
 The below code snippet is indicative of how PyMacLab can be used in an environment such as IPython. Since the library
-is still undergoing change, it is always advisable to enter the subdirectory contained the test.py test-script and
+is still undergoing change, it is always advisable to enter the subdirectory containing the test.py test-script and
 inspect/run this to better understand PyMacLab's syntax.
 ```python
 import pymaclab as pm
