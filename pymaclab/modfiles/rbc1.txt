@@ -34,7 +34,7 @@ None
 
 
 
-%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 
 [1]   z(t)*k(t-1)**(rho)+(1-delta)*k(t-1)-k(t)-c(t) = 0;
@@ -54,12 +54,14 @@ k_bar = 1.0;
 y_bar = 1.0;
 betta = 1.0;
 
-%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 betta   = 1.0/R_bar;
 k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
 y_bar   = (z_bar*k_bar)**rho;
 c_bar   = y_bar - delta*k_bar;
 
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
