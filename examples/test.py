@@ -129,23 +129,25 @@ shock_pos = 2
 
 
 # Some dsge stuff
-rbc1 = pm.newMOD('rbc1.txt',db1)
+#TODO Let's not make calls to the DSGE model with a dataset at the moment as it is broken
+#rbc1 = pm.newMOD(os.path.join(datapath,'rbc1.txt'),db1)
+rbc1 = pm.newMOD(os.path.join(datapath,'rbc1.txt'),db1)
 rbc1.ccv('forkleind')
-sims = pm.newMOD('sims.txt')
+sims = pm.newMOD(os.path.join(datapath,'sims.txt'))
 sims.ccv('forkleind')
-rbc2 = pm.newMOD('rbc2.txt')
+rbc2 = pm.newMOD(os.path.join(datapath,'rbc2.txt'))
 rbc2.ccv('forkleind')
-mbc1 = pm.newMOD('mbc1.txt')
+mbc1 = pm.newMOD(os.path.join(datapath,'mbc1.txt'))
 mbc1.ccv('forkleind')
-model2 = pm.newMOD('model2.txt')
+model2 = pm.newMOD(os.path.join(datapath,'model2.txt'))
 model2.ccv('forkleind')
-model3 = pm.newMOD('model3.txt')
+model3 = pm.newMOD(os.path.join(datapath,'model3.txt'))
 model3.ccv('forkleind')
 #cmod = newMOD('max1.txt')
 #cmod.ccv('forkleind')
-cmod2 = pm.newMOD('max2.txt')
+cmod2 = pm.newMOD(os.path.join(datapath,'max2.txt'))
 cmod2.ccv('forkleind')
-cee = pm.newMOD('cee.txt')
+cee = pm.newMOD(os.path.join(datapath,'cee.txt'))
 cee.ccv('forkleind')
 
 
