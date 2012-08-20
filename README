@@ -1,4 +1,19 @@
-Depends
+About
+-------
+PyMacLab stands for Python Macroeconomics Library which currently primarily serves the purposes of providing
+a convenience framework written in Python to solve non-linear DSGE models. It was authored by Eric M. Scheffel
+and is distributed under the GNU General Public License v3.0. When using this Python library please make sure to
+cite the the project (using Latex) as:
+
+@Misc{,
+  author =    {Eric M. Scheffel},
+  title =     {{PyMacLab}: Open source {Python} Macroeconomics Laboratory},
+  year =      {2007--},
+  url = "http://github.com/escheffel/pymaclab/"
+}
+
+
+Dependencies
 -------
 ipython
 numpy
