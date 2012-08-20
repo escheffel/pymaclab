@@ -64,25 +64,25 @@ chr_rprof = np.log(chr_rprof).flatten(1)
 #chrt_err = ts.time_series\
          #(err,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_gdp = ts.time_series\
-         (chr_gdp,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+         (chr_gdp,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_pi = ts.time_series\
-        (chr_pi,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_pi,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_cons = ts.time_series\
-        (chr_cons,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_cons,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_inv = ts.time_series\
-        (chr_inv,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_inv,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_rwage = ts.time_series\
-        (chr_rwage,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_rwage,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_prod = ts.time_series\
-        (chr_prod,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_prod,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_ffr = ts.time_series\
-        (chr_ffr,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_ffr,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_dm = ts.time_series\
-        (chr_dm,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_dm,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_rprof = ts.time_series\
-        (chr_rprof,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_rprof,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 chrt_cap = ts.time_series\
-        (chr_cap,start_date=TS.Date(freq='Q', year=1964, quarter=2),freq='Q')
+        (chr_cap,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 
 # Load Christiano's VAR data in matlab format
 cdata = io.loadmat(OPS.path.join(datapath,'datrep.mat'))
