@@ -31,7 +31,7 @@ None
 None
 
 
-%Non-linear first-order conditions+++++++++++++++++++
+%Non-Linear First-Order Conditions+++++++++++++++++++
 None
 
 
@@ -39,12 +39,16 @@ None
 None
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++
 k_bar = ((1/alpha)*((1/betta)-1+delta))**(1/(alpha-1));
 y_bar = k_bar**alpha;
 c_bar = y_bar-delta*k_bar;
 ky_bar = k_bar/y_bar;
 cy_bar = c_bar/y_bar;
+
+
+%Steady State Non-Linear System [Manual]++++++++++++++
+None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++
