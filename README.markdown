@@ -20,14 +20,14 @@ cite the the project (using Latex) as:
 
 Dependencies
 -------
-numpy 
-scipy 
-sympy 
-sympycore 
-ipython (optional) 
-pp (optional) 
-mlabwrap (optional) 
-scikits.timeseries 
+numpy  
+scipy  
+sympy  
+sympycore  
+ipython (optional)  
+pp (optional)  
+mlabwrap (optional)  
+scikits.timeseries  
 
 Installation
 ------------
