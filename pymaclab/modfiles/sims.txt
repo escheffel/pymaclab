@@ -31,7 +31,7 @@ None
 [1]  @y(t) = z(t)*k(t-1)**alpha;
 
 
-%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 [1]  c(t)**(-gamma)-betta*E(t)|c(t+1)**(-gamma)*...
      (alpha*E(t)|z(t+1)*k(t)**(alpha-1)+delta) = 0;
@@ -43,10 +43,12 @@ None
 None
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 k_bar = (alpha*betta/(1-betta*delta))**(1/(1-alpha));
 c_bar = k_bar**alpha-(1-delta)*k_bar;
 
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
