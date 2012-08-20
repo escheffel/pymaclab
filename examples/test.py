@@ -85,7 +85,7 @@ chrt_cap = ts.time_series\
         (chr_cap,start_date=ts.Date(freq='Q', year=1964, quarter=2),freq='Q')
 
 # Load Christiano's VAR data in matlab format
-cdata = io.loadmat(OPS.path.join(datapath,'datrep.mat'))
+cdata = io.loadmat(os.path.join(datapath,'datrep.mat'))
 cdata = cdata['datrep']
 cdata = np.matrix(cdata)
 
