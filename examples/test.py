@@ -90,14 +90,14 @@ cdata = cdata['datrep']
 cdata = np.matrix(cdata)
 
 # Some VAR Stuff
-Var1 = newVAR(4,cdata[:,:],'const')
+Var1 = pm.newVAR(4,cdata[:,:],'const')
 Var1.ols()
 Var1.ols_comp()
 Var1.do_irf(3,15)
 
 
 # Build database and populate
-db1 = newDB()
+db1 = pm.newDB()
 db1.nameimDatStr('USEURSN.csv')
 #db1.tsim('chr_err','Steady-State error',chrt_err)
 #db1.mkalias('chr_err','err')
@@ -128,23 +128,23 @@ db1.mkvar(varlag,varord,shock_pos,'const')
 
 
 # Some dsge stuff
-rbc1 = newMOD('rbc1.txt',db1)
+rbc1 = pm.newMOD('rbc1.txt',db1)
 rbc1.ccv('forkleind')
-sims = newMOD('sims.txt')
+sims = pm.newMOD('sims.txt')
 sims.ccv('forkleind')
-rbc2 = newMOD('rbc2.txt')
+rbc2 = pm.newMOD('rbc2.txt')
 rbc2.ccv('forkleind')
-mbc1 = newMOD('mbc1.txt')
+mbc1 = pm.newMOD('mbc1.txt')
 mbc1.ccv('forkleind')
-model2 = newMOD('model2.txt')
+model2 = pm.newMOD('model2.txt')
 model2.ccv('forkleind')
-model3 = newMOD('model3.txt')
+model3 = pm.newMOD('model3.txt')
 model3.ccv('forkleind')
 #cmod = newMOD('max1.txt')
 #cmod.ccv('forkleind')
-cmod2 = newMOD('max2.txt')
+cmod2 = pm.newMOD('max2.txt')
 cmod2.ccv('forkleind')
-cee = newMOD('cee.txt')
+cee = pm.newMOD('cee.txt')
 cee.ccv('forkleind')
 
 
