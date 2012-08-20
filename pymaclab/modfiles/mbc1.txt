@@ -92,9 +92,10 @@ None
 [6]   LOG(E(t)|u(t+1))-psi_u*LOG(u(t))-psi_uz*LOG(z(t))+epsu(t) = 0;
 
 
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
 
-%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
-
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
 # from market equilibrium
 [1]   z_bar*k_bar**(rho)*l_bar**(1-rho)-delta*k_bar-c_bar = 0;
 # From definition real interest rate
@@ -134,12 +135,6 @@ m_bar       = 1.0;
 A           = 1.0;
 betta       = 1.0;
 
-
-%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-None
-
-%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-None
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
