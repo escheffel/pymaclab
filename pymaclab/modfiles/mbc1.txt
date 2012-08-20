@@ -2,7 +2,6 @@
 This is a monetary (CIA) model with endogenous labour.
 
 
-
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 Name = Leisure MBC model;
 
@@ -71,7 +70,7 @@ None
 [5]  @I(t) = 1+(E(t)|mu(t+1)/E(t)|lam(t+1));
 
 
-%Non-linear first-order conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 # Insert here the non-linear FOCs in format g(x)=0
 
@@ -91,7 +90,6 @@ None
 [5]   LOG(E(t)|z(t+1))-psi_z*LOG(z(t))+epsz(t) = 0;
 # money shock
 [6]   LOG(E(t)|u(t+1))-psi_u*LOG(u(t))-psi_uz*LOG(z(t))+epsu(t) = 0;
-
 
 
 
@@ -137,9 +135,11 @@ A           = 1.0;
 betta       = 1.0;
 
 
-%Steady States[closed-form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
 
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
