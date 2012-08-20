@@ -1,5 +1,5 @@
-PyMacLab README
-================================
+PyMacLab - The Python Macroeconomics Library
+=============================================
 
 About
 -------
@@ -8,24 +8,26 @@ a convenience framework written in Python to solve non-linear DSGE models. It wa
 and is distributed under the GNU General Public License v3.0. When using this Python library please make sure to
 cite the the project (using Latex) as:
 
+```
 @Misc{,
   author =    {Eric M. Scheffel},
   title =     {{PyMacLab}: Open source {Python} Macroeconomics Laboratory},
   year =      {2007--},
   url = "http://github.com/escheffel/pymaclab/"
 }
+```
 
 
 Dependencies
 -------
-numpy
-scipy
-sympy
-sympycore
-ipython (optional)
-pp (optional)
-mlabwrap (optional)
-scikits.timeseries
+numpy 
+scipy 
+sympy 
+sympycore 
+ipython (optional) 
+pp (optional) 
+mlabwrap (optional) 
+scikits.timeseries 
 
 Installation
 ------------
