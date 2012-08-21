@@ -54,14 +54,12 @@ def read_nativefmt(filestring, fname):
                 ['%Parameters','params','PA_loc'],
                 ['%Variable Vectors','varvec','VV_loc'],
                 ['%Boundary Conditions','bocond','BC_loc'],
-                ['%Variable Substitution Non-Linear System','vsfocs',
-                    'VSFO_loc'],
+                ['%Variable Substitution Non-Linear System','vsfocs','VSFO_loc'],
                 ['%Non-Linear First-Order Conditions','focs','FO_loc'],
                 ['%Steady States [Closed Form]','closedformss','SS_loc'],
                 ['%Steady State Non-Linear System [Manual]','manualss','SSM_loc'],
                 ['%Log-Linearized Model Equations','modeq','ME_loc'],
-                ['%Variance-Covariance Matrix','vcvm','VCM_loc'],
-                ['%Minford Model Evaluation','mme','MME_loc']]
+                ['%Variance-Covariance Matrix','vcvm','VCM_loc']]
 
     lines = filestring.splitlines()
     numlines = len(lines)
