@@ -110,8 +110,5 @@ None
 Sigma = [sigma_z**2 0;
          0 sigma_v**2];
 
-%Minford Model Evaluation++++++++++++++++++++++++++++
-None
-
 
 %End Of Model File+++++++++++++++++++++++++++++++++++
