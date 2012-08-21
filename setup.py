@@ -59,7 +59,7 @@ MAINTAINER = "Eric M. Scheffel"
 MAINTAINER_EMAIL = "emscheffel@gmail.com"
 URL = 'https://github.com/escheffel/pymaclab/'
 DOWNLOAD_URL="https://github.com/escheffel/pymaclab/zipball/v0.8"
-CLASSIFIERS=[Scientific, Macroeconomics, General Equilibrium, DSGE, Time Series]
+CLASSIFIERS=["Scientific", "Macroeconomics", "General Equilibrium", "DSGE", "Time Series"]
 
 MAJOR = 0
 MINOR = 8
