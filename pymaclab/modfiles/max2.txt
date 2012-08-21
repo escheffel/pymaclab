@@ -193,9 +193,4 @@ Sigma = [sigma_ez 0  0;
          0  0  sigma_ev];
 
 
-
-%Minford Model Evaluation++++++++++++++++++++++++++++
-none
-
-
 %End Of Model File+++++++++++++++++++++++++++++++++++
