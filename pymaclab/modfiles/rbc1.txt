@@ -43,7 +43,13 @@ None
 [4]   psi*LOG(z(t))-LOG(E(t)|z(t+1)) = 0;
 
 
-%Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+betta   = 1.0/R_bar;
+k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
+y_bar   = (z_bar*k_bar)**rho;
+c_bar   = y_bar - delta*k_bar;
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   z_bar*k_bar**(rho)-delta*k_bar-c_bar = 0;
 [2]   rho*z_bar*k_bar**(rho-1)+(1-delta)-R_bar = 0;
 [3]   (betta*R_bar)-1 = 0;
@@ -53,15 +59,6 @@ c_bar = 1.0;
 k_bar = 1.0;
 y_bar = 1.0;
 betta = 1.0;
-
-%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-betta   = 1.0/R_bar;
-k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
-y_bar   = (z_bar*k_bar)**rho;
-c_bar   = y_bar - delta*k_bar;
-
-%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
