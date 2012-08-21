@@ -1,16 +1,16 @@
 """Macroeconomics
 
 __author__ = "Eric Michael Scheffel"
-__version__ = '0.2'
+__version__ = '0.8'
 __revision__ = "$Revision: 1001 $"
 __date__ = '$Date: 2007-08-05$'
 
 """
 
 __author__ = "Eric Michael Scheffel"
-__version__ = '0.2'
+__version__ = '0.8'
 __revision__ = "$Revision: 1001 $"
-__date__ = '$Date: 2007-08-05$'
+__date__ = '$Date: 2012-08-21$'
 
 import os as OPS
 from dsge import macrolab
