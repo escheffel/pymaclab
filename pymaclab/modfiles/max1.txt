@@ -234,9 +234,4 @@ V_bar    = 1.0;
 None
 
 
-
-%Minford Model Evaluation++++++++++++++++++++++++++++
-none
-
-
 %End Of Model File+++++++++++++++++++++++++++++++++++
