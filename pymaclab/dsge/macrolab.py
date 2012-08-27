@@ -60,8 +60,7 @@ from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
         MatKleinD, MatWood, ForKlein, PyKlein2D, MatKlein2D, ForKleinD,
         FairTaylor)
 from parsers._modparser import parse_mod
-from parsers._dsgeparser import (populate_model_stage_one, 
-        populate_model_stage_two)
+from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_b,populate_model_stage_two
 from tools import dicwrap
 
 #Define a list of the Greek Alphabet for Latex
@@ -372,6 +371,9 @@ class DSGEmodel(object):
 
         # Initial population method of model, does NOT need steady states
         self = populate_model_stage_one(self, secs)
+        # This is an additional populator which creates subsitution dictionary
+        # and uses this to already get rid of @s in the manuall sstate list
+        self = populate_model_stage_one_b(self,secs)
 
         # Attach the data from database
         if self.dbase != None:
