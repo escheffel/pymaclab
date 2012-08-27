@@ -157,8 +157,8 @@ from __future__ import division
 
     # Collect info on numerical steady state
     if any([False if 'None' in x else True for x in secs['manualss'][0]]):
-        _mreg = '[a-zA-Z]*_bar\s*=\s*[0-9]*\.[0-9]*'
-        _mreg2 = '[a-zA-Z]*\s*=\s*[0-9]*\.[0-9]*'
+        _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
+        _mreg2 = '\[\d+]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
         mreg = re.compile(_mreg+'|'+_mreg2)
         indx = []
         ssidic={}
@@ -168,7 +168,7 @@ from __future__ import division
         for x in secs['manualss'][0]:
             if mreg.search(x):
                 ma = mreg.search(x)
-                str1 = ma.group().split('=')[0].strip()
+                str1 = ma.group().split('=')[0].split(']')[1].strip()
                 str2 = ma.group().split('=')[1].strip()
                 ssidic[str1] = eval(str2)
                 indx.append(i1)
@@ -738,8 +738,131 @@ def mk_subs_dic(self, secs):
             rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
                 rhs_eq[poe:]
         list_tmp2[i][1] = rhs_eq
+    
+    # Also allow for differentiation in substitution list
+    _mreg = '\s*DIFF{.*?,.*?}\s*'
+    _mregv1 = '\w+\d*_bar'
+    _mregv1b = '\(t\+|-\d{1,2}\)'
+    mregv1b = re.compile(_mregv1b)
+    _mregv1c = '\([p+|m+]\)'
+    mregv1c = re.compile(_mregv1c)
+    _mreglog = 'LOG\(.*?\)'
+    _mregexp = 'EXP\(.*?\)'
+    mregle = re.compile(_mregexp+'|'+_mreglog)
+    _mreglog2 = 'LOG\[.*?]'
+    _mregexp2 = 'EXP\[.*?]'
+    mregle2 = re.compile(_mregexp2+'|'+_mreglog2)
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    mreg = re.compile(_mreg)
+    for i1,elem in enumerate(list_tmp2):
+        if mreg.search(list_tmp2[i1][1]):
+            evalstr = list_tmp2[i1][1].replace('DIFF','')
+            evalstr = evalstr.replace('{','')
+            evalstr = evalstr.replace('}','')
+            differo = evalstr.split(',')[1]
+            evalstr = evalstr.split(',')[0]
+            var_li = list(self.vreg(patup,evalstr,True,'max'))
+            # Replace the LOGs and EXPs with square brackets
+            while mregle.search(evalstr):
+                ma = mregle.search(evalstr)
+                starts = ma.start()
+                ends = ma.end()
+                evalstr = evalstr[:ends] + ']' + evalstr[ends+1:]
+                evalstr = evalstr[:starts+3] + '[' + evalstr[starts+4:]
+            # Replace t+1 or t-1 with something without the operators
+            for i1,varo in enumerate(var_li):
+                var_li[i1] = list(varo)
+                ma = mregv1b.search(varo[0])
+                if ma:
+                    ends = ma.end()
+                    starts = ma.start()
+                    if '+' in varo[0]:
+                        str1 = varo[0].split('(')[0]
+                        counto = varo[0].split('+')[1][0]
+                        var_li[i1][0] = str1+'('+int(counto)*'p' + ')'
+                    if '-' in varo[0]:
+                        str1 = varo[0].split('(')[0]
+                        counto = varo[0].split('-')[1][0]
+                        var_li[i1][0] = str1+'('+int(counto)*'m' + ')'
+            # Replace left and right round brackets for variables and expose to sympycore
+            for i1,varo in enumerate(var_li):
+                str_tmp2 = var_li[i1][0]
+                str_tmp2 = str_tmp2.replace('(','__l__')
+                str_tmp2 = str_tmp2.replace(')','__r__')
+                locals()[str_tmp2] = SP.Symbol(str_tmp2)
+            for varo in self.paramdic.keys(): locals()[varo] = SP.Symbol(varo)
+            # Replace left and right round brackets for the differo variable and expose to sympycore
+            str_tmp3 = deepcopy(differo)
+            # First, also check for (t+x) or (t-x) in differo and replace with something readable by sympycore
+            ma = mregv1b.search(str_tmp3)
+            if ma:
+                ends = ma.end()
+                starts = ma.start()
+                if '+' in str_tmp3:
+                    str1 = str_tmp3.split('(')[0]
+                    counto = str_tmp3.split('+')[1][0]
+                    str_tmp3 = str1+'('+int(counto)*'p' + ')'
+                if '-' in str_tmp3:
+                    str1 = str_tmp3.split('(')[0]
+                    counto = str_tmp3.split('-')[1][0]
+                    str_tmp3 = str1+'('+int(counto)*'m' + ')' 
+            # Now replace the brackets
+            while '(' in str_tmp3:
+                str_tmp3 = str_tmp3.replace('(','__l__')
+            while ')' in str_tmp3:
+                str_tmp3 = str_tmp3.replace(')','__r__')
+            differo_new = deepcopy(str_tmp3)
+            locals()[str_tmp3] = SP.Symbol(str_tmp3)
+            # Replace left and right bracksts for the entire expression before calling diff
+            var_li.reverse()
+            for varo in var_li:
+                varn = varo[0].replace(')','__r__')
+                varn = varn.replace('(','__l__')
+                varpos = varo[3]
+                evalstr = evalstr[:varpos[0]]+varn+evalstr[varpos[1]:]
+            # Replace the LOGs and EXPs with round brackets again
+            while mregle2.search(evalstr):
+                ma = mregle2.search(evalstr)
+                starts = ma.start()
+                ends = ma.end()
+                evalstr = evalstr[:ends-1] + ')' + evalstr[ends:]
+                evalstr = evalstr[:starts+3] + '(' + evalstr[starts+4:]
+            # Now substitute out exp and log in terms of sympycore expressions
+            elog = re.compile('LOG\(')
+            while elog.search(evalstr):
+                ma = elog.search(evalstr)
+                pos = ma.span()[0]
+                poe = ma.span()[1]
+                evalstr = evalstr[:pos]+'SP.log('+evalstr[poe:]
+            eexp = re.compile('EXP\(')
+            while eexp.search(evalstr):
+                ma = eexp.search(evalstr)
+                pos = ma.span()[0]
+                poe = ma.span()[1]
+                evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
+            # Now evaluate and differentiate
+            expr = eval(evalstr)
+            resstr = expr.diff(locals()[str(differo_new)])
+            resstr = str(resstr)
+            # Now switch back to normal notation with brackets
+            while '__l__' in resstr:
+                resstr = resstr.replace('__l__','(')
+            while '__r__' in resstr:
+                resstr = resstr.replace('__r__',')')
+            # Now also switch back to normal t+1/t-x notation
+            while mregv1c.search(resstr):
+                ma = mregv1c.search(resstr)
+                ends = ma.end()
+                starts = ma.start()
+                str3 = ma.group()
+                lengo = len(str3[1:-1])
+                if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends+1:]
+                elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends+1:]
+            list_tmp2[i1][1] = resstr
+            
     self.nlsubs = deepcopy(dict(list_tmp2))
-    self.nlsubs_list = deepcopy(list_tmp2)
+    self.nlsubs_list = deepcopy(list_tmp2)        
+
     return self
 
 
