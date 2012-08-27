@@ -6,6 +6,7 @@ from copy import deepcopy
 import numpy.matlib as mat
 import sympycore as SP
 
+
 #TODO: why have these as nested functions?
 def populate_model_stage_one(self, secs):
     """
@@ -107,7 +108,7 @@ def populate_model_stage_one(self, secs):
 
     # Extract the model name and description
     if any([False if 'None' in x else True for x in secs['info'][0]]):
-       for x in secs['info'][0]:
+        for x in secs['info'][0]:
             if 'Name' in x:
                 self.mod_name = x.split('=')[1].replace(';','').strip()
             if 'Desc' in x:
@@ -440,8 +441,8 @@ def mkaug1(self, insys,othersys):
                         tind1 = (5-len(str(lead)))*'0'+str(lead)
                         if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-            
-            
+
+
 
     return self, (list_tmp1,list_tmp2)
 
@@ -702,11 +703,52 @@ def mkaug2(self, insys):
     return self, list_tmp1
 
 
+def mk_subs_dic(self, secs):
+    # Make the substitution system by joining lines and stripping
+    list_tmp2 = []
+    i1=0
+    linecounter=0
+    for x in secs['vsfocs'][0]:
+        if x.endswith(("...","\\")):
+            linecounter += 1
+        else:
+            if linecounter == 0:
+                line = x.replace(';','').split(']')[1].strip()
+            elif linecounter > 0: # have a multiline equation
+                str_tmp = ''
+                for y in secs['vsfocs'][0][i1-linecounter:i1+1]:
+                    str_tmp += y.replace('...','').replace(';',
+                                                           '').replace('//','').strip()
+                line = str_tmp.split(']')[1].strip()
+                linecounter = 0 
+        i1 += 1
+        splitline = line.split('=')
+        list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
+
+    # Replace substitutions inside substitutions
+    mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
+    variables = [x[0] for x in list_tmp2] # do this once
+    self.subs_vars = deepcopy(variables)
+    for i,x in enumerate(list_tmp2):
+        rhs_eq = list_tmp2[i][1]
+        while mreg.search(rhs_eq):
+            ma = mreg.search(rhs_eq)
+            pos, poe = ma.span()
+            indx = variables.index(ma.group())
+            rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
+                rhs_eq[poe:]
+        list_tmp2[i][1] = rhs_eq
+    self.nlsubs = deepcopy(dict(list_tmp2))
+    self.nlsubs_list = deepcopy(list_tmp2)
+    return self
+
+
 def mknonlinsys(self, secs):
     """
     Create Non-Linear FOC System
     """
     # Make the non-linear system by joining lines and stripping
+    variables = deepcopy(self.subs_vars)
     list_tmp1 = []
     i1 = 0
     linecounter = 0
@@ -722,51 +764,15 @@ def mknonlinsys(self, secs):
                 str_tmp = ''
                 for y in secs['focs'][0][i1-linecounter:i1+1]:
                     str_tmp += y.replace('...','').replace('\\',
-                                    '').replace(';','').strip()
+                                                           '').replace(';','').strip()
                 line = str_tmp.split(']')[1].strip()
                 linecounter = 0 
                 line = line.split('=')[0].strip()
                 list_tmp1.append(line)
         i1 += 1
 
-    # Check and do substitutions
-    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
-        # Make the substitution system by joining lines and stripping
-        list_tmp2 = []
-        i1=0
-        linecounter=0
-        for x in secs['vsfocs'][0]:
-            if x.endswith(("...","\\")):
-                linecounter += 1
-            else:
-                if linecounter == 0:
-                    line = x.replace(';','').split(']')[1].strip()
-                elif linecounter > 0: # have a multiline equation
-                    str_tmp = ''
-                    for y in secs['vsfocs'][0][i1-linecounter:i1+1]:
-                        str_tmp += y.replace('...','').replace(';',
-                                        '').replace('//','').strip()
-                    line = str_tmp.split(']')[1].strip()
-                    linecounter = 0 
-            i1 += 1
-            splitline = line.split('=')
-            list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
-
-        # Replace substitutions inside substitutions
-        mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
-        variables = [x[0] for x in list_tmp2] # do this once
-        for i,x in enumerate(list_tmp2):
-            rhs_eq = list_tmp2[i][1]
-            while mreg.search(rhs_eq):
-                ma = mreg.search(rhs_eq)
-                pos, poe = ma.span()
-                indx = variables.index(ma.group())
-                rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
-                                        rhs_eq[poe:]
-            list_tmp2[i][1] = rhs_eq
-
-
         # substitute out in main nonlinear equation system
+        list_tmp2 = deepcopy(self.nlsubs_list)
         mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
         for i,x in enumerate(list_tmp1):
             rhs_eq = list_tmp1[i]
@@ -776,13 +782,13 @@ def mknonlinsys(self, secs):
                 pos, poe = ma.span()
                 indx = variables.index(subv)
                 rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
-                            rhs_eq[poe:]
+                    rhs_eq[poe:]
             list_tmp1[i] = rhs_eq
 
     self, list_tmp1 = mkaug2(self, list_tmp1)
     list_tmp3 = [x[1] for x in list_tmp2]
     self, outtup = mkaug1(self, list_tmp3,list_tmp1)
-        
+
     list_tmp3 = outtup[1]
     list_tmp1 = outtup[0]
     for i1,x in enumerate(list_tmp3):
@@ -935,6 +941,7 @@ def mkloglinsys2(inlist):
         i1 = i1 + 1
     return list_tmp1
 
+
 # Creates the log-linear system
 def mkloglinsys1(secs):
     list_tmp = []
@@ -1044,10 +1051,43 @@ def mksymsys(self):
         for y in x.keys():
 #            tmpdic[y] = eval(x[y].tostr())
             tmpdic[y] = eval(str(x[y]))
-    
+
         diffli2.append(tmpdic) 
     self.diffli2 = diffli2
     return self
+
+
+#This function is needed in population stage 1, at the end
+def mk_msstate_subs(self):
+    """
+    This function takes the manually defined numerical sstate conditions and then replaces
+    any @terms with the corresponding substitutions
+    """
+    _mreg = '@[a-zA-Z]*_bar'
+    mreg = re.compile(_mreg)
+    tmp_list = deepcopy(self.ssys_list)
+    sub_dic = deepcopy(self.nlsubs)
+    for i1,x in enumerate(tmp_list):
+        while mreg.search(tmp_list[i1]):
+            ma = mreg.search(tmp_list[i1])
+            str_tmp = ma.group()
+            tmp_list[i1] = tmp_list[i1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
+    self.ssys_list = deepcopy(tmp_list)
+    return self
+
+
+# Extra population stage factored out, which is needed before steady state calculations
+def populate_model_stage_one_b(self, secs):
+    # Check and calculate the substitution list and dictionary
+    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        self = mk_subs_dic(self, secs)
+    # Do substitutions inside the numerical steady state list
+    # Check and do substitutions
+    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
+       any([False if 'None' in x else True for x in secs['manualss'][0]]):
+        self = mk_msstate_subs(self)
+    return self
+
 
 def populate_model_stage_two(self, secs):
     """
@@ -1066,11 +1106,7 @@ def populate_model_stage_two(self, secs):
 
     # Creates variance/covariance
     if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
-            'sstate' in dir(self):
+       'sstate' in dir(self):
         self.sigma = mksigmat(self, secs)
 
     return self
-
-
-
-
