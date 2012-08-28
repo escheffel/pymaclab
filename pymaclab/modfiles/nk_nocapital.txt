@@ -1,0 +1,99 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is one version of the standard Calvo-pricing New Keynesian model with no physical capital.
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = NK Model no capital;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+betta     = 0.99;
+sigma     = 1.0;
+xi        = 1.0; 
+ups       = 1.0;
+theta     = 3.5;
+phi       = 0.75;
+rho       = 0.9;
+rhom      = 0.5;
+psi       = 1.0;
+veps      = 11.0;
+n_bar     = 0.2;
+inf_bar   = 0.0;
+inf_star  = 0.01;
+infa_bar  = 0.0;
+z_bar     = 1.0;
+mgro_bar  = 0.01;
+sigma_e   = 0.007;
+sigma_em  = 0.002;
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  c(t):consumption{con}[log,bk]
+[2]  n(t):labour{con}[log,bk]
+[3]  mc(t):marginal_cost{con}[log,bk]
+[4]  w(t):wage{con}[log,bk]
+[5]  inf(t):inflation{con}
+[6]  infa(t):inflation_atl{con}
+[7]  r(t):rrate{con}
+[8]  int(t):irate{con}
+[9]  m(t):money{endo}[log,bk]
+[10] aa(t):wedge_a{con}[log,bk]
+[11] bb(t):wedge_b{con}[log,bk]
+[12] z(t):eps(t):productivity{exo}[log,bk]
+[13] mgro(t):zeta(t):money_growth{exo}[log,bk]
+[14] y(t):output{con}[log,bk]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+[1] @disc(t) = (E(t)|c(t+1)/c(t))**(-sigma);
+
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the non-linear FOCs in format g(x)=0
+
+[1]   c(t)**(-sigma)-betta*E(t)|c(t+1)**(-sigma)*(1+r(t)) = 0;
+[2]   y(t)-c(t) = 0;
+[3]   y(t)-z(t)*n(t) = 0;
+[4]   theta*(1-n(t))**(-xi)-c(t)**(-sigma)*w(t) = 0;
+[5]   w(t)-mc(t)*z(t) = 0;
+[6]   (1+inf(t))-((1-phi)*(1+infa(t))**(1-veps)+phi)**(1/(1-veps)) = 0;
+[7]   (1+infa(t))-(veps/(veps-1))*(aa(t)/bb(t)) = 0;
+[8]   aa(t)-(1+inf(t))*(mc(t)*y(t)+phi*betta*@disc(t)*(1+E(t)|inf(t+1))**(-(1-veps))*E(t)|aa(t+1)) = 0;
+[9]   bb(t)-y(t)-phi*betta*@disc(t)*(1+E(t)|inf(t+1))**(-(1-veps))*E(t)|bb(t+1) = 0;
+[10]  psi*m(t)**(-ups)-c(t)**(-sigma)*(int(t)/(1+int(t))) = 0;
+[11]  (1+r(t))-((1+int(t))/(1+E(t)|inf(t+1))) = 0;
+[12]  mgro(t)+inf(t)-(1-rhom)*inf_star-rhom*mgro(t-1)-rhom*inf(t-1)-zeta(t) = 0;
+[13]  mgro(t)-(m(t)/m(t-1)) = 0;
+[14]  (z(t)/z(t-1)**rho)-eps(t) = 0;
+
+
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+y_bar       = z_bar*n_bar;
+c_bar       = y_bar;
+w_bar       = c_bar**(sigma)*theta*(1-n_bar)**(-xi);
+mc_bar      = w_bar*z_bar;
+r_bar       = (1/betta)-1;
+int_bar     = r_bar + inf_star;
+#infa_bar    = (((1+inf_star)**(1-veps)-phi)/(1-phi))**(1/(1-veps))-1;
+aa_bar      = (1+inf_star)*mc_bar*y_bar/(1-phi*betta*(1+inf_star)**(-(1-veps)));
+bb_bar      = y_bar/(1-phi*betta*(1+inf_star)**(-(1-veps)));
+m_bar       = ((1/psi)*c_bar**(-sigma)*(int_bar/(1+int_bar)))**(-1/ups);
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_e 0;
+         0 sigma_em];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

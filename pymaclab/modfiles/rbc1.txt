@@ -55,10 +55,10 @@ c_bar   = y_bar - delta*k_bar;
 [3]   (betta*R_bar)-1 = 0;
 [4]   z_bar*k_bar**(rho)-y_bar = 0;
 
-c_bar = 1.0;
-k_bar = 1.0;
-y_bar = 1.0;
-betta = 1.0;
+[1]  c_bar = 1.0;
+[2]  k_bar = 1.0;
+[3]  y_bar = 1.0;
+[4]  betta = 1.0;
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

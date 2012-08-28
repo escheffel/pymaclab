@@ -117,23 +117,23 @@ None
 # From money equation
 [10]  Theta -Inf_bar = 0;
 # From CIA constraint
-[13]  c_bar-m_bar = 0;
+[11]  c_bar-m_bar = 0;
 # For investment
-[14]  inv_bar-delta*k_bar = 0;
+[12]  inv_bar-delta*k_bar = 0;
 
 
-c_bar       = 1.0;
-inv_bar     = 1.0;
-k_bar       = 1.0;
-y_bar       = 1.0;
-w_bar       = 1.0;
-lam_bar     = 1.0;
-mu_bar      = 1.0;
-Inf_bar     = 1.0;
-I_bar       = 1.0;
-m_bar       = 1.0;
-A           = 1.0;
-betta       = 1.0;
+[1]  c_bar       = 1.0;
+[2]  inv_bar     = 1.0;
+[3]  k_bar       = 1.0;
+[4]  y_bar       = 1.0;
+[5]  w_bar       = 1.0;
+[6]  lam_bar     = 1.0;
+[7]  mu_bar      = 1.0;
+[8]  Inf_bar     = 1.0;
+[9]  I_bar       = 1.0;
+[10] m_bar       = 1.0;
+[11] A           = 1.0;
+[12] betta       = 1.0;
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

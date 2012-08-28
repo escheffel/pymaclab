@@ -1,0 +1,163 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is Monica Merz's unemployment RBC model
+
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = Unemployment RBC Model;
+
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+alpha    = 0.36;
+betta    = 0.99;
+delta    = 0.022;
+eta      = 1.0;
+ups      = -1.25;
+lambdar  = 0.40;
+mu       = 0.004;
+rho_z    = 0.95;
+psi      = 0.07;
+a        = 0.05;
+c0       = 0.005;
+z_bar    = 1.0;
+A_g      = 1.0;
+sigma_z  = 0.007;
+
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,hp]
+[2]  c(t):consumption{con}[log,hp]
+[3]  y(t):output{con}[log,hp]
+[4]  em(t):employment{endo}[log,hp]
+[5]  ma(t):matches{con}[log,hp]
+[6]  va(t):vacancies{con}[log,hp]
+[7]  vac(t):vacancy_cost{con}[log,hp]
+[8]  sic(t):search_cost{con}[log,hp]
+[9]  si(t):search_intensity{con}[log,hp]
+[10] inv(t):investment{con}[log,hp]
+[11] r(t):real_rate{con}
+[12] w(t):wage{con}[log,hp]
+[13] z(t):epsz(t):productivity{exo}[log,hp]
+
+
+%Boundary Conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+[1]   @MU(t)     = LOG(c(t))+em(t-1)**(1-1/ups)/(1-1/ups);
+[2]   @MU(t+1)   = FF_1{@MU(t)};
+[1]   @MUc(t)    = DIFF{@MU(t),c(t)};
+[2]   @MUc(t+1)  = DIFF{@MU(t+1),FF_1{c(t)}};
+[2]   @MUc_bar   = 1/c_bar;
+[3]   @MUem(t)   = em(t-1)**(-1/ups);
+[3]   @MUem(t+1) = em(t)**(-1/ups);
+[3]   @MUem_bar  = em_bar**(-1/ups);
+[3]   @MA(t)     = va(t)**(1-lambdar)*(si(t)*(1-em(t-1)))**lambdar;
+[3]   @MA_bar    = va_bar**(1-lambdar)*(si_bar*(1-em_bar))**lambdar;
+[4]   @MAv(t)    = (1-lambdar)*((si(t)*(1-em(t-1)))/va(t))**lambdar;
+[5]   @MAv(t+1)  = (1-lambdar)*((E(t)|si(t+1)*(1-em(t)))/E(t)|va(t+1))**lambdar;
+[5]   @MAv_bar   = (1-lambdar)*((si_bar*(1-em_bar))/va_bar)**lambdar;
+[4]   @MAem(t)   = -si(t)*lambdar*(va(t)/(si(t)*(1-em(t-1))))**(1-lambdar);
+[5]   @MAem(t+1) = -si(t)*lambdar*(E(t)|va(t+1)/(E(t)|si(t+1)*(1-em(t))))**(1-lambdar);
+[4]   @MAem_bar  = -si_bar*lambdar*(va_bar/(si_bar*(1-em_bar)))**(1-lambdar);
+[4]   @MAsi(t)   = (1-em(t-1))*lambdar*(va(t)/(si(t)*(1-em(t-1))))**(1-lambdar);
+[5]   @MAsi(t+1) = (1-em(t))*lambdar*(E(t)|va(t+1)/(E(t)|si(t+1)*(1-em(t))))**(1-lambdar);
+[4]   @MAsi_bar  = (1-em_bar)*lambdar*(va_bar/(si_bar*(1-em_bar)))**(1-lambdar);
+[6]   @F(t)      = z(t)*A_g*em(t-1)**(1-alpha)*k(t-1)**alpha;
+[6]   @F_bar     = z_bar*A_g*em_bar**(1-alpha)*k_bar**alpha;
+[6]   @Fn(t)     = (1-alpha)*z(t)*(k(t-1)/em(t-1))**alpha;
+[7]   @Fn(t+1)   = (1-alpha)*E(t)|z(t+1)*(k(t)/em(t))**alpha;
+[6]   @Fn_bar    = (1-alpha)*z_bar*(k_bar/em_bar)**alpha;
+[8]   @Fk(t)     = alpha*z(t)*(em(t-1)/k(t-1))**(1-alpha);
+[9]   @Fk(t+1)   = alpha*E(t)|z(t+1)*(em(t)/k(t))**(1-alpha);
+[8]   @Fk_bar    = alpha*z_bar*(em_bar/k_bar)**(1-alpha);
+[10]  @Cs(t)     = c0*si(t)**eta;
+[10]  @Cs_bar    = c0*si_bar**eta;
+[11]  @Css(t)    = eta*c0*si(t)**(eta-1);
+[11]  @Css(t+1)  = eta*c0*E(t)|si(t+1)**(eta-1);
+[11]  @Css_bar   = eta*c0*si_bar**(eta-1);
+
+
+%Non-Linear First-Order Conditions+++++++++++++++++++
+
+# Budget constraint, c(t)
+[1]   c(t)+inv(t)-y(t)+sic(t)+vac(t) = 0;
+# Search cost function, sic(t)
+[2]   sic(t)-@Cs(t) = 0;
+# Vacancy posting function, vac(t)
+[3]   vac(t)-a*va(t) = 0;
+# Definition for investment, inv(t)
+[4]   inv(t)-k(t)+(1-delta_k)*k(t-1) = 0;
+# Matching Cobb-Douglas function, ma(t)
+[5]   ma(t)-@MA(t) = 0;
+# Employment law of motion, em(t)
+[6]   em(t)-(1-psi)*em(t-1)-ma(t) = 0;
+# Defintion of aggregate output, y(t)
+[7]   y(t)-@F(t) = 0;
+# Law of motion of productivity shock, z(t)
+[8]   (z(t)/z(t-1)**rho_z)-epsz(t) = 0;
+# Definition of the real rate of return on capital, r(t)
+[9]   r(t)-1-@Fk(t)+delta = 0;
+# Definition of the return on labour (i.e. wage rate), w(t)
+[10]   w(t)-@Fn(t) = 0;
+# Physical capital Euler equation, k(t)
+[11]   betta*@MUc(t+1)*(1+@Fk(t+1)-delta)-@MUc(t) = 0;
+# First-order condition with respect to vacancies, va(t)
+[12]  (a*@MUc(t)/@MAv(t))-betta*(@MUc(t+1)*(@Fn(t+1)+@Css(t+1))-@MUem(t+1)+...
+      (a*@MUc(t+1)/@MAv(t+1))*((1-psi)+@MAem(t+1))) = 0;
+# Eurler equation 3, si(t)
+[13]  (@MUc(t)*@Css(t)*(1-em(t-1))/@MAsi(t))-betta*(@MUc(t+1)*(@Fn(t+1)+@Css(t+1))-@MUem(t+1)+...
+      (@MUc(t+1)*@Css(t+1)*(1-em(t))/@MAsi(t+1))*((1-psi)+@MAem(t+1))) = 0;
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+%Steady States [Closed Form]++++++++++++++++++++++++++
+None
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++
+[1]   c_bar+inv_bar-y_bar+sic_bar+vac_bar = 0;
+[2]   sic_bar-@Cs_bar = 0;
+[3]   vac_bar-a*va_bar = 0;
+[4]   inv_bar-delta*k_bar = 0;
+[6]   ma_bar-psi*em_bar = 0;
+[5]   ma_bar-@MA_bar = 0;
+[7]   y_bar-@F_bar = 0;
+[8]   r_bar-1-@Fk_bar+delta = 0;
+[9]   w_bar-@Fn_bar = 0;
+[10]  r_bar-1/betta = 0;
+[11]  (a*@MUc_bar/@MAv_bar)-betta*(@MUc_bar*(@Fn_bar+@Css_bar)-@MUem_bar+...
+      (a*@MUc_bar/@MAv_bar)*((1-psi)+@MAem_bar)) = 0;
+[12]  (@MUc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)-betta*(@MUc_bar*(@Fn_bar+@Css_bar)-@MUem_bar+...
+      (@MUc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)*((1-psi)+@MAem_bar)) = 0;
+
+
+[1]  c_bar     = 1.0;
+[2]  inv_bar   = 1.0;
+[3]  y_bar     = 1.0;
+[4]  sic_bar   = 1.0;
+[5]  vac_bar   = 1.0;
+[6]  si_bar    = 1.0;
+[7]  va_bar    = 1.0;
+[8]  k_bar     = 1.0;
+[9]  ma_bar    = 1.0;
+[10] em_bar    = 1.0;
+[11] r_bar     = 1.0;
+[12] w_bar     = 1.0;
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+Sigma = [sigma_z**2 0;
+         0 sigma_v**2];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++
+
