@@ -1,12 +1,12 @@
-PyMacLab - The Python Macroeconomics Library
-=============================================
+PyMacLab - The Python Macroeconomics Laboratory
+===============================================
 
 About
 -------
-PyMacLab stands for Python Macroeconomics Library which currently primarily serves the purposes of providing
-a convenience framework written in Python to solve non-linear DSGE models. At the time of writing this the library
+PyMacLab is the Python Macroeconomics Laboratory which currently primarily serves the purpose of providing
+a convenience framework written in Python to solve non-linear DSGE models easily. At the time of this writing the library
 supports solving DSGE models using 1st and 2nd order perturbation methods which are computed around the steady state.
-In particular, the library provides wrapper function for [Paul Klein's](http://paulklein.ca/newsite/start/start.php)
+In particular, the library provides wrapper functions for [Paul Klein's](http://paulklein.ca/newsite/start/start.php)
 1st-order accurate method based on the Schur Decomposition as well a more recently published method by the same author
 (co-authored with Paul Gomme, see [here](http://ideas.repec.org/a/eee/dyncon/v35y2011i4p604-615.html)) which provides
 2nd-order accurate solutions without using Tensor Algebra (using the Magnus and Neudecker 1999 definition of the
@@ -30,7 +30,7 @@ stage to reflect this.
 
 PyMacLab was authored by [Eric M. Scheffel](http://www.ericscheffel.com) who is currently working as [Assistant Professor
 in Economics at Nottingham University China](http://www.nottingham.edu.cn/en/business/people/staffprofile/eric-scheffel.aspx)
-and is distributed under the GNU General Public License v3.0. When using this Python library please make sure to cite
+and is distributed under the Apache License v2.0. When using this Python library please make sure to cite
 the the project (using Latex) as:
 
 ```latex
