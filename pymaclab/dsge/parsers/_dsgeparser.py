@@ -742,37 +742,67 @@ def mk_subs_dic(self, secs):
     # Also allow for differentiation in substitution list
     _mreg = '\s*DIFF{.*?,.*?}\s*'
     _mregv1 = '\w+\d*_bar'
-    _mregv1b = '\(t\+|-\d{1,2}\)'
+    _mregv1b = '(?<!E)\(t[\+|-]{0,1}\d{0,2}\)'
     mregv1b = re.compile(_mregv1b)
+    _mregv1bb = '\(t[\+|-]\d{1,2}\)'
+    mregv1bb = re.compile(_mregv1bb)
     _mregv1c = '\([p+|m+]\)'
     mregv1c = re.compile(_mregv1c)
+    _mregv1d = 'E\(t[\+|-]{0,1}\d{0,2}\)\|'
+    mregv1d = re.compile(_mregv1d)
+    _mregv1e = 'E\[t[\+|-]{0,1}\d{0,2}]\|'
+    mregv1e = re.compile(_mregv1e)
     _mreglog = 'LOG\(.*?\)'
     _mregexp = 'EXP\(.*?\)'
-    mregle = re.compile(_mregexp+'|'+_mreglog)
+    mregle_ng = re.compile(_mregexp+'|'+_mreglog)
     _mreglog2 = 'LOG\[.*?]'
     _mregexp2 = 'EXP\[.*?]'
-    mregle2 = re.compile(_mregexp2+'|'+_mreglog2)
+    mregle2_ng = re.compile(_mregexp2+'|'+_mreglog2)
+    _mreglog = 'LOG\(.*\)'
+    _mregexp = 'EXP\(.*\)'
+    mregle_gg = re.compile(_mregexp+'|'+_mreglog)
+    _mreglog2 = 'LOG\[.*]'
+    _mregexp2 = 'EXP\[.*]'
+    mregle2_gg = re.compile(_mregexp2+'|'+_mreglog2)
     patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
     mreg = re.compile(_mreg)
-    for i1,elem in enumerate(list_tmp2):
-        if mreg.search(list_tmp2[i1][1]):
-            evalstr = list_tmp2[i1][1].replace('DIFF','')
+    for kk1,elem in enumerate(list_tmp2):
+        if mreg.search(list_tmp2[kk1][1]):
+            evalstr = list_tmp2[kk1][1].replace('DIFF','')
             evalstr = evalstr.replace('{','')
             evalstr = evalstr.replace('}','')
             differo = evalstr.split(',')[1]
             evalstr = evalstr.split(',')[0]
             var_li = list(self.vreg(patup,evalstr,True,'max'))
+            # Replace expectations operators with square brackets
+            while mregv1d.search(evalstr):
+                ma = mregv1d.search(evalstr)
+                vname = ma.group()
+                ends = ma.end()
+                starts = ma.start()
+                vname = vname.replace('(','__ll__')
+                vname = vname.replace(')','__rr__')
+                vname = vname.replace('|','_DELIM_')
+                evalstr = evalstr[:starts]+vname+evalstr[ends:]
+            for i1,varo in enumerate(var_li):
+                if mregv1d.search(varo[0]):
+                    str1 = varo[0].split('|')[1]
+                    str2 = varo[0].split('|')[0]
+                    str2 = str2.replace('(','__ll__')
+                    str2 = str2.replace(')','__rr__')
+                    var_li[i1] = list(varo)
+                    var_li[i1][0] = str2+'_DELIM_'+str1
             # Replace the LOGs and EXPs with square brackets
-            while mregle.search(evalstr):
-                ma = mregle.search(evalstr)
+            while mregle_ng.search(evalstr):
+                ma = mregle_ng.search(evalstr)
                 starts = ma.start()
                 ends = ma.end()
                 evalstr = evalstr[:ends] + ']' + evalstr[ends+1:]
                 evalstr = evalstr[:starts+3] + '[' + evalstr[starts+4:]
-            # Replace t+1 or t-1 with something without the operators
+            # Replace t+1 or t-1 with something without the operators, inside var_li
             for i1,varo in enumerate(var_li):
                 var_li[i1] = list(varo)
-                ma = mregv1b.search(varo[0])
+                ma = mregv1bb.search(varo[0])
                 if ma:
                     ends = ma.end()
                     starts = ma.start()
@@ -784,6 +814,22 @@ def mk_subs_dic(self, secs):
                         str1 = varo[0].split('(')[0]
                         counto = varo[0].split('-')[1][0]
                         var_li[i1][0] = str1+'('+int(counto)*'m' + ')'
+            # Replace t+1 or t-1 with something without the operators, also in evalstr
+            while mregv1bb.search(evalstr):
+                ma = mregv1bb.search(evalstr)
+                varn = ma.group()
+                ends = ma.end()
+                starts = ma.start()
+                if '+' in varn:
+                    str1 = varn.split('(')[0]
+                    counto = varn.split('+')[1][0]
+                    varn_new = str1+'('+int(counto)*'p' + ')'
+                    evalstr = evalstr[:starts]+varn_new+evalstr[ends:]
+                if '-' in varn:
+                    str1 = varn.split('(')[0]
+                    counto = varn.split('-')[1][0]
+                    varn_new = str1+'('+int(counto)*'m' + ')'
+                    evalstr = evalstr[:starts]+varn_new+evalstr[ends:]
             # Replace left and right round brackets for variables and expose to sympycore
             for i1,varo in enumerate(var_li):
                 str_tmp2 = var_li[i1][0]
@@ -793,36 +839,54 @@ def mk_subs_dic(self, secs):
             for varo in self.paramdic.keys(): locals()[varo] = SP.Symbol(varo)
             # Replace left and right round brackets for the differo variable and expose to sympycore
             str_tmp3 = deepcopy(differo)
-            # First, also check for (t+x) or (t-x) in differo and replace with something readable by sympycore
-            ma = mregv1b.search(str_tmp3)
-            if ma:
+            # First, also check for (t+x),(t-x) or (t) in differo and replace with something readable by sympycore
+            while mregv1b.search(str_tmp3):
+                ma = mregv1b.search(str_tmp3)
                 ends = ma.end()
                 starts = ma.start()
                 if '+' in str_tmp3:
-                    str1 = str_tmp3.split('(')[0]
-                    counto = str_tmp3.split('+')[1][0]
-                    str_tmp3 = str1+'('+int(counto)*'p' + ')'
-                if '-' in str_tmp3:
-                    str1 = str_tmp3.split('(')[0]
-                    counto = str_tmp3.split('-')[1][0]
-                    str_tmp3 = str1+'('+int(counto)*'m' + ')' 
-            # Now replace the brackets
-            while '(' in str_tmp3:
-                str_tmp3 = str_tmp3.replace('(','__l__')
-            while ')' in str_tmp3:
-                str_tmp3 = str_tmp3.replace(')','__r__')
+                    counto = str_tmp3.split('+')[-1][0]
+                    post = str_tmp3[starts:]
+                    pre = str_tmp3[:starts]
+                    # Also replace brackets
+                    if ')' in pre: pre = pre.replace(')','__rr__')
+                    if '(' in pre: pre = pre.replace('(','__ll__')
+                    if ')' in post: post = post.replace(')','__r__')
+                    if '(' in post: post = post.replace('(','__l__')                    
+                    str_tmp3 = pre+'__l__'+int(counto)*'p' + '__r__' 
+                elif '-' in str_tmp3:
+                    counto = str_tmp3.split('-')[-1][0]
+                    post = str_tmp3[starts:]
+                    pre = str_tmp3[:starts]
+                    # Also replace brackets
+                    if ')' in pre: pre = pre.replace(')','__rr__')
+                    if '(' in pre: pre = pre.replace('(','__ll__')
+                    if ')' in post: post = post.replace(')','__r__')
+                    if '(' in post: post = post.replace('(','__l__')                    
+                    str_tmp3 = pre+'__l__'+int(counto)*'m' + '__r__'
+                else:
+                    post = str_tmp3[starts:]
+                    pre = str_tmp3[:starts]
+                    # Also replace brackets
+                    if ')' in pre: pre = pre.replace(')','__rr__')
+                    if '(' in pre: pre = pre.replace('(','__ll__')
+                    if ')' in post: post = post.replace(')','__r__')
+                    if '(' in post: post = post.replace('(','__l__')                    
+                    str_tmp3 = pre+'__l__'+'t' + '__r__'                    
             differo_new = deepcopy(str_tmp3)
-            locals()[str_tmp3] = SP.Symbol(str_tmp3)
-            # Replace left and right bracksts for the entire expression before calling diff
+            # Also replace the delimiter when expectations are present in differo
+            while '|' in differo_new: differo_new = differo_new.replace('|','_DELIM_')
+            locals()[differo_new] = SP.Symbol(differo_new)
+            # Replace left and right brackets for the entire expression before calling diff
             var_li.reverse()
             for varo in var_li:
+                varn_orig = varo[0]
                 varn = varo[0].replace(')','__r__')
                 varn = varn.replace('(','__l__')
-                varpos = varo[3]
-                evalstr = evalstr[:varpos[0]]+varn+evalstr[varpos[1]:]
+                evalstr = evalstr.replace(varn_orig, varn)
             # Replace the LOGs and EXPs with round brackets again
-            while mregle2.search(evalstr):
-                ma = mregle2.search(evalstr)
+            while mregle2_ng.search(evalstr):
+                ma = mregle2_ng.search(evalstr)
                 starts = ma.start()
                 ends = ma.end()
                 evalstr = evalstr[:ends-1] + ')' + evalstr[ends:]
@@ -849,6 +913,12 @@ def mk_subs_dic(self, secs):
                 resstr = resstr.replace('__l__','(')
             while '__r__' in resstr:
                 resstr = resstr.replace('__r__',')')
+            while '__ll__' in resstr:
+                resstr = resstr.replace('__ll__','(')
+            while '__rr__' in resstr:
+                resstr = resstr.replace('__rr__',')')
+            # Also replace the DELIM with |
+            while '_DELIM_' in resstr: resstr = resstr.replace('_DELIM_','|')
             # Now also switch back to normal t+1/t-x notation
             while mregv1c.search(resstr):
                 ma = mregv1c.search(resstr)
@@ -856,9 +926,9 @@ def mk_subs_dic(self, secs):
                 starts = ma.start()
                 str3 = ma.group()
                 lengo = len(str3[1:-1])
-                if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends+1:]
-                elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends+1:]
-            list_tmp2[i1][1] = resstr
+                if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends:]
+                elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends:]
+            list_tmp2[kk1][1] = resstr
             
     self.nlsubs = deepcopy(dict(list_tmp2))
     self.nlsubs_list = deepcopy(list_tmp2)        
