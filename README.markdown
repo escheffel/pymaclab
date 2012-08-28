@@ -31,7 +31,7 @@ stage to reflect this.
 PyMacLab was authored by [Eric M. Scheffel](http://www.ericscheffel.com) who is currently working as [Assistant Professor
 in Economics at Nottingham University China](http://www.nottingham.edu.cn/en/business/people/staffprofile/eric-scheffel.aspx)
 and is distributed under the Apache License v2.0. When using this Python library please make sure to cite
-the the project (using Latex) as:
+the project (using Latex) as:
 
 ```latex
 @Misc{,
