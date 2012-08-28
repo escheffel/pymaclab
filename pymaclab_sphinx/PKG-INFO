@@ -1,0 +1,26 @@
+Metadata-Version: 1.1
+Name: cloud_sptheme
+Version: 1.4
+Summary: a nice sphinx theme named 'Cloud', and some related extensions
+Home-page: https://bitbucket.org/ecollins/cloud_sptheme
+Author: Eli Collins
+Author-email: elic@assurancetechnologies.com
+License: BSD
+Download-URL: http://pypi.python.org/pypi/cloud_sptheme
+Description: This is a small package containing a Sphinx theme named "Cloud",
+        along with some related Sphinx extensions. To see an example
+        of the theme in action, check out it's documentation
+        at `<http://packages.python.org/cloud_sptheme>`_.
+            
+Keywords: sphinx extension theme
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Documentation
+Classifier: Topic :: Software Development :: Documentation

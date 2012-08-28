@@ -1,0 +1,34 @@
+.. -*- restructuredtext -*-
+
+====================
+"Cloud" Sphinx Theme
+====================
+
+About
+=====
+This is a small package containing a Sphinx theme named "Cloud",
+along with some related Sphinx extensions.
+For more details (and to see the theme in action),
+check out it's documentation at `<http://packages.python.org/cloud_sptheme>`_.
+
+Requirements
+------------
+* Sphinx 1.1 or newer
+
+Installation
+------------
+To install from pypi::
+
+   pip install cloud_sptheme
+
+To install from the source::
+
+   python setup.py install
+
+For more detailed installation & testing instructions, see "docs/install.rst",
+
+Online Resources
+----------------
+* **Homepage & Source:** `<https://bitbucket.org/ecollins/cloud_sptheme>`_
+* **Docs:** `<http://packages.python.org/cloud_sptheme>`_
+* **Download & PyPI:** `<http://pypi.python.org/pypi/cloud_sptheme>`_
