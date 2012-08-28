@@ -725,6 +725,11 @@ def mk_subs_dic(self, secs):
         splitline = line.split('=')
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
 
+    self.nlsubs_raw1 = deepcopy(list_tmp2)
+    return self
+
+def subs_in_subs(self):
+    list_tmp2 = deepcopy(self.nlsubs_raw1)
     # Replace substitutions inside substitutions
     mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
     variables = [x[0] for x in list_tmp2] # do this once
@@ -738,7 +743,83 @@ def mk_subs_dic(self, secs):
             rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
                 rhs_eq[poe:]
         list_tmp2[i][1] = rhs_eq
-    
+    self.nlsubs_raw2 = deepcopy(list_tmp2)
+    return self
+
+
+      
+
+    return self
+
+def ff_chron_str(self,str1='',ff_int=1):
+    '''
+    This forwards all variables in an algebraic string expression by ff_int,
+    but it leaves the timing of the expectations operator untouched.
+    '''
+    _mregv1b = '(?<!E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)'
+    mregv1b = re.compile(_mregv1b)    
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    var_li = list(self.vreg(patup,str1,True,'max'))
+    var_li.reverse()
+    for varo in var_li:
+        varn = varo[0]
+        ma = mregv1b.search(varn)
+        starts = ma.start()
+        ends = ma.end()
+        matot = ma.group()
+        oper = ma.group('oper')
+        counto = ma.group('counto')
+        varpos = varo[3]
+        if oper == '':
+            oper = '+'
+            counto = int(ff_int)
+        elif oper == '+':
+            counto = int(counto)+ff_int
+            counto = str(counto)
+        elif oper == '-':
+            counto = -int(counto)+ff_int
+            counto = str(counto)
+            if counto == '0':
+                oper = ''
+                counto = ''
+            elif counto[0] == '-':
+                oper == '-'
+                counto = counto[1]
+            else:
+                oper = '+'
+                counto = str(counto)
+        varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        if oper == '+' and int(counto) > 0:
+            varn_new = 'E(t)|'+varn_new
+        str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
+    return str1
+
+def bb_chron_str(str1):
+    pass
+
+def mk_timeshift(self):
+    list_tmp2 = deepcopy(self.nlsubs_raw2)
+    _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
+    mreg = re.compile(_mreg)
+    for i1,elem in enumerate(list_tmp2):
+        while mreg.search(list_tmp2[i1][1]):
+            ma = mreg.search(list_tmp2[i1][1])
+            matn = ma.group()
+            starts = ma.start()
+            ends = ma.end()
+            fint = int(ma.group('fint'))
+            str_tmp = matn
+            str_tmp = str_tmp.split('{')[1].split('}')[0]
+            str_tmp = ff_chron_str(self,str1=str_tmp,ff_int=fint)
+            list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
+
+    self.nlsubs_raw3 = deepcopy(list_tmp2)  
+    return self
+
+def differ_out(self):
+    # Copy in raw nlsubs which has substitutions inside
+    # substitutions already replaced by previous function call
+    list_tmp2 = deepcopy(self.nlsubs_raw3)
     # Also allow for differentiation in substitution list
     _mreg = '\s*DIFF{.*?,.*?}\s*'
     _mregv1 = '\w+\d*_bar'
@@ -928,13 +1009,10 @@ def mk_subs_dic(self, secs):
                 lengo = len(str3[1:-1])
                 if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends:]
                 elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends:]
-            list_tmp2[kk1][1] = resstr
-            
+            list_tmp2[kk1][1] = resstr        
     self.nlsubs = deepcopy(dict(list_tmp2))
-    self.nlsubs_list = deepcopy(list_tmp2)        
-
+    self.nlsubs_list = deepcopy(list_tmp2)
     return self
-
 
 def mknonlinsys(self, secs):
     """
@@ -1273,7 +1351,14 @@ def mk_msstate_subs(self):
 def populate_model_stage_one_b(self, secs):
     # Check and calculate the substitution list and dictionary
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        # Create the raw nlsubs list 1
         self = mk_subs_dic(self, secs)
+        # Create the raw nlsubs list 2 by replacing substitutions inside substitutions
+        self = subs_in_subs(self)
+        # Apply timeshifts where needed
+        self = mk_timeshift(self)
+        # Pass last raw list on in order to replace differentiation commands with algebraic expressions
+        self = differ_out(self)
     # Do substitutions inside the numerical steady state list
     # Check and do substitutions
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
