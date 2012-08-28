@@ -757,7 +757,9 @@ def ff_chron_str(self,str1='',ff_int=1):
     but it leaves the timing of the expectations operator untouched.
     '''
     _mregv1b = '(?<!E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)'
-    mregv1b = re.compile(_mregv1b)    
+    _mregv1c = '(?<=E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)(?=\|)'
+    mregv1b = re.compile(_mregv1b)
+    mregv1c = re.compile(_mregv1c)
     patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
     var_li = list(self.vreg(patup,str1,True,'max'))
     var_li.reverse()
@@ -789,19 +791,62 @@ def ff_chron_str(self,str1='',ff_int=1):
                 oper = '+'
                 counto = str(counto)
         varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        # Add an expectations term if needed, but only if it is not already inside the original variable
         if oper == '+' and int(counto) > 0:
-            varn_new = 'E(t)|'+varn_new
+            if not mregv1c.search(varn_new): varn_new = 'E(t)|'+varn_new
         str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
     return str1
 
-def bb_chron_str(str1):
-    pass
+def bb_chron_str(self,str1='',bb_int=1):
+    '''
+    This backwards (lags) all variables in an algebraic string expression by bb_int,
+    but it leaves the timing of the expectations operator untouched.
+    '''
+    _mregv1b = '(?<!E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)'
+    mregv1b = re.compile(_mregv1b)    
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    var_li = list(self.vreg(patup,str1,True,'max'))
+    var_li.reverse()
+    for varo in var_li:
+        varn = varo[0]
+        ma = mregv1b.search(varn)
+        starts = ma.start()
+        ends = ma.end()
+        matot = ma.group()
+        oper = ma.group('oper')
+        counto = ma.group('counto')
+        varpos = varo[3]
+        if oper == '':
+            oper = '-'
+            counto = int(bb_int)
+        elif oper == '+':
+            counto = int(counto)-bb_int
+            counto = str(counto)
+            if counto == '0':
+                oper = ''
+                counto = ''
+            elif counto[0] == '-':
+                oper == '-'
+                counto = counto[1]
+            else:
+                oper = '+'
+                counto = str(counto)
+        elif oper == '-':
+            counto = -int(counto)-bb_int
+            counto = str(counto)[1]
+        varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        # Compare this line with ff_chron_str, here I do not add any expectations term
+        str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
+    return str1
 
 def mk_timeshift(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
     _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
+    _mreg2 = 'BB[_](?P<bint>\d{1,2})\{.*?\}'
     mreg = re.compile(_mreg)
+    mreg2 = re.compile(_mreg2)
     for i1,elem in enumerate(list_tmp2):
+        # First search for forward shifting terms
         while mreg.search(list_tmp2[i1][1]):
             ma = mreg.search(list_tmp2[i1][1])
             matn = ma.group()
@@ -812,16 +857,28 @@ def mk_timeshift(self):
             str_tmp = str_tmp.split('{')[1].split('}')[0]
             str_tmp = ff_chron_str(self,str1=str_tmp,ff_int=fint)
             list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
+        # Now search for backward shifting terms
+        while mreg2.search(list_tmp2[i1][1]):
+            ma = mreg2.search(list_tmp2[i1][1])
+            matn = ma.group()
+            starts = ma.start()
+            ends = ma.end()
+            bint = int(ma.group('bint'))
+            str_tmp = matn
+            str_tmp = str_tmp.split('{')[1].split('}')[0]
+            str_tmp = bb_chron_str(self,str1=str_tmp,bb_int=bint)
+            list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
 
-    self.nlsubs_raw3 = deepcopy(list_tmp2)  
+    self.nlsubs_raw2 = deepcopy(list_tmp2)  
     return self
 
 def differ_out(self):
     # Copy in raw nlsubs which has substitutions inside
     # substitutions already replaced by previous function call
-    list_tmp2 = deepcopy(self.nlsubs_raw3)
+    list_tmp2 = deepcopy(self.nlsubs_raw2)
     # Also allow for differentiation in substitution list
     _mreg = '\s*DIFF{.*?,.*?}\s*'
+    mreg = re.compile(_mreg)
     _mregv1 = '\w+\d*_bar'
     _mregv1b = '(?<!E)\(t[\+|-]{0,1}\d{0,2}\)'
     mregv1b = re.compile(_mregv1b)
@@ -845,16 +902,73 @@ def differ_out(self):
     _mreglog2 = 'LOG\[.*]'
     _mregexp2 = 'EXP\[.*]'
     mregle2_gg = re.compile(_mregexp2+'|'+_mreglog2)
+    _mregsh = '(?<!DI)FF[_]\d{1,2}|BB[_]\d{1,2}'
+    mregsh = re.compile(_mregsh)
     patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
-    mreg = re.compile(_mreg)
+    # Collect some necessary info for steady state substitutions
+    var_bar = []
+    varnames = deepcopy(self.vardic)
+    for elem in ['con','endo','exo','other']:
+        tmp_li = [x[0].split('(')[0]+'_bar' for x in varnames[elem]['var']]
+        for elem2 in tmp_li:
+            var_bar.append(elem2)
     for kk1,elem in enumerate(list_tmp2):
-        if mreg.search(list_tmp2[kk1][1]):
-            evalstr = list_tmp2[kk1][1].replace('DIFF','')
+        while mreg.search(list_tmp2[kk1][1]):
+            maout = mreg.search(list_tmp2[kk1][1])
+            expout = maout.group()
+            starts_out = maout.end()
+            ends_out = maout.start()
+            evalstr = expout.replace('DIFF','')
             evalstr = evalstr.replace('{','')
             evalstr = evalstr.replace('}','')
             differo = evalstr.split(',')[1]
+            # Skip if differo still has uncomputed timeshifter
+            if mregsh.search(differo): break
+            # Also skip if evalstr has uncomputed timeshifter
+            if mregsh.search(evalstr): break
             evalstr = evalstr.split(',')[0]
             var_li = list(self.vreg(patup,evalstr,True,'max'))
+            ##################################################
+            # Do for steady state expressions, as is very easy
+            ##################################################
+            if '_bar' in differo:
+                # First replace all chronological variables in evalstr with _bar equivalents
+                varbar_li = deepcopy(var_li)
+                varbar_li.reverse()
+                for varo in varbar_li:
+                    vpos = varo[3]
+                    evalstr = evalstr[:vpos[0]]+varo[2][1]+'_bar'+evalstr[vpos[1]:]
+                # Now substitute out exp and log in terms of sympycore expressions
+                elog = re.compile('LOG\(')
+                while elog.search(evalstr):
+                    ma = elog.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.log('+evalstr[poe:]
+                eexp = re.compile('EXP\(')
+                while eexp.search(evalstr):
+                    ma = eexp.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
+                # Now populate scope with sympy symbols
+                tmp_dic={}
+                for elem in var_bar:
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                tmp_dic = {}
+                for elem in self.paramdic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                locals()[differo] = SP.Symbol(differo)
+                # Population of scope done, now do calculation and continue in loop
+                expr_bar = eval(evalstr)
+                resstr = expr_bar.diff(locals()[str(differo)])
+                list_tmp2[kk1][1] = str(resstr)
+                continue
+            ###################################################
+            # Steady State branch ends here
+            ###################################################
             # Replace expectations operators with square brackets
             while mregv1d.search(evalstr):
                 ma = mregv1d.search(evalstr)
@@ -1009,7 +1123,8 @@ def differ_out(self):
                 lengo = len(str3[1:-1])
                 if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends:]
                 elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends:]
-            list_tmp2[kk1][1] = resstr        
+            list_tmp2[kk1][1] = list_tmp2[kk1][1].replace(expout,resstr)
+    self.nlsubs_raw2 = deepcopy(list_tmp2)
     self.nlsubs = deepcopy(dict(list_tmp2))
     self.nlsubs_list = deepcopy(list_tmp2)
     return self
@@ -1355,9 +1470,11 @@ def populate_model_stage_one_b(self, secs):
         self = mk_subs_dic(self, secs)
         # Create the raw nlsubs list 2 by replacing substitutions inside substitutions
         self = subs_in_subs(self)
+        # Make a first differentiation pass for DIFFs inside timeshifters
+        self = differ_out(self)
         # Apply timeshifts where needed
         self = mk_timeshift(self)
-        # Pass last raw list on in order to replace differentiation commands with algebraic expressions
+        # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
     # Do substitutions inside the numerical steady state list
     # Check and do substitutions
