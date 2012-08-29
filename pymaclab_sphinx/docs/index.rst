@@ -60,6 +60,8 @@ Getting Started
 
 API Documentation
 ------------------
+:doc:`api_doc`
+    The auto-generated documentation of pymaclab's main modules and classes
 
 Reference
 ---------
