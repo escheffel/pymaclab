@@ -344,6 +344,10 @@ class DSGEmodel(object):
             0 just parse the modfile
             1 parse modfile and solve steady state
             2 Jacobian (and Hessian)
+            
+        Returns
+        -------
+        A DSGE model instance
         """
         self._initlev = initlev #TODO: remove this as an option
         # Set no author
@@ -359,6 +363,16 @@ class DSGEmodel(object):
 
     # Initializes all of the rest, errors can occur here ! (steady state, jacobian, hessian)
     def init2(self):
+        '''
+        Model's second intialisation method called by newMOD() function call. The model's
+        __init__() method only creates the instance and adds information, but does no
+        parsing and computations whatsoever. init2() parses and ready's the model for
+        calculating the steady state and the dynamic solution to the model.
+        
+        init_lev = 0: only parsing, no calculations
+        init_lev = 1: parsing and steady state calculations
+        init_lev = 2: parsing, steady state calculations and dynamic solution computation
+        '''
         initlev = self._initlev
 
         # Create None tester regular expression
@@ -459,9 +473,7 @@ class DSGEmodel(object):
                  self.diffli2,
                  sess1)
             self.modsolvers.forklein = ForKlein(intup)
-        ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-
-#        if sum([nreg.search(x)!=None for x in txtpars.secs['focs'][0]]) == 0:
+    ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['focs'][0]]):
 
             # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
@@ -499,41 +511,43 @@ class DSGEmodel(object):
                      self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
 
-        ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-#            if sum([nreg.search(x)!=None for x in txtpars.secs['vcvm'][0]]) == 0 and\
-            if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
-               'numh' in dir(self):
-                # Open the MatKlein2D object
-                if 'nlsubsys' in dir(self):
-                    intup = (self.numj,self.numh,
-                         self.nendo,self.nexo,
-                         self.ncon,self.sigma,
-                         self.jAA,self.jBB,
-                         self.vardic,self.vdic,
-                         self.mod_name,self.audic,
-                         self.numjl,self.numhl,
-                         self.nother,sess1)
-                else:
-                    intup = (self.numj,self.numh,
-                         self.nendo,self.nexo,
-                         self.ncon,self.sigma,
-                         self.jAA,self.jBB,
-                         self.vardic,self.vdic,
-                         self.mod_name,self.audic,
-                         sess1)
-                self.modsolvers.matklein2d = MatKlein2D(intup)
-                # Open the PyKlein2D object
-                intup = intup[:-1]
-                self.modsolvers.pyklein2d = PyKlein2D(intup)
+    ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
+        if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
+            # Open the MatKlein2D object
+            if 'nlsubsys' in dir(self):
+                intup = (self.numj,self.numh,
+                     self.nendo,self.nexo,
+                     self.ncon,self.sigma,
+                     self.jAA,self.jBB,
+                     self.vardic,self.vdic,
+                     self.mod_name,self.audic,
+                     self.numjl,self.numhl,
+                     self.nother,sess1)
+            else:
+                intup = (self.numj,self.numh,
+                     self.nendo,self.nexo,
+                     self.ncon,self.sigma,
+                     self.jAA,self.jBB,
+                     self.vardic,self.vdic,
+                     self.mod_name,self.audic,
+                     sess1)
+            self.modsolvers.matklein2d = MatKlein2D(intup)
+            # Open the PyKlein2D object
+            intup = intup[:-1]
+            self.modsolvers.pyklein2d = PyKlein2D(intup)
 
         if 'jAA' in dir(self):
             self.mkeigv()
-            
+        
         # Wrap the paramdic at the end of model initialization
         self.params = dicwrap(self,initlev)
 
     # html info of model opened with webbrowser
     def info(self):
+        '''
+        A convience method for collecting and displaying the model's properties in a browser
+        using html language.
+        '''
         tmplist = glob.glob('tempz*.html')
         for x in tmplist:
             os.remove(x)
@@ -545,7 +559,7 @@ class DSGEmodel(object):
         htmlfile.write('<HTML><BODY BGCOLOR="white">\n')
         htmlfile.write('<H2>%s</H2>\n'%modname)
         htmlfile.write('\n\n')
-        for x1 in secs['mod'][1]:
+        for x1 in secs['info'][1]:
             htmlfile.write('<P>'+x1+'\n')
         htmlfile.write('<P>'+'<H4>Model Parameters</H4>\n')
         for x1 in secs['params'][1]:
@@ -574,12 +588,18 @@ class DSGEmodel(object):
         return 'Model Website opened!'
     # Set the author of the current model
     def setauthor(self,author=None):
+        '''
+        Convience method for setting the model's author's name.
+        '''
         if author == None:
             self.author = 'No author'
         else:
             self.author = author
     # pdflatex the model tex file and open with pdf viewer
     def pdf(self):
+        '''
+        This will pdflatex the model's tex file and then view it in the system's pdf viewer.
+        '''
         modfile = self.modfile
         modfname = modfile.split('.')[0]
         if modfname+'.pdf' in os.listdir(modfpath):
@@ -636,6 +656,11 @@ class DSGEmodel(object):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Opens the model text file for editing
     def txted(self):
+        '''
+        A convience method for launching an editor editing the model's associated
+        model txt file. If the file gets saved (even if unaltered) the model is
+        re-initialized.
+        '''
         modfile = self.modfile
         modfname = modfile.split('.')[0]
         if modfname+'.log' in os.listdir(modfpath):
@@ -655,6 +680,10 @@ class DSGEmodel(object):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Opens the model latex file for editing
     def texed(self):
+        '''
+        A convenience method which allows users to launch the model's tex file in an
+        editor specified in the configuration settings of pymaclab.
+        '''
         modfile = self.modfile
         modfname = modfile.split('.')[0]
         if modfname+'.log' in os.listdir(modfpath):
@@ -680,6 +709,10 @@ class DSGEmodel(object):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
     # Choose to delete the current model's latex file. Your are asked again whether yes/no
     def deltex(self):
+        '''
+        A simple method which allows you to delete the current tex file associated with this model.
+        Will ask for confirmation though, so cannot be used in a fire-and-forget batch file.
+        '''
         answ = 0
         while answ not in ['Y','y','N','n']:
             answ = raw_input("REALLY delete this model's tex file ? (Y/N)")
@@ -692,6 +725,11 @@ class DSGEmodel(object):
             return
     # Change the 'current view' of model solution algorithms
     def ccv(self,instring=None):
+        '''
+        This is just a convenience method which allows the current preferred dynamic
+        solution method to be stored (attached) here and made accessible without having
+        to traverse too deeply into the model instance tree structure.
+        '''
         if instring == None:
             return 'Error: Your have not specified a current view name!'
         elif instring not in dir(self.modsolvers):
@@ -700,6 +738,10 @@ class DSGEmodel(object):
             self.cv = eval('self.modsolvers.'+instring)
     # Get data method, in case model has not been loaded with database object
     def getdata(self,datafile=None,dbase=None):
+        '''
+        A separate method useful for importing and attaching to the model data which may
+        be used for estimation purposes, which has however not been implemented yet.
+        '''
         self.data = {}
         if datafile != None:
             input = open(os.path.join(os.getcwd(),datafile), 'r')
@@ -959,9 +1001,21 @@ class DSGEmodel(object):
     # The unparallelized Jacobian, Hessian computation method
     def mkjahe(self):
         '''
-        This produces the Jacobian for the non-linear system of equations
-        around the steady state, and evaluated at the steady state.
-        Also produces the Hessian!
+        An unparallelized method using native Python and Sympycore in oder
+        to calculate the numerical and analytical Jacobian and Hessian of the model.
+        
+        Parameters
+        ----------
+        self: object instance
+        
+        Returns
+        -------
+        self.numj: attaches numerical model Jacobian to instance
+        self.jdic: attaches the analytical model Jacobian to instance
+        self.numh: attaches numerical model Hessian to instance
+        self.hdic: attaches the analytical 3D Hessian to instance
+        self.jAA: attaches numerical AA matrix used in Forkleind solution method
+        self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1167,9 +1221,22 @@ class DSGEmodel(object):
     # The parallelized mkjahe version using parallel python
     def mkjahepp(self):
         '''
-        This produces the Jacobian for the non-linear system of equations
-        around the steady state, and evaluated at the steady state.
-        Also produces the Hessian!
+        An parallelized method using native Python and Sympycore in oder
+        to calculate the numerical and analytical Jacobian and Hessian of the model.
+        This is the parallelized version of method self.mkjahe using the Python pp library.
+        
+        Parameters
+        ----------
+        self: object instance
+        
+        Returns
+        -------
+        self.numj: attaches numerical model Jacobian to instance
+        self.jdic: attaches the analytical model Jacobian to instance
+        self.numh: attaches numerical model Hessian to instance
+        self.hdic: attaches the analytical 3D Hessian to instance
+        self.jAA: attaches numerical AA matrix used in Forkleind solution method
+        self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         # import local sympycore
         import sympycore
@@ -1407,8 +1474,25 @@ class DSGEmodel(object):
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
+    
     # The numerical (Paul Klein) Jacobian and Hessian computation method (uses matlab)
     def mkjahenmat(self,msess=sess1):
+        '''
+        A method using mlabwrap to call an external Matlab code in oder to calculate
+        the numerical Jacobian and Hessian of the model.
+        
+        Parameters
+        ----------
+        self: object instance
+        msess: active mlabwrap session to be used
+        
+        Returns
+        -------
+        self.numj: attaches numerical model Jacobian to instance
+        self.numh: attaches numerical model Hessian to instance
+        self.jAA: attaches numerical AA matrix used in Forkleind solution method
+        self.jBB: attaches numerical BB matrix used in Forkleind solution method
+        '''
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1524,7 +1608,7 @@ class DSGEmodel(object):
                     self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
 
-        # Transorm python exponentiation into matlab exponentiation
+        # Transform python exponentiation into matlab exponentiation
         _mreg='\*{2,2}'
         mreg=re.compile(_mreg)
         for i,x in enumerate(self.func2):
@@ -1603,9 +1687,24 @@ class DSGEmodel(object):
     # The unparallelized Jacobian, Hessian computation method
     def mkjahen(self):
         '''
-        This produces the Jacobian for the non-linear system of equations
-        around the steady state, and evaluated at the steady state.
-        Also produces the Hessian!
+        An unparallelized method using native Python and Sympycore in oder
+        to calculate the numerical and analytical Jacobian and Hessian of the model.
+        This is the corresponding method to "self.mkjahe()" but is only called when
+        some parameters were changed and the model needs dynamic updating. In particular
+        in this case the expensive computation of the analytical expressions can be
+        avoided, as only parameters affecting the steady state may have been altered.
+        Uses existing self.jdic for Jacobian and self.hdic for Hessian of model.
+        
+        Parameters
+        ----------
+        self: object instance
+        
+        Returns
+        -------
+        self.numj: attaches numerical model Jacobian to instance
+        self.numh: attaches numerical model Hessian to instance
+        self.jAA: attaches numerical AA matrix used in Forkleind solution method
+        self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1729,9 +1828,24 @@ class DSGEmodel(object):
     # The parallelized mkjahe version using parallel python
     def mkjaheppn(self):
         '''
-        This produces the Jacobian for the non-linear system of equations
-        around the steady state, and evaluated at the steady state.
-        Also produces the Hessian!
+        A parallelized method using native Python and Sympycore in oder
+        to calculate the numerical and analytical Jacobian and Hessian of the model.
+        This is the corresponding method to "self.mkjahe()" but is only called when
+        some parameters were changed and the model needs dynamic updating. In particular
+        in this case the expensive computation of the analytical expressions can be
+        avoided, as only parameters affecting the steady state may have been altered.
+        Uses existing self.jdic for Jacobian and self.hdic for Hessian of model.
+        
+        Parameters
+        ----------
+        self: object instance
+        
+        Returns
+        -------
+        self.numj: attaches numerical model Jacobian to instance
+        self.numh: attaches numerical model Hessian to instance
+        self.jAA: attaches numerical AA matrix used in Forkleind solution method
+        self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         # import local sympycore
         import sympycore
@@ -1869,10 +1983,20 @@ class DSGEmodel(object):
 ##########################################################  
     # Method updating model IF model file has been changed externally !
     def updf(self):
+        '''
+        Method useful for completely re-initializing model based on a different or else
+        altered external modfile. It is also perceivable to load the existing modfile at
+        runtime, change it in a program, save it as a temporary file and then re-load it
+        using this method.
+        '''
         self.txtpars.__init__(self.modfile)
 
     # Method updating model after anything has been changed manually, like paramvalue, etc !
     def updm(self):
+        '''
+        Method useful for upating model manually if any parameter value has been changed
+        manually as well.
+        '''
         # Create None tester regular expression
         _nreg = '^\s*None\s*$'
         nreg = re.compile(_nreg)
@@ -2010,6 +2134,11 @@ class DSGEmodel(object):
             self.mkeigv()
 
     def mkeigv(self):
+        '''
+        A method useful for calculating the Eigenvalues as in Blanchard and Kahn
+        for inspection. Recall the Eigenvalue Rule of this paper which needs to be
+        meet for the model to be solvable.
+        '''
         AA = self.jAA
         BB = self.jBB
         try:
