@@ -742,6 +742,11 @@ def subs_in_subs(self):
             indx = variables.index(ma.group())
             rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
                 rhs_eq[poe:]
+        # Finally get rid of possible `+-` or `-+` occurences
+        while '+-' in rhs_eq or '-+' in rhs_eq or '++' in rhs_eq:
+            rhs_eq = rhs_eq.replace('+-','-')
+            rhs_eq = rhs_eq.replace('-+','-')
+            rhs_eq = rhs_eq.replace('++','+')        
         list_tmp2[i][1] = rhs_eq
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     return self
@@ -960,6 +965,12 @@ def differ_out(self):
                 for elem in self.paramdic.keys():
                     tmp_dic[elem] = SP.Symbol(elem)
                 locals().update(tmp_dic)
+                # Also expose any variables from the ssidic, just in case
+                tmp_dic = {}
+                for elem in self.ssidic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                # Also expose the differo variable
                 locals()[differo] = SP.Symbol(differo)
                 # Population of scope done, now do calculation and continue in loop
                 expr_bar = eval(evalstr)
@@ -1100,6 +1111,16 @@ def differ_out(self):
                 poe = ma.span()[1]
                 evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
             # Now evaluate and differentiate
+            # Before evaluating expose the self.paramdic and self.ssidic to locals
+            tmp_dic = {}
+            for elem in self.paramdic.keys():
+                tmp_dic[elem] = SP.Symbol(elem)
+            locals().update(tmp_dic)
+            # Also expose any variables from the ssidic, just in case
+            tmp_dic = {}
+            for elem in self.ssidic.keys():
+                tmp_dic[elem] = SP.Symbol(elem)
+            locals().update(tmp_dic)
             expr = eval(evalstr)
             resstr = expr.diff(locals()[str(differo_new)])
             resstr = str(resstr)
@@ -1123,7 +1144,13 @@ def differ_out(self):
                 lengo = len(str3[1:-1])
                 if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends:]
                 elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends:]
+                
             list_tmp2[kk1][1] = list_tmp2[kk1][1].replace(expout,resstr)
+            # Finally get rid of possible `+-` or `-+` occurences
+            while '+-' in list_tmp2[kk1][1] or '-+' in list_tmp2[kk1][1] or '++' in list_tmp2[kk1][1]:
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('+-','-')
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('-+','-')
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('++','+')            
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     self.nlsubs = deepcopy(dict(list_tmp2))
     self.nlsubs_list = deepcopy(list_tmp2)

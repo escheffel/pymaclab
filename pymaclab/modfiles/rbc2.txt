@@ -10,21 +10,21 @@ Name = Leisure RBC model;
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 #Physical Capital Share
-rho		= 0.36;
+rho	= 0.36;
 #Physical Capital depreciation
-delta     = 0.025;
+delta	= 0.025;
 #Gross Real Interest Rate
-R_bar     = 1.01;
+R_bar	= 1.01;
 #Utility parameter
-eta		 = 1.0;
+eta	= 1.0;
 #Autocorrelation shock 
-psi		 = 0.95;
+psi	= 0.95;
 #Steady State of Shock
-z_bar      = 1.0;
+z_bar	= 1.0;
 # Standard Deviation Shock
-sigma_eps   = 0.0712;
+sigma_eps = 0.0712;
 # Utility parameter leisure
-l_bar       =1.0/3.0; 
+l_bar	= 1.0/3.0; 
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,36 +53,44 @@ None
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
 # Investment
 [1]   @inv(t) = k(t)-(1-delta)*k(t-1);
+# Production Function
+[2]   @F(t) = z(t)*k(t-1)**(rho)*l(t)**(1-rho);
+# Utility Function
+[3]   @U(t) = c(t)**(1-eta)*(1-l(t))**(A*(1-eta))/(1-eta);
+# Marginal Utility wrt consumption
+[4]   @MUc(t) = DIFF{@U(t),c(t)}
+# Marginal Utility wrt labour
+[5]   @MUl(t) = DIFF{@U(t),l(t)}
 # Wage Rate
-[2]   @w(t) = (1-rho)*z(t)*k(t-1)**(rho)*l(t)**(-rho);
+[6]   @w(t) = DIFF{@F(t),l(t)};
 # Real Interest Rate
-[3]   @R(t) = rho*z(t)*k(t-1)**(rho-1)*l(t)**(1-rho)+(1-delta);
-[4]	@E(t)|R(t+1) = z(t)**psi*rho*k(t)**(rho-1)*E(t)|l(t+1)**(1-rho)+(1-delta);
+[7]   @R(t) = 1+DIFF{@F(t),k(t-1)}-delta;
+[8]   @E(t)|R(t+1) = FF_1{@R(t)};
 # Output
-[5]   @y(t) = z(t)*k(t-1)**(rho)*l(t)**(1-rho);
-[4]   @R2(t) = -betta+(0.5)*eta*LOG(E(t)|c(t+2))-(0.5)*eta*LOG(c(t));
-[4]   @R3(t) = -betta+(0.33)*eta*LOG(E(t)|c(t+3))-(0.33)*eta*LOG(c(t));
-[4]   @R4(t) = -betta+(0.25)*eta*LOG(E(t)|c(t+4))-(0.25)*eta*LOG(c(t));
-[4]   @R5(t) = -betta+(0.20)*eta*LOG(E(t)|c(t+5))-(0.20)*eta*LOG(c(t));
-[4]   @R6(t) = -betta+(0.167)*eta*LOG(E(t)|c(t+6))-(0.167)*eta*LOG(c(t));
-[4]   @R20(t) = -betta+(0.05)*eta*LOG(E(t)|c(t+20))-(0.05)*eta*LOG(c(t));
+[9]   @y(t)  = @F(t);
+[10]   @R2(t) = -betta+(0.5)*eta*LOG(E(t)|c(t+2))-(0.5)*eta*LOG(c(t));
+[11]   @R3(t) = -betta+(0.33)*eta*LOG(E(t)|c(t+3))-(0.33)*eta*LOG(c(t));
+[12]   @R4(t) = -betta+(0.25)*eta*LOG(E(t)|c(t+4))-(0.25)*eta*LOG(c(t));
+[13]   @R5(t) = -betta+(0.20)*eta*LOG(E(t)|c(t+5))-(0.20)*eta*LOG(c(t));
+[14]   @R6(t) = -betta+(0.167)*eta*LOG(E(t)|c(t+6))-(0.167)*eta*LOG(c(t));
+[15]   @R20(t) = -betta+(0.05)*eta*LOG(E(t)|c(t+20))-(0.05)*eta*LOG(c(t));
 # dividend
-[7]   @Div(t) = @y(t) - @w(t)*l(t) - @inv(t);
+[16]   @Div(t) = @y(t) - @w(t)*l(t) - @inv(t);
 
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 
 # Market equilibrium
-[1]   @y(t)+(1-delta)*k(t-1)-k(t)-c(t) = 0;
+[1]   @y(t)-@inv(t)-c(t) = 0;
 # FOC for consumption
-[2]   c(t)**(-eta)*(1-l(t))**(A*(1-eta))-lam(t) = 0;
+[2]   @MUc(t)-lam(t) = 0;
 # FOC for labour
-[3]   A*c(t)**(1-eta)*(1-l(t))**(A*(1-eta)-1)-lam(t)*@w(t) = 0;
+[3]   @MUl(t)-lam(t)*@w(t) = 0;
 # Consumption Euler
 [3]   betta*E(t)|lam(t+1)*@E(t)|R(t+1)-lam(t) = 0;
 # Shock Process
-[4]   psi*LOG(z(t))-LOG(E(t)|z(t+1)) = 0;
+[4]   LOG(z(t))-psi*z(t-1) = 0;
 
 
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
