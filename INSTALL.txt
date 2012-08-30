@@ -1,0 +1,3 @@
+The prgram can be installed from source by running the command:
+
+sudo python setup.py install 
