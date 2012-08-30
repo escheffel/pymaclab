@@ -4,6 +4,15 @@
 Release History
 ===============
 
+**0.85** (2012-08-30)
+====================
+
+    * Added Sphinx Documentation with API Section.
+
+    * Analytical differentiation using DIFF{exp,x(t)} now possible in Substitution Section of modfiles.
+
+    * Forward and Backward operators FF_X{} and BB_X{} for X=1...N now possible in Substitution section of modfiles.
+
 **0.8** (2012-08-21)
 ====================
 
