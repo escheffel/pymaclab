@@ -1713,6 +1713,215 @@ class PyKlein2D:
             P.legend(leg)
         return figo
 
+    def save_sim(self,intup,fpath=None,filtup=None,insim='insim'):
+        # Check if simulations have been carried out
+        if insim not in dir(self):
+            return 'Error: You have not produced any simulations yet! Nothing to graph!'
+        if fpath == None:
+            return 'Error: You have not supplied the function with an fpath= argument where to save the plot!'
+        mname = self.modname
+        vardic = self.vardic
+        insim = eval('self.'+insim)
+        sim_x = COP.deepcopy(insim[0])
+        sim_y = COP.deepcopy(insim[1])
+        tlen = sim_x.shape[1]
+        if self.oswitch:
+            sim_o = COP.deepcopy(insim[2])
+            nother = self.nother
+            otherli = [x[1] for x in vardic['other']['var']]
+        nexo = self.nexo
+        nendo = self.nendo
+        ncon = self.ncon
+        conli = [x[1] for x in vardic['con']['var']]
+        endoli = [x[1] for x in vardic['endo']['var']]
+        exoli = [x[1] for x in vardic['exo']['var']]
+
+        # If filtup is None, create filtup from vardic
+        if filtup == None:
+            filli = [0]*len(intup)
+            for i1,x in enumerate(intup):
+                for y in vardic.keys():
+                    if x in [z[1] for z in vardic[y]['var']]:
+                        indx = [z[1] for z in vardic[y]['var']].index(x)
+                        if 'hp' in [z for z in vardic[y]['mod']][indx]:
+                            filli[i1] = 1
+                        elif 'bk' in [z for z in vardic[y]['mod']][indx]:
+                            filli[i1] = 2
+            filtup = tuple(filli)
+
+
+        stateli = exoli+endoli
+        alli = stateli+conli
+        if self.oswitch:
+            alli = alli+otherli
+        # Check if all name in intup are available to graph
+        for name in intup:
+            if name not in alli:
+                return 'Error: '+name+' is not a valid variable name for this model!'
+        # Create x, y and z indeces
+        indx = []
+        indy = []
+        indo = []
+        for name in intup:
+            if name in stateli:
+                indx.append(stateli.index(name))
+            elif name in conli:
+                indy.append(conli.index(name))
+            elif self.oswitch and name in otherli:
+                indo.append(otherli.index(name))
+        leg = []
+        indx.sort()
+        indy.sort()
+        indo.sort()     
+
+        # Now hp filter the simulations before graphing according to filtup
+        for i1 in xrange(sim_y.shape[0]):
+            if indy and (i1 in indy) and filtup[list(intup).index(conli[i1])]:
+                if filtup[list(intup).index(conli[i1])] == 1:
+                    conli[i1] = conli[i1]+'(hpf)'
+                    yy = sim_y[i1,:].__array__().T
+                    woy = np.zeros((tlen,3))
+                    lam = 1600
+                    yyf = MAT.matrix(hpfilter(yy,woy,tlen,1600,0))
+                    sim_y[i1,:] = yyf[0]*100
+                elif filtup[list(intup).index(conli[i1])] == 2:
+                    conli[i1] = conli[i1]+'(bkf)'
+                    yy = sim_y[i1,:].__array__().T
+                    woy = np.zeros((tlen,1))
+                    up = 6
+                    dn = 32
+                    kkl = 12
+                    yyf = MAT.matrix(bkfilter(yy,up,dn,kkl,tlen))
+                    sim_y[i1,:] = yyf[0]*100
+        # Now filter the state variables!
+        for i1 in xrange(sim_x.shape[0]):
+            if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
+                if filtup[list(intup).index(stateli[i1])] == 1:
+                    stateli[i1] = stateli[i1]+'(hpf)'
+                    xx = sim_x[i1,:].__array__().T
+                    wox = np.zeros((tlen,3))
+                    lam = 1600
+                    xxf = MAT.matrix(hpfilter(xx,wox,tlen,1600,0))
+                    sim_x[i1,:] = xxf[0]*100
+                elif filtup[list(intup).index(stateli[i1])] == 2:
+                    stateli[i1] = stateli[i1]+'(bkf)'
+                    xx = sim_x[i1,:].__array__().T
+                    wox = np.zeros((tlen,1))
+                    up = 6
+                    dn = 32
+                    kkl = 12
+                    xxf = MAT.matrix(bkfilter(xx,up,dn,kkl,tlen))
+                    sim_x[i1,:] = xxf[0]*100                  
+            # Now hp filter the other variables!
+        if self.oswitch:
+            for i1 in xrange(sim_o.shape[0]):
+                if indo and (i1 in indo) and filtup[list(intup).index(otherli[i1])]:
+                    if filtup[list(intup).index(otherli[i1])] == 1:                   
+                        otherli[i1] = otherli[i1]+'(hpf)'
+                        oo = sim_o[i1,:].__array__().T
+                        woo = np.zeros((tlen,3))
+                        lam = 1600
+                        oof = MAT.matrix(hpfilter(oo,woo,tlen,1600,0))
+                    elif filtup[list(intup).index(otherli[i1])] == 2:
+                        otherli[i1] = otherli[i1]+'(bkf)'
+                        oo = sim_o[i1,:].__array__().T
+                        woo = np.zeros((tlen,1))
+                        up = 6
+                        dn = 32
+                        kkl = 12
+                        oof = MAT.matrix(bkfilter(oo,up,dn,kkl,tlen)) 
+
+        if indx and indy and indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for y in indy:
+                leg.append(conli[y])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(MAT.hstack((sim_x.T[:,indx],sim_y.T[:,indy],sim_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif not indx and indy and indo:
+            for y in indy:
+                leg.append(conli[y])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(MAT.hstack((sim_y.T[:,indy],sim_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and not indy and indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(MAT.hstack((sim_x.T[:,indx],sim_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and indy and not indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for y in indy:
+                leg.append(conli[y])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(MAT.hstack((sim_x.T[:,indx],sim_y.T[:,indy])).A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and not indy and not indo:
+            for x in indx:
+                leg.append(stateli[x])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(sim_x.T[:,indx].A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif not indx and indy and not indo:
+            for y in indy:
+                leg.append(conli[y])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(sim_y.T[:,indy].A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif not indx and not indy and indo:
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            P.plot(sim_o.T[:,indo].A)
+            P.title(str(tlen)+' simulated periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage deviation from SS')
+            P.grid()
+            P.legend(leg)
+        PLT.savefig(fpath,dpi=100)
+        return "Your plot has been saved in: "+fpath
+
+
     def irf(self,tlen,sntup):
         tlen = tlen + 1
         ncon = self.ncon
@@ -1963,6 +2172,163 @@ class PyKlein2D:
             P.grid()
             P.legend(leg)
         return figo
+
+    def save_irf(self,intup,fpath=None,inirf='inirf'):
+        # Check if simulations have been carried out
+        if inirf not in dir(self):
+            return 'Error: You have not produced any IRFs yet! Nothing to graph!'
+        if fpath == None:
+            return 'Error: You have not supplied the function with an fpath= argument where to save the plot!'
+        inirf = eval('self.'+inirf)
+        irf_x = COP.deepcopy(inirf[0])
+        tlen = irf_x.shape[1]
+        irf_x = MAT.hstack((MAT.zeros((irf_x.shape[0],20)),irf_x))
+        irf_y = COP.deepcopy(inirf[1])
+        irf_y = MAT.hstack((MAT.zeros((irf_y.shape[0],20)),irf_y))
+        irf_x = irf_x*100
+        irf_y = irf_y*100
+        mname = self.modname
+        vardic = self.vardic
+        time_axis = np.arange(-20,tlen,1)
+        if self.oswitch:
+            irf_o = COP.deepcopy(inirf[2])
+            nother = self.nother
+            varother = self.vardic['other']['var']
+            otherli = [x[1] for x in varother]
+        nexo = self.nexo
+        nendo = self.nendo
+        ncon = self.ncon
+        conli = [x[1] for x in vardic['con']['var']]
+        endoli = [x[1] for x in vardic['endo']['var']]
+        exoli = [x[1] for x in vardic['exo']['var']]
+
+        stateli = exoli+endoli
+        alli = stateli+conli
+        if self.oswitch:
+            alli = alli+otherli
+        # Check if all name in intup are available to graph
+        for name in intup:
+            if name not in alli:
+                return 'Error: '+name+' is not a valid variable name for this model!'
+        # Create x, y and z indeces
+        indx = []
+        indy = []
+        indo = []
+        for name in intup:
+            if name in stateli:
+                indx.append(stateli.index(name))
+            elif name in conli:
+                indy.append(conli.index(name))
+            elif self.oswitch and name in otherli:
+                indo.append(otherli.index(name))
+        leg = []
+        indx.sort()
+        indy.sort()
+        indo.sort()
+
+        if indx and indy and indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for y in indy:
+                leg.append(conli[y])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy],irf_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif not indx and indy and indo:
+            for y in indy:
+                leg.append(conli[y])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_y.T[:,indy],irf_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and not indy and indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_o.T[:,indo])).A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and indy and not indo:
+            for x in indx:
+                leg.append(stateli[x])
+            for y in indy:
+                leg.append(conli[y])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,MAT.hstack((irf_x.T[:,indx],irf_y.T[:,indy])).A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif indx and not indy and not indo:
+            for x in indx:
+                leg.append(stateli[x])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_x.T[:,indx].A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS')
+            P.grid()
+            P.legend(leg)
+        elif not indx and indy and not indo:
+            for y in indy:
+                leg.append(conli[y])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_y.T[:,indy].A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS, hp-filtered')
+            P.grid()
+            P.legend(leg)
+        elif not indx and not indy and indo:
+            for o in indo:
+                leg.append(otherli[o])
+            leg = tuple(leg)
+            figo = P.figure()
+            ax = figo.add_subplot(111)
+            ax.set_xlim([-20,tlen])
+            ax.plot(time_axis,irf_o.T[:,indo].A)
+            P.title(str(tlen)+' simulated IRF periods, '+mname)
+            P.xlabel('Time')
+            P.ylabel('Percentage Deviation from SS, hp-filtered')
+            P.grid()
+            P.legend(leg)
+        PLT.savefig(fpath,dpi=100)
+        return "Your plot has been save in: "+fpath
 
 #----------------------------------------------------------------------------------------------------------------------
 class MatKlein2D(PyKlein2D):

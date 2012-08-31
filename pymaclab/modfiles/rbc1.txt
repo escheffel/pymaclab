@@ -30,8 +30,9 @@ None
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-[2]   @F(t)     = z(t)*k(t-1)**(-rho);
+[2]   @F(t)     = z(t)*k(t-1)**rho;
 [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+[3]   @R(t+1)   = FF_1{@R(t)};
 [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
 [6]   @MU(t+1)  = FF_1{@MU(t)};
@@ -42,9 +43,9 @@ None
 # Insert here the non-linear FOCs in format g(x)=0
 
 [1]   @F(t)-@inv(t)-c(t) = 0;
-[2]   betta*(@MU(t+1)/@MU(t))*@R(t)-1 = 0;
+[2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
 [3]   @F(t)-y(t) = 0;
-[4]   LOG(z(t))-psi*LOG(z(t-1)) = 0;
+[4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
 
 
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

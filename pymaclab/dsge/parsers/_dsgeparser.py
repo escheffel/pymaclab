@@ -4,7 +4,8 @@ Functions to parse the MODparser and attach results to the DSGE Model.
 import re
 from copy import deepcopy
 import numpy.matlib as mat
-import sympycore as SP
+# This used to import sympycore, but should now also work with sympy
+import sympy as SP
 
 
 #TODO: why have these as nested functions?
@@ -740,13 +741,17 @@ def subs_in_subs(self):
             ma = mreg.search(rhs_eq)
             pos, poe = ma.span()
             indx = variables.index(ma.group())
+            # Important: When substituting in, put the term between brackets!
             rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
                 rhs_eq[poe:]
+        # Don't do below anymore as the term above has been inserted between brackets, so okay that way
+        '''
         # Finally get rid of possible `+-` or `-+` occurences
         while '+-' in rhs_eq or '-+' in rhs_eq or '++' in rhs_eq:
             rhs_eq = rhs_eq.replace('+-','-')
             rhs_eq = rhs_eq.replace('-+','-')
-            rhs_eq = rhs_eq.replace('++','+')        
+            rhs_eq = rhs_eq.replace('++','+')
+        '''
         list_tmp2[i][1] = rhs_eq
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     return self
@@ -1144,13 +1149,16 @@ def differ_out(self):
                 lengo = len(str3[1:-1])
                 if 'p' in str3: resstr = resstr[:starts]+'(t+'+str(lengo)+')'+resstr[ends:]
                 elif 'm' in str3: resstr = resstr[:starts]+'(t-'+str(lengo)+')'+resstr[ends:]
-                
-            list_tmp2[kk1][1] = list_tmp2[kk1][1].replace(expout,resstr)
-            # Finally get rid of possible `+-` or `-+` occurences
+            # Replace with the differentiate term, but also take brackets around it just in case    
+            list_tmp2[kk1][1] = list_tmp2[kk1][1].replace(expout,'('+resstr+')')
+            # Dont' do the below anymore as above I have put the differentiated term into brackets, so okay now that way
+            '''
+            # Finally get rid of possible `+(-` or `-(+` occurences
             while '+-' in list_tmp2[kk1][1] or '-+' in list_tmp2[kk1][1] or '++' in list_tmp2[kk1][1]:
-                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('+-','-')
-                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('-+','-')
-                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('++','+')            
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('+(-','-(')
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('-(+','-(')
+                list_tmp2[kk1][1] = list_tmp2[kk1][1].replace('+(+','+(')
+            '''
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     self.nlsubs = deepcopy(dict(list_tmp2))
     self.nlsubs_list = deepcopy(list_tmp2)
@@ -1352,6 +1360,7 @@ def mkloglinsys2(inlist):
             list_tmp1[i1] = list_tmp1[i1]+coeff+vari
         str_tmp2 = ''   
         i1 = i1 + 1
+    self.nlsys_list = deepcopy(list_tmp1)
     return list_tmp1
 
 

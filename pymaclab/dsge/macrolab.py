@@ -39,11 +39,11 @@ import tempfile as TMF
 import threading as THR
 import glob
 try:
-    import sympycore
+    # Import Sympy
+    import sympy
 except:
-    print "You need to get the sympycore source by doing"
-    print "svn checkout http://sympycore.googlecode.com/svn/trunk/ /path/to/sympycore"
-    print "and then installing"
+    print "You need to have Sympy installed for PyMacLab to work properly"
+    print "Get is via: sudo pip install sympy"
 try:
     import pp
 except:
@@ -1049,7 +1049,7 @@ class DSGEmodel(object):
         subli = []
         symdic = {}
         for x in dicli.values():
-            symdic[x] = sympycore.Symbol(x)
+            symdic[x] = sympy.Symbol(x)
         locals().update(symdic)
 #NOTE: don't do this?
 # or don't modify _existing_ contents?
@@ -1057,9 +1057,9 @@ class DSGEmodel(object):
 #also locals() is no longer a dictionary in Python 3
 #NOTE: just use the dictionary itself
         for x in self.paramdic.keys():
-            locals()[x] = sympycore.Symbol(x)
+            locals()[x] = sympy.Symbol(x)
         for x in self.sstate.keys():
-            locals()[x] = sympycore.Symbol(x)
+            locals()[x] = sympy.Symbol(x)
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1083,16 +1083,17 @@ class DSGEmodel(object):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympy.log('+str_tmp[poe:]
             eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympy.exp('+str_tmp[poe:]
             func.append(eval(str_tmp))
         self.func1 = func
-
+        
+        
         # Only exp() when variable needs to be put into ln !
         list1 = [x[1] for x in self.vardic['endo']['var']]
         list1 = list1 + [x[1] for x in self.vardic['con']['var']]
@@ -1123,7 +1124,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1137,7 +1138,7 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
 
         # Create list with log of steady states
         evalli = []
@@ -1169,7 +1170,13 @@ class DSGEmodel(object):
             for x in range(jrows):
                 for y in range(jcols):
                     jdic[x][y] = func2[x].diff(symdic[tmpli[y][1]])
-                    numj[x,y] = eval(str(jdic[x][y].evalf()))
+                    evalfo = jdic[x][y].evalf()
+                    if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
+                        numj[x,y] = eval(str(evalfo))
+                    elif 'exp(' in str(evalfo):
+                        numj[x,y] = eval(str(evalfo).replace('exp(','np.exp('))
+                    elif 'log(' in str(evalfo):
+                        numj[x,y] = eval(str(evalfo).replace('log(','np.log('))
             return numj,jdic
 
         # Now make 3D symbolic and numeric Hessian
@@ -1191,7 +1198,13 @@ class DSGEmodel(object):
                 for y in range(jcols):
                     for z in range(jcols):
                         hdic[x][y][z] = jdic[x][y].diff(symdic[tmpli[z][1]])
-                        numh[count,z] = eval(str(hdic[x][y][z].evalf()))
+                        evalfo = hdic[x][y][z].evalf()
+                        if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
+                            numh[count,z] = eval(str(evalfo))
+                        elif 'exp(' in str(evalfo):
+                            numh[count,z] = eval(str(evalfo).replace('exp(','np.exp('))
+                        elif 'log(' in str(evalfo):
+                            numh[count,z] = eval(str(evalfo).replace('log(','np.log('))
                     count = count + 1
             return numh,hdic
 
@@ -1238,8 +1251,8 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
-        # import local sympycore
-        import sympycore
+        # import local sympy
+        import sympy
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1273,12 +1286,12 @@ class DSGEmodel(object):
         subli = []
         symdic = {}
         for x in dicli.values():
-            symdic[x] = sympycore.Symbol(x)
+            symdic[x] = sympy.Symbol(x)
         locals().update(symdic)
         for x in self.paramdic.keys():
-            locals()[x] = sympycore.Symbol(x)
+            locals()[x] = sympy.Symbol(x)
         for x in self.sstate.keys():
-            locals()[x] = sympycore.Symbol(x)
+            locals()[x] = sympy.Symbol(x)
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1302,13 +1315,13 @@ class DSGEmodel(object):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympy.log('+str_tmp[poe:]
             eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympy.exp('+str_tmp[poe:]
             func.append(eval(str_tmp))
         self.func1 = func
 
@@ -1342,7 +1355,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1356,7 +1369,7 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
 
         # Create list with log of steady states
         evalli = []
@@ -1395,11 +1408,23 @@ class DSGEmodel(object):
             count = 0
             for y in range(jcols):
                 jdic[y] = func2[lcount].diff(symdic[tmpli[y][1]])
-                numj[0,y] = eval(str(jdic[y].evalf()))
+                evalfo = jdic[y].evalf()
+                if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
+                    numj[0,y] = eval(str(evalfo))
+                elif 'exp(' in str(evalfo):
+                    numj[0,y] = eval(str(evalfo).replace('exp(','np.exp('))
+                elif 'log(' in str(evalfo):
+                    numj[0,y] = eval(str(evalfo).replace('log(','np.log('))
                 if mk_hessian:
                     for z in range(jcols):
                         hdic[y][z] = jdic[y].diff(symdic[tmpli[z][1]])
-                        numh[count,z] = eval(str(hdic[y][z].evalf()))
+                        evalfo2 = hdic[y][z].evalf()
+                        if 'log(' not in str(evalfo2) and 'exp(' not in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2))
+                        elif 'exp(' in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2).replace('exp(','np.exp('))
+                        elif 'log(' in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2).replace('log(','np.log('))
                     count = count + 1
             if mk_hessian:
                 return (numj,jdic,numh,hdic)
@@ -1587,7 +1612,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1601,11 +1626,11 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
 
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
 
 
         # Transform python exponentiation into matlab exponentiation
@@ -1781,7 +1806,13 @@ class DSGEmodel(object):
             locals().update(alldic)
             for x in range(jrows):
                 for y in range(jcols):
-                    numj[x,y] = eval(str(jdic[x][y].evalf()))
+                    evalfo = jdic[x][y].evalf()
+                    if 'exp(' not in str(evalfo) and 'log(' not in str(evalfo):
+                        numj[x,y] = eval(str(evalfo))
+                    elif 'exp(' in str(evalfo):
+                        numj[x,y] = eval(str(evalfo).replace('exp(','np.exp('))
+                    elif 'log(' in str(evalfo):
+                        numj[x,y] = eval(str(evalfo).replace('log(','np.log('))
             return numj
 
         # Now make 3D symbolic and numeric Hessian
@@ -1798,7 +1829,13 @@ class DSGEmodel(object):
             for x in range(jrows):
                 for y in range(jcols):
                     for z in range(jcols):
-                        numh[count,z] = eval(str(hdic[x][y][z].evalf()))
+                        evalfo = hdic[x][y][z].evalf()
+                        if 'exp(' not in str(evalfo) and 'log(' not in str(evalfo):
+                            numh[count,z] = eval(str(evalfo))
+                        elif 'exp(' in str(evalfo):
+                            numh[count,z] = eval(str(evalfo).replace('exp(','np.exp('))
+                        elif 'log(' in str(evalfo):
+                            numh[count,z] = eval(str(evalfo).replace('log(','np.log('))
                     count = count + 1
             return numh
 
@@ -1930,10 +1967,22 @@ class DSGEmodel(object):
             globals().update(evaldic)
             count = 0
             for y in range(jcols):
-                numj[0,y] = eval(str(jdic[lcount][y].evalf()))
+                evalfo = jdic[lcount][y].evalf()
+                if 'exp(' not in str(evalfo) and 'log(' not in str(evalfo):
+                    numj[0,y] = eval(str(evalfo))
+                elif 'exp(' in str(evalfo):
+                    numj[0,y] = eval(str(evalfo).replace('exp(','np.exp('))
+                elif 'log(' in str(evalfo):
+                    numj[0,y] = eval(str(evalfo).replace('log(','np.log('))
                 if mk_hessian:
                     for z in range(jcols):
-                        numh[count,z] = eval(str(hdic[lcount][y][z].evalf()))
+                        evalfo2 = hdic[lcount][y][z].evalf()
+                        if 'exp(' not in str(evalfo2) and 'log(' not in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2))
+                        elif 'exp(' in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2).replace('exp(','np.exp('))
+                        elif 'log(' in str(evalfo2):
+                            numh[count,z] = eval(str(evalfo2).replace('log(','np.log('))
                     count = count + 1
             if mk_hessian:
                 return (numj,numh)
