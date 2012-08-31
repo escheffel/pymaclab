@@ -47,18 +47,19 @@ Dependencies
 -------
 [numpy](http://numpy.scipy.org/)  
 [scipy](http://www.scipy.org/)  
-[sympy](http://sympy.org/en/index.html)  
-[sympy-core](http://code.google.com/p/sympycore/)  
+[sympy](http://sympy.org/en/index.html)   
 [ipython](http://ipython.org/) (optional)  
 [pp](http://www.parallelpython.com/) (optional)  
 [mlabwrap](http://mlabwrap.sourceforge.net/) (optional)  
-[scikits.timeseries](http://pytseries.sourceforge.net/)  
+[scikits.timeseries](http://pytseries.sourceforge.net/) (optional) 
 
-While numpy, scipy, sympycore and scikits.timeseries are absolutely necessary to run PyMacLab, Parallel Python (PP)
+While numpy, scipy, and sympy are absolutely necessary to run PyMacLab, Parallel Python (PP)
 can autodetect multi-core processors and can potentially speed up the computation of elements such as the analytical
-Hessian of a non-linear DSGE model, while sympy and mlabwrap have been marked as deprecated and are in the process of
-being pruned from the code. To explore the use of PyMacLab interactively a special IPython environment can be launched
-with pre-loaded convenience functions.
+Hessian of a non-linear DSGE model, while mlabwrap have been marked as deprecated and are in the process of
+being pruned from the code. Scikits.timeseries is not used in any of the classes themselves, but is used in the example
+test file that ships with the library, so it is not essential. To explore the use of PyMacLab interactively a special
+IPython environment can be launched with pre-loaded convenience functions, but again, ipython is not a necessary
+dependency.
 
 Installation
 ------------
@@ -73,13 +74,16 @@ The below code snippet is indicative of how PyMacLab can be used in an environme
 is still undergoing change, it is always advisable to enter the subdirectory containing the test.py test-script and
 inspect/run this to better understand PyMacLab's syntax.
 ```python
+# Import the PyMacLab library
 import pymaclab as pm
+# Import a convenience handler to filepaths for supplied DSGE model files
+from pymaclab.modfiles import models
 
 # Model Instantiation with data
-rbc1 = pm.newMOD('modfiles/rbc1.txt',db1)
+rbc1 = pm.newMOD(models.rbc1,db1)
 
 # Model instantiation without data
-rbc2 = pm.newMOD('modfiles/rbc2.txt')
+rbc2 = pm.newMOD(models.rbc2)
 
 # Solve the models using different methods
 rbc1.modsolvers.forkleind.solve()
