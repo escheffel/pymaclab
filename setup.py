@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-import setuptools # have to do this to be able to setup.py develop
+# import setuptools # have to do this to be able to setup.py develop
 from numpy.distutils.core import setup
 from numpy import get_include
 
@@ -57,12 +57,12 @@ Copyright 2007-2012 Eric M. Scheffel
 AUTHOR = "Eric M. Scheffel"
 MAINTAINER = "Eric M. Scheffel"
 MAINTAINER_EMAIL = "emscheffel@gmail.com"
-URL = 'https://github.com/escheffel/pymaclab/'
-DOWNLOAD_URL="https://github.com/escheffel/pymaclab/zipball/v0.8"
+URL = 'http://github.com/escheffel/pymaclab/'
+DOWNLOAD_URL="http://github.com/escheffel/pymaclab/tarball/v0.85"
 CLASSIFIERS=["Scientific", "Macroeconomics", "General Equilibrium", "DSGE", "Time Series"]
 
 MAJOR = 0
-MINOR = 8
+MINOR = 85
 MICRO = 0
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)

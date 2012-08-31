@@ -15,7 +15,6 @@ __date__ = '$Date: 2012-08-21$'
 import os as OPS
 from dsge import macrolab
 import linalg
-from .modfiles.makemod import make_modfile
 
 # Some helper functions
 def db_graph(dbase,tseries):
@@ -237,3 +236,8 @@ def texedit(model):
 
 def explain(model):
 	model.pdf()
+
+
+# Import this late because cascading imports need newMOD() function'
+import modfiles
+from .modfiles.makemod import make_modfile
