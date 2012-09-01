@@ -7,34 +7,34 @@ Introduction
 
 Description
 -----------
-  :mod:`!PyMacLab` is the Python Macroeconomics Laboratory which currently primarily serves the purpose
+  PyMacLab is the Python Macroeconomics Laboratory which currently primarily serves the purpose
   of providing a convenience framework written in form of a `Python <http://www.python.org/>`_ library with the ability to solve
-  non-linear DSGE models. At the time of writing this, the library supports solving DSGE models
+  non-linear DSGE models. At the time of writing these words, the library supports solving DSGE models
   using 1st and 2nd order perturbation methods which are computed around the steady state. In particular, the library provides wrapper
-  function for `Paul Klein's <http://paulklein.ca/newsite/start/start.php>`_ 1st-order accurate method based on the
+  functions for `Paul Klein's <http://paulklein.ca/newsite/start/start.php>`_ 1st-order accurate method based on the
   Schur Decomposition :cite:`Kle:2000` as well a more recently published method by the same author (co-authored with Paul Gomme)
-  which provides 2nd-order accurate solutions without using Tensor Algebra :cite:`GomKle:2012` (using the Magnus and Neudecker
-  1999 definition of the Hessian matrix). :mod:`!PyMacLab` however possesses the added advantage of being equipped with an advanced
+  which computes 2nd-order accurate solutions without using Tensor Algebra :cite:`GomKle:2012` (using the Magnus and Neudecker
+  1999 definition of the Hessian matrix). PyMacLab possesses the added advantage of being equipped with an advanced
   model file parser module, similar to the one available in `Dynare <http://www.dynare.org>`_, which automates cumbersome and error-prone
-  (log-)linearization by hand. :mod:`!PyMacLab` is also written entirely in Python, which makes it free and incredibly flexible to use and extend.
+  (log-)linearization by hand. PyMacLab is also written entirely in Python, which makes it free and incredibly flexible to use and extend.
 
 Features at a Glance
 --------------------
-  * No log-linearisation by hand required, done automatically py parsing a DSGE model file.
-  * All solutions based on analytical/symbolical computation of Jacobian and Hessian of models using `Sympycore <http://code.google.com/p/sympycore/>`_.
+  * No log-linearization by hand required, done automatically py parsing a DSGE model file.
+  * All solutions based on analytical/symbolical computation of Jacobian and Hessian of models using `Sympy <http://www.sympy.org/>`_.
   * DSGE models are Python DSGE class instances, treat them as if they were data structures, pass them around, copy them, stack them into arrays,
     and work with many of them simultaneously!
   * Loop over a DSGE model instance thousands of times to alter the parameter space, each time re-computing the solution.
   * Choose from closed form or non-linear steady state solvers.
   * Choose from a number of tried and tested perturbation methods, such as Klein's 1st order accurate and Klein & Gomme's 2nd order accurate methods.
-  * Solving models is as fast as using optimized compiled C or Fortran code, most CPU time spent parsing the DSGE model file.
-  * DSGE model examples are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
+  * Solving models is as fast as using optimized compiled C or Fortran code, most CPU time spent parsing the DSGE model file, and computing Jacobian and Hessian.
+  * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
   * Benefit from a large and growing set of convience methods to simulate models and graph filtered simulated series as well as impulse-response functions.
   * Enjoy the power, flexibility and extensibility of the Python programming language.
   * PyMacLab is free as in freedom and distributed under a `Apache 2.0 license <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
 
   PyMacLab is currently known to work well but continues to mature. If you have used PyMacLab already and spotted some bugs or felt that some other important
-  features are missing, you can head over to the library's `Github <https://github.com/escheffel/pymaclab/>`_ repository to submit an Issue item. We are
+  features are missing, you can head over to the library's `Github <http://github.com/escheffel/pymaclab/>`_ repository to submit an Issue item. We are
   eager to receive your feedback!
 
 Documentation
@@ -50,11 +50,15 @@ Introduction
     In this section I touch upon the the pros and cons of doing Macroeconomics or scientific computing using Python in general.
 
 
-Getting Started
+Tutorial Series
 ---------------
-:doc:`A basic DSGE tutorial <started_tutorial>`
+:doc:`A basic DSGE tutorial <tutorial/started_tutorial>`
     This section provides a succinct tutorial on how to use PyMacLab to work with DSGE models.
-:doc:`A description of all template DSGE models <started_allmodels>`
+:doc:`A PyMacLab DSGE instance tutorial <tutorial/dsge_instance_tutorial>`
+    This section provides a succinct tutorial facilitating the understaning of the DSGE OOP data structure in PyMacLab.
+:doc:`A PyMacLab DSGE dynamic solver tutorial <tutorial/dynamic_solver_tutorial>`
+    This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
+:doc:`A description of all template DSGE models <tutorial/started_allmodels>`
     This section gives detailed descriptions of all of the template DSGE models which come supplied with PyMacLab, including the derivation of all necessary algebraic results.
 
 
@@ -110,7 +114,7 @@ Dependencies
 -------------
 Proper functioning of PyMacLab depends on a number of additional Python libraries already being installed on
 your system, such as `Numpy <http://numpy.scipy.org/>`_, `Scipy <http://www.scipy.org/>`_,
-`Sympycore <http://code.google.com/p/sympycore/>`_, `Sympy <http://sympy.org/en/index.html>`_ and
+`Sympy <http://www.sympy.org>`_, `Matplotlib <http://matplotlib.sourceforge.net/>`_ and
 `scikits.timeseries <http://pytseries.sourceforge.net/>`_. All of these are great libraries by themselves and
 should be checked out by any serious scientist interested in doing work in Python.
 

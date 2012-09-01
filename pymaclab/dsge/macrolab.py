@@ -1044,6 +1044,8 @@ class DSGEmodel(object):
             tmpli.append([x,'SUB'+inds])
             dicli = dict(tmpli)
             dicli2 = dict([[x[1],x[0]] for x in tmpli])
+        self.subs_dic = deepcopy(dicli)
+        self.subs_dic2 = deepcopy(dicli2)
 
         func = []
         subli = []
@@ -1159,8 +1161,10 @@ class DSGEmodel(object):
         def mkjac(jrows=jrows,jcols=jcols):
             rdic = dict([[x,'0'] for x in range(jcols)])
             jdic = dict([[x,deepcopy(rdic)] for x in range(jrows)])
+            jdicc = deepcopy(jdic)
             jcols = len(jdic[0])
             jrows = len(jdic)
+            carry_over_dic = {}
             numj = mat.zeros((jrows,jcols))
             alldic = {}
             alldic.update(self.paramdic)
@@ -1170,6 +1174,16 @@ class DSGEmodel(object):
             for x in range(jrows):
                 for y in range(jcols):
                     jdic[x][y] = func2[x].diff(symdic[tmpli[y][1]])
+                    suba_dic = self.subs_dic2
+                    differo_var = str(symdic[tmpli[y][1]])
+                    differo_var = suba_dic[differo_var]
+                    carry_over_dic[y] = differo_var
+                    jdicc[x][differo_var] = str(jdic[x][y])
+                    if mreg.search(jdicc[x][differo_var]):
+                        for keyo in suba_dic.keys():
+                            jdicc[x][differo_var] = jdicc[x][differo_var].replace(keyo,suba_dic[keyo])
+                    else:
+                        jdicc[x][differo_var] = jdicc[x][differo_var]
                     evalfo = jdic[x][y].evalf()
                     if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
                         numj[x,y] = eval(str(evalfo))
@@ -1177,17 +1191,19 @@ class DSGEmodel(object):
                         numj[x,y] = eval(str(evalfo).replace('exp(','np.exp('))
                     elif 'log(' in str(evalfo):
                         numj[x,y] = eval(str(evalfo).replace('log(','np.log('))
-            return numj,jdic
+            return numj,jdic,jdicc,carry_over_dic
 
         # Now make 3D symbolic and numeric Hessian
-        def mkhes(jrows=jrows,jcols=jcols):
+        def mkhes(jrows=jrows,jcols=jcols,trans_dic=None):
             rdic = dict([[x,'0'] for x in range(jcols)])
             rdic1 = dict([[x,deepcopy(rdic)] for x in range(jcols)])
             hdic = dict([[x,deepcopy(rdic1)] for x in range(jrows)])
+            hdicc = deepcopy(hdic)
             hcols = len(hdic[0])
             hrows = len(hdic[0])*len(hdic)
             numh = mat.zeros((hrows,hcols))
             jdic = self.jdic
+            jdicc = self.jdicc
             alldic = {}
             alldic.update(self.paramdic)
             alldic.update(self.sstate)
@@ -1196,8 +1212,18 @@ class DSGEmodel(object):
             count = 0
             for x in range(jrows):
                 for y in range(jcols):
+                    hdicc[x][trans_dic[y]] = {}
                     for z in range(jcols):
                         hdic[x][y][z] = jdic[x][y].diff(symdic[tmpli[z][1]])
+                        suba_dic = self.subs_dic2
+                        differo_var = str(symdic[tmpli[z][1]])
+                        differo_var = suba_dic[differo_var]
+                        hdicc[x][trans_dic[y]][differo_var] = str(hdic[x][y][z])
+                        if mreg.search(hdicc[x][trans_dic[y]][differo_var]):
+                            for keyo in suba_dic.keys():
+                                hdicc[x][trans_dic[y]][differo_var] = hdicc[x][trans_dic[y]][differo_var].replace(keyo,suba_dic[keyo])
+                        else:
+                            hdicc[x][trans_dic[y]][differo_var] = hdicc[x][trans_dic[y]][differo_var]
                         evalfo = hdic[x][y][z].evalf()
                         if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
                             numh[count,z] = eval(str(evalfo))
@@ -1206,12 +1232,12 @@ class DSGEmodel(object):
                         elif 'log(' in str(evalfo):
                             numh[count,z] = eval(str(evalfo).replace('log(','np.log('))
                     count = count + 1
-            return numh,hdic
+            return numh,hdic,hdicc
 
-        self.numj,self.jdic = mkjac()
+        self.numj,self.jdic,self.jdicc,carry_over_dic = mkjac()
         numj = self.numj
         if mk_hessian:
-            self.numh,self.hdic = mkhes()
+            self.numh,self.hdic,self.hdicc = mkhes(trans_dic=carry_over_dic)
             numh = self.numh
 
         if 'nlsubsys' in dir(self):
