@@ -14,12 +14,13 @@ The Python DSGE instance
   interesting things with DSGE models and to treat them as if they were some kind of primitive `data type` in their own right.
   While the previous tutorial described some basics as well as the all-important DSGE model file structure and syntax conventions,
   in this section I am going to stress some of the object-oriented programming features of PyMacLab, in particular the
-  structure of a PyMacLab DSGE model `instance` or data structure. Readers with a background in modern programming languages supporting
-  the object-oriented programming (OOP) paradigm will easily relate to concepts in this sections, while for others it may appear more cryptic
-  at first sight. But to convey these concepts to researchers is important, as it stresses many particular advantages of PyMacLab over other
-  programs, and in particular its `flexibility`, `transparency`, `consistency`, `persistence` and enormous scope for `extensibility`. All example
-  code fragments provided here assume that you are replicating them within an IPyton interactive session, but they could also be called from a
-  Python program "batch" file.
+  structure of a PyMacLab DSGE model `instance` or data structure.
+
+  Readers with a background in modern programming languages supporting the object-oriented programming (OOP) paradigm will easily relate to
+  concepts in this sections, while for others it may appear more cryptic at first sight. But to convey these concepts to researchers is
+  important, as it stresses many particular advantages of PyMacLab over other programs, and in particular its `flexibility`, `transparency`,
+  `consistency`, `persistence` and enormous scope for `extensibility`. All example code fragments provided here assume that you are replicating
+  them within an IPyton interactive session, but they could also be called from a Python program "batch" file.
 
 *Understanding the PyMacLab DSGE model class and its instances*
 
@@ -84,7 +85,7 @@ The Python DSGE instance
 Digging deeper into the DSGE model's instance's structure
 ==========================================================
 
-*Working with the DSGE model instance*
+*Working with DSGE model instances*
 
   The most useful feature is to call the model with the option `initlev=1`, because this will allow you more control over the steady-state
   computation of the model by permitting a closer interactive `inspection` of the DSGE model instance as created thus far. Let's demonstrate this
@@ -227,10 +228,16 @@ Digging deeper into the DSGE model's instance's structure
   section of the DSGE model file. Now you know how to explore the DSGE model instance and understand its general structure, and we conclude
   this short tutorial by inviting you to do so. Don't forget that some nodes at the root possess further sub-nodes, as was the case when
   cascading down the ``rbc1.sssolvers`` branch. To help your search, the only other node with many more sub-nodes is the ``rbc1.modsolvers``
-  branch, which we will explore more in the next section to this tutorial series. Before concluding this tutorial, we will demonstrate how
-  PyMacLab's DSGE data structure (or instance) approach allows researchers to implement ideas very intuitively, such as for instance "looping"
-  over a DSGE model instance in order to explore how incremental changes to the parameter space alter the steady state of the model. Leaving
-  our usual interactive IPyton shell, consider the following Python program file:
+  branch, which we will explore more in the next section to this tutorial series. 
+
+DSGE modelling made intuitive
+=============================
+
+*Introduction*
+
+  Before concluding this tutorial, we will demonstrate how PyMacLab's DSGE data structure (or instance) approach allows researchers to implement
+  ideas very intuitively, such as for instance "looping" over a DSGE model instance in order to explore how incremental changes to the parameter
+  space alter the steady state of the model. Leaving our usual interactive IPyton shell, consider the following Python program file:
 
   ::
 
@@ -273,4 +280,7 @@ Digging deeper into the DSGE model's instance's structure
 .. plot:: ../../pymaclab/examples/test2.py
    :include-source:
 
-  That was nice and simple, wasn't it?
+  That was nice and simple, wasn't it? So with the power and flexibility of PyMacLab DSGE model instances we can relatively painlessly explore
+  simply questions such as how differing deep parameter specifications for the impatience factor can affect the steady state level of physical
+  capital. And indeed, as intuition would suggest, less patient consumers are less thrifty and more spend-thrifty thus causing a lower steady
+  state level of physical capital in the economy.

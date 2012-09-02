@@ -1,9 +1,8 @@
 .. index:: cloud; sphinx theme, sphinx theme; cloud
 
 =======================
-"PyMacLab" Introduction
+What is PyMacLab?
 =======================
 
-Features
-========
+  To be written.
 

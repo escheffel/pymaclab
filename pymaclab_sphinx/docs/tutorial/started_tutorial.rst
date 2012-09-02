@@ -443,3 +443,7 @@ A Description of the model file's individual sections
 
       [1]   (1-Theta)*c(t)+(Psi*(1-Theta)-1)*x(t)=lam(t)+...
              z(t)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
+
+  Finally, as is customary from other programming languages, comments can also be inserted into DSGE model files. However, in contrast to other
+  languages conventions, such as Python itself, at the moment the library will only parse model files correctly if the comments are on a line of
+  their own, and not intermingled with model description items. As usual comments are identified by beginning with the hash symbol #.
