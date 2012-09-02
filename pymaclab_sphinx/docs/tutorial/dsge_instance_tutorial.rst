@@ -136,7 +136,7 @@ Digging deeper into the DSGE model's instance's structure
     In [1]: import pymaclab as pm
     In [2]: from pymaclab.modfiles import models
 
-    # Instantiate a new DSGE model instance like so, but adding initlev=1 as extra argument
+    # Instantiate a new DSGE model instance like so
     In [3]: rbc1 = pm.newMOD(models.rbc1)
 
     # Inspect the data fields and methods of the DSGE model instance
@@ -213,7 +213,7 @@ Digging deeper into the DSGE model's instance's structure
     In [1]: import pymaclab as pm
     In [2]: from pymaclab.modfiles import models
 
-    # Instantiate a new DSGE model instance like so, but adding initlev=1 as extra argument
+    # Instantiate a new DSGE model instance like so
     In [3]: rbc1 = pm.newMOD(models.rbc1)
 
     # Access one of the model's fields
@@ -227,8 +227,50 @@ Digging deeper into the DSGE model's instance's structure
   section of the DSGE model file. Now you know how to explore the DSGE model instance and understand its general structure, and we conclude
   this short tutorial by inviting you to do so. Don't forget that some nodes at the root possess further sub-nodes, as was the case when
   cascading down the ``rbc1.sssolvers`` branch. To help your search, the only other node with many more sub-nodes is the ``rbc1.modsolvers``
-  branch, which we will explore more in the next section to this tutorial series.
+  branch, which we will explore more in the next section to this tutorial series. Before concluding this tutorial, we will demonstrate how
+  PyMacLab's DSGE data structure (or instance) approach allows researchers to implement ideas very intuitively, such as for instance "looping"
+  over a DSGE model instance in order to explore how incremental changes to the parameter space alter the steady state of the model. Leaving
+  our usual interactive IPyton shell, consider the following Python program file:
 
-    
+  ::
 
+    # Import the pymaclab module into its namespace
+    # Also import Numpy for array handling and Matplotlib for plotting
+    import pymaclab as pm
+    from pymaclab.modfiles import models
+    import numpy as np
+    from matplotlib import pyplot as plt
 
+    # Instantiate a new DSGE model instance like so
+    rbc1 = pm.newMOD(models.rbc1)
+
+    # Create an array representing a finely-spaced range of possible impatience values
+    # Then convert to corresponding steady state gross real interest rate values
+    betarr = np.arange(0.8,0.99,0.001)
+    betarr = 1.0/betarr
+
+    # Loop over the RBC DSGE model, each time re-computing for new R_bar
+    ss_capital = []
+    for betar in betarr:
+	rbc1.paramdic['R_bar'] = betar # assign new R_bar to model
+	rbc1.sssolvers.fsolve.solve() # re-compute steady stae
+	ss_capital.append(rbc1.sssolvers.fsolve.fsout['k_bar']) # fetch and store k_bar
+
+    # Create a nice figure
+    fig1 = plt.figure()
+    plt.grid()
+    plt.title('Plot of steady state physical capital against R\_bar')
+    plt.xlabel(r'Steady state gross real interest rate')
+    plt.ylabel(r'Steady State of physical capital')
+    plt.plot(betarr,ss_capital,'k-')
+    plt.show()
+
+  Anybody who has done some DSGE modelling in the past will easily be able to intuitively grasp the purpose of the above code snippet. All we
+  are doing here is to loop over the same RBC model, each time feeding it with a slightly different steady state groos real interest rate value
+  and re-computing the steady state of the model. This gives rise to the following nice plot exhibting the steady state relationship between the
+  interest rate and the level of physical capital prevailing in steady state:
+
+.. plot:: ../../pymaclab/examples/test2.py
+   :include-source:
+
+  That was nice and simple, wasn't it?

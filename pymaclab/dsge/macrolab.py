@@ -1044,6 +1044,8 @@ class DSGEmodel(object):
             tmpli.append([x,'SUB'+inds])
             dicli = dict(tmpli)
             dicli2 = dict([[x[1],x[0]] for x in tmpli])
+        self.subs_li = deepcopy(tmpli)
+        self.var_li = [x[0] for x in tmpli]
         self.subs_dic = deepcopy(dicli)
         self.subs_dic2 = deepcopy(dicli2)
 
@@ -1172,6 +1174,7 @@ class DSGEmodel(object):
             alldic.update(evaldic)
             locals().update(alldic)
             for x in range(jrows):
+                jdicc[x] = {}
                 for y in range(jcols):
                     jdic[x][y] = func2[x].diff(symdic[tmpli[y][1]])
                     suba_dic = self.subs_dic2
@@ -1191,6 +1194,11 @@ class DSGEmodel(object):
                         numj[x,y] = eval(str(evalfo).replace('exp(','np.exp('))
                     elif 'log(' in str(evalfo):
                         numj[x,y] = eval(str(evalfo).replace('log(','np.log('))
+            # Take out the elements from the variable substitution equations
+            lengor = len(self.nlsys_list)
+            for keyo in jdicc.keys():
+                if keyo > (lengor-1):
+                    jdicc.pop(keyo)
             return numj,jdic,jdicc,carry_over_dic
 
         # Now make 3D symbolic and numeric Hessian
@@ -1211,6 +1219,7 @@ class DSGEmodel(object):
             locals().update(alldic)
             count = 0
             for x in range(jrows):
+                hdicc[x] = {}
                 for y in range(jcols):
                     hdicc[x][trans_dic[y]] = {}
                     for z in range(jcols):
@@ -1232,6 +1241,11 @@ class DSGEmodel(object):
                         elif 'log(' in str(evalfo):
                             numh[count,z] = eval(str(evalfo).replace('log(','np.log('))
                     count = count + 1
+            # Take out the elements from the variable substitution equations
+            lengor = len(self.nlsys_list)
+            for keyo in hdicc.keys():
+                if keyo > (lengor-1):
+                    hdicc.pop(keyo)
             return numh,hdic,hdicc
 
         self.numj,self.jdic,self.jdicc,carry_over_dic = mkjac()
@@ -2095,7 +2109,7 @@ class DSGEmodel(object):
             self.sssolvers.manss = ManualSteadyState(intup)
             self.sssolvers.manss.solve()
             self.sstate = self.sssolvers.manss.sstate
-        if initlev == 1: return
+        if self._initlev == 1: return
 
         # No populate more with stuff that needs steady state
         secs = self.txtpars.secs
