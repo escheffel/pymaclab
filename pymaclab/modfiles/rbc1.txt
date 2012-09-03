@@ -30,8 +30,11 @@ None
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+[2]   @inv_bar  = SS{@inv(t)};
 [2]   @F(t)     = z(t)*k(t-1)**rho;
+[2]   @F_bar    = SS{@F(t)};
 [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+[4]   @R_bar    = SS{R(t)};
 [3]   @R(t+1)   = FF_1{@R(t)};
 [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
@@ -51,14 +54,14 @@ None
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 betta   = 1.0/R_bar;
 k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
-y_bar   = (z_bar*k_bar)**rho;
-c_bar   = y_bar - delta*k_bar;
+y_bar   = @F_bar;
+c_bar   = y_bar - @inv_bar;
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   z_bar*k_bar**(rho)-delta*k_bar-c_bar = 0;
-[2]   rho*z_bar*k_bar**(rho-1)+(1-delta)-R_bar = 0;
+[1]   @F_bar-@inv_bar-c_bar = 0;
+[2]   @R_bar-R_bar = 0;
 [3]   (betta*R_bar)-1 = 0;
-[4]   z_bar*k_bar**(rho)-y_bar = 0;
+[4]   @F_bar-y_bar = 0;
 
 [1]  c_bar = 1.0;
 [2]  k_bar = 1.0;

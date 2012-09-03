@@ -296,11 +296,12 @@ A Description of the model file's individual sections
 
       [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
       [2]   @F(t)     = z(t)*k(t-1)**rho;
-      [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-      [3]   @R(t+1)   = FF_1{@R(t)};
-      [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
-      [5]   @MU(t)    = DIFF{@U(t),c(t)};
-      [6]   @MU(t+1)  = FF_1{@MU(t)};
+      [3]   @F_bar    = SS{@F(t)};
+      [4]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+      [5]   @R(t+1)   = FF_1{@R(t)};
+      [6]   @U(t)     = c(t)**(1-eta)/(1-eta);
+      [7]   @MU(t)    = DIFF{@U(t),c(t)};
+      [8]   @MU(t+1)  = FF_1{@MU(t)};
 
   These can then be used in the following section instead of having to work with the full expressions instead. Additionally, convience operators
   are accessible, given by:
@@ -308,6 +309,8 @@ A Description of the model file's individual sections
    ::
 
       DIFF{EXPRESSION,x(t)}  # is replaced by first derivate if expression w.r.t. x(t)
+
+      SS{EXPRESSION}         # the entire expression is converted to its steady state equivalent
 
       FF_X{EXPRESSION}       # is replaced with expression forwarded in time by X periods.
                              # The timing of the information set for expectations is unchanged!
@@ -345,12 +348,8 @@ A Description of the model file's individual sections
 
       [4]   E(t)|z(t+1)/(z(t)**psi) = 0;
 
-  Also, for the exogenous state variable such as, again, the productivity shock, it does not matter whether we write down the law of motion as
-  in the previous example or alternatively as:
-
-   ::
-
-      [4]   z(t)/(z(t-1)**psi) = 0;
+  .. deprecated:: 0.85 In previous versions of PyMacLab it was possible to write down the law of motion of exogenous states without expectations, i.e.
+     `z(t)/(z(t-1)**psi) = 0;`. This behaviour is now deprecated and no longer supported.
 
 *Steady States [Closed Form] Section*
   For relatively simple models, closed form solutions for the steady state may exist and can be entered here as follows:
