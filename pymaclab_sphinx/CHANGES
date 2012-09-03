@@ -4,14 +4,30 @@
 Release History
 ===============
 
+**0.88.1** (2012-9-3)
+====================
+
+    * PyMacLab now only depends on Sympy and no longer the outdated Sympycore.
+
+    * Significantly improved documentation, now on its way of being first draft.
+
+    * Translated some model files to make use of new functions.
+
+    * Deprecated alternative ways of specifying law of motion of exogenous states.
+
+    * Added new SS{EXPRESSION} steady-state conversion feature to Variable Substitution section.
+
+    * DIFF{EXPRESSION} now also works for steady state expressions w.r.t. steady state variables.
+
+
 **0.85** (2012-08-30)
 ====================
 
     * Added Sphinx Documentation with API Section.
 
-    * Analytical differentiation using DIFF{exp,x(t)} now possible in Substitution Section of modfiles.
+    * Analytical differentiation using DIFF{EXPRESSION,x(t)} now possible in Substitution Section of modfiles.
 
-    * Forward and Backward operators FF_X{} and BB_X{} for X=1...N now possible in Substitution section of modfiles.
+    * Forward and Backward operators FF_X{EXPRESSION} and BB_X{EXPRESSION} for X=1...N now possible in Substitution section of modfiles.
 
 **0.8** (2012-08-21)
 ====================
