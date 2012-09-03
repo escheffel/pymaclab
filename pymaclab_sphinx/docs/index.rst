@@ -30,7 +30,7 @@ Features at a Glance
   * Loop over a DSGE model instance thousands of times to alter the parameter space, each time re-computing the solution.
   * Choose from closed form or non-linear steady state solvers.
   * Choose from a number of tried and tested perturbation methods, such as Klein's 1st order accurate and Klein & Gomme's 2nd order accurate methods.
-  * Solving models is as fast as using optimized compiled C or Fortran code, most CPU time spent parsing the DSGE model file, and computing Jacobian and Hessian.
+  * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of Jacobian and Hessian employs parallelized multi-core CPU approach.
   * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
   * Benefit from a large and growing set of convience methods to simulate models and graph filtered simulated series as well as impulse-response functions.
   * Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.

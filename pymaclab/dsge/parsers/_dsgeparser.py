@@ -4,6 +4,7 @@ Functions to parse the MODparser and attach results to the DSGE Model.
 import re
 from copy import deepcopy
 import numpy.matlib as mat
+import sys
 # This used to import sympycore, but should now also work with sympy
 import sympy as SP
 
@@ -731,8 +732,8 @@ def mk_subs_dic(self, secs):
 
 def subs_in_subs(self):
     list_tmp2 = deepcopy(self.nlsubs_raw1)
-    # Replace substitutions inside substitutions
-    mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
+    # Replace substitutions inside substitutions, for both time-subscripted and steady state vars!
+    mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)|@(E\(t.*?\)\|){0,1}.*?_bar')
     variables = [x[0] for x in list_tmp2] # do this once
     self.subs_vars = deepcopy(variables)
     for i,x in enumerate(list_tmp2):
@@ -754,11 +755,6 @@ def subs_in_subs(self):
         '''
         list_tmp2[i][1] = rhs_eq
     self.nlsubs_raw2 = deepcopy(list_tmp2)
-    return self
-
-
-      
-
     return self
 
 def ff_chron_str(self,str1='',ff_int=1):
@@ -849,6 +845,47 @@ def bb_chron_str(self,str1='',bb_int=1):
         str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
     return str1
 
+def ss_chron_str(self,str1=''):
+    '''
+    This turns all variables in an algebraic string expression into steady state equivalents.
+    '''
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    try:
+        var_li = list(self.vreg(patup,str1,True,'max'))
+    except:
+        print "Model parsing error, problem with processing this text string:\n"+"'"+str1+"'."
+        sys.exit()
+
+    var_li.reverse()
+    for varo in var_li:
+        varn = varo[0]
+        varpos = varo[3]
+        if '|' in varn:
+            varn_new = varn.split('|')[1].split('(')[0]+'_bar'
+        else:
+            varn_new = varn.split('(')[0]+'_bar'
+        str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
+    return str1
+
+def mk_steady(self):
+    list_tmp2 = deepcopy(self.nlsubs_raw2)
+    _mreg = 'SS\{.*?\}'
+    mreg = re.compile(_mreg)
+    for i1,elem in enumerate(list_tmp2):
+        # If there is an unreplaced DIFF inside the SS, then skip for now...
+        if list_tmp2[i1][1][:2] == 'SS' and 'DIFF' in list_tmp2[i1][1][2:] : continue
+        while mreg.search(list_tmp2[i1][1]):
+            ma = mreg.search(list_tmp2[i1][1])
+            matn = ma.group()
+            starts = ma.start()
+            ends = ma.end()
+            str_tmp = matn
+            str_tmp = str_tmp.split('{')[1].split('}')[0]
+            str_tmp = ss_chron_str(self,str1=str_tmp)
+            list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
+    self.nlsubs_raw2 = deepcopy(list_tmp2)  
+    return self
+
 def mk_timeshift(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
     _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
@@ -923,6 +960,8 @@ def differ_out(self):
         for elem2 in tmp_li:
             var_bar.append(elem2)
     for kk1,elem in enumerate(list_tmp2):
+        # Skip any line in which
+        if list_tmp2[kk1][1][:4] == 'DIFF' and 'SS{' in list_tmp2[kk1][1]: continue
         while mreg.search(list_tmp2[kk1][1]):
             maout = mreg.search(list_tmp2[kk1][1])
             expout = maout.group()
@@ -937,11 +976,16 @@ def differ_out(self):
             # Also skip if evalstr has uncomputed timeshifter
             if mregsh.search(evalstr): break
             evalstr = evalstr.split(',')[0]
-            var_li = list(self.vreg(patup,evalstr,True,'max'))
+            if '_bar' not in evalstr:
+                try:
+                    var_li = list(self.vreg(patup,evalstr,True,'max'))
+                except:
+                    print "Model parsing error, problem with processing this text string:\n"+"'"+list_tmp2[kk1][0]+" = "+list_tmp2[kk1][1]+"'."
+                    sys.exit()
             ##################################################
             # Do for steady state expressions, as is very easy
             ##################################################
-            if '_bar' in differo:
+            if '_bar' not in evalstr and '_bar' in differo:
                 # First replace all chronological variables in evalstr with _bar equivalents
                 varbar_li = deepcopy(var_li)
                 varbar_li.reverse()
@@ -982,6 +1026,41 @@ def differ_out(self):
                 resstr = expr_bar.diff(locals()[str(differo)])
                 list_tmp2[kk1][1] = str(resstr)
                 continue
+            elif '_bar' in evalstr and '_bar' in differo:
+                # Now substitute out exp and log in terms of sympycore expressions
+                elog = re.compile('LOG\(')
+                while elog.search(evalstr):
+                    ma = elog.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.log('+evalstr[poe:]
+                eexp = re.compile('EXP\(')
+                while eexp.search(evalstr):
+                    ma = eexp.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
+                # Now populate scope with sympy symbols
+                tmp_dic={}
+                for elem in var_bar:
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                tmp_dic = {}
+                for elem in self.paramdic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                # Also expose any variables from the ssidic, just in case
+                tmp_dic = {}
+                for elem in self.ssidic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                # Also expose the differo variable
+                locals()[differo] = SP.Symbol(differo)
+                # Population of scope done, now do calculation and continue in loop
+                expr_bar = eval(evalstr)
+                resstr = expr_bar.diff(locals()[str(differo)])
+                list_tmp2[kk1][1] = str(resstr)
+                continue               
             ###################################################
             # Steady State branch ends here
             ###################################################
@@ -1506,10 +1585,14 @@ def populate_model_stage_one_b(self, secs):
         self = mk_subs_dic(self, secs)
         # Create the raw nlsubs list 2 by replacing substitutions inside substitutions
         self = subs_in_subs(self)
+        # Apply steady state transformation where needed
+        self = mk_steady(self)
         # Make a first differentiation pass for DIFFs inside timeshifters
         self = differ_out(self)
         # Apply timeshifts where needed
         self = mk_timeshift(self)
+        # Apply steady state transformation where needed
+        self = mk_steady(self)
         # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
     # Do substitutions inside the numerical steady state list

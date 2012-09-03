@@ -106,10 +106,8 @@ try:    # no mp in 2.5
     ncpus = cpu_count()
 except:
     ncpus = 1
-ncpus = 1 # debug without parallel stuff
-#NOTE: also see when this would actually speed things up.  doesn't seem to 
-# now
-
+# For now leave ncpus at 1
+ncpus = 1
 # Update level
 updlev = 0
 
@@ -1161,6 +1159,7 @@ class DSGEmodel(object):
 
         # Make 2D symbolic and numeric Jacobian
         def mkjac(jrows=jrows,jcols=jcols):
+            from sympy import conjugate,exp,log
             rdic = dict([[x,'0'] for x in range(jcols)])
             jdic = dict([[x,deepcopy(rdic)] for x in range(jrows)])
             jdicc = deepcopy(jdic)
@@ -1188,12 +1187,7 @@ class DSGEmodel(object):
                     else:
                         jdicc[x][differo_var] = jdicc[x][differo_var]
                     evalfo = jdic[x][y].evalf()
-                    if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
-                        numj[x,y] = eval(str(evalfo))
-                    elif 'exp(' in str(evalfo):
-                        numj[x,y] = eval(str(evalfo).replace('exp(','np.exp('))
-                    elif 'log(' in str(evalfo):
-                        numj[x,y] = eval(str(evalfo).replace('log(','np.log('))
+                    numj[x,y] = eval(str(evalfo))
             # Take out the elements from the variable substitution equations
             lengor = len(self.nlsys_list)
             for keyo in jdicc.keys():
@@ -1203,6 +1197,7 @@ class DSGEmodel(object):
 
         # Now make 3D symbolic and numeric Hessian
         def mkhes(jrows=jrows,jcols=jcols,trans_dic=None):
+            from sympy import conjugate,exp,log
             rdic = dict([[x,'0'] for x in range(jcols)])
             rdic1 = dict([[x,deepcopy(rdic)] for x in range(jcols)])
             hdic = dict([[x,deepcopy(rdic1)] for x in range(jrows)])
@@ -1234,12 +1229,7 @@ class DSGEmodel(object):
                         else:
                             hdicc[x][trans_dic[y]][differo_var] = hdicc[x][trans_dic[y]][differo_var]
                         evalfo = hdic[x][y][z].evalf()
-                        if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
-                            numh[count,z] = eval(str(evalfo))
-                        elif 'exp(' in str(evalfo):
-                            numh[count,z] = eval(str(evalfo).replace('exp(','np.exp('))
-                        elif 'log(' in str(evalfo):
-                            numh[count,z] = eval(str(evalfo).replace('log(','np.log('))
+                        numh[count,z] = eval(str(evalfo))
                     count = count + 1
             # Take out the elements from the variable substitution equations
             lengor = len(self.nlsys_list)
@@ -1274,7 +1264,7 @@ class DSGEmodel(object):
     # The parallelized mkjahe version using parallel python
     def mkjahepp(self):
         '''
-        An parallelized method using native Python and Sympycore in oder
+        A parallelized method using native Python and Sympy in oder
         to calculate the numerical and analytical Jacobian and Hessian of the model.
         This is the parallelized version of method self.mkjahe using the Python pp library.
         
@@ -1291,8 +1281,6 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
-        # import local sympy
-        import sympy
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1428,15 +1416,13 @@ class DSGEmodel(object):
             evaldic[x[1]] = evalli[i]
 
         # Now make the 2D and 3D symbolic and numeric Jacobian and Hessian
-        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian,exp,log):
-
+        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian,exp,log,conjugate):
             jdic = dict([[x,'0'] for x in range(jcols)])
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 rdic = dict([[x,'0'] for x in range(jcols)])
-                hdic = dict([[x,deepcopy(rdic)] for x in range(jcols)])
+                hdic = dict([[x,copy.deepcopy(rdic)] for x in range(jcols)])
                 numh = numpy.matlib.zeros((jcols,jcols))
-
             alldic = {}
             alldic.update(paramdic)
             alldic.update(sstate)
@@ -1448,53 +1434,34 @@ class DSGEmodel(object):
             count = 0
             for y in range(jcols):
                 jdic[y] = func2[lcount].diff(symdic[tmpli[y][1]])
-                evalfo = jdic[y].evalf()
-                if 'log(' not in str(evalfo) and 'exp(' not in str(evalfo):
-                    numj[0,y] = eval(str(evalfo))
-                elif 'exp(' in str(evalfo):
-                    numj[0,y] = eval(str(evalfo).replace('exp(','np.exp('))
-                elif 'log(' in str(evalfo):
-                    numj[0,y] = eval(str(evalfo).replace('log(','np.log('))
+                numj[0,y] = eval(str(jdic[y].evalf()))
                 if mk_hessian:
                     for z in range(jcols):
                         hdic[y][z] = jdic[y].diff(symdic[tmpli[z][1]])
-                        evalfo2 = hdic[y][z].evalf()
-                        if 'log(' not in str(evalfo2) and 'exp(' not in str(evalfo2):
-                            numh[count,z] = eval(str(evalfo2))
-                        elif 'exp(' in str(evalfo2):
-                            numh[count,z] = eval(str(evalfo2).replace('exp(','np.exp('))
-                        elif 'log(' in str(evalfo2):
-                            numh[count,z] = eval(str(evalfo2).replace('log(','np.log('))
+                        numh[count,z] = eval(str(hdic[y][z].evalf()))
                     count = count + 1
             if mk_hessian:
                 return (numj,jdic,numh,hdic)
             else:
                 return (numj,jdic)
 
+
+        funco2 = deepcopy(self.func2)
+        paramdico = deepcopy(self.paramdic)
+        sstateo = deepcopy(self.sstate)
+        from sympy import exp,log,conjugate
+
         # Start parallel Python job server
+        # Notice that here distinct equations of the system are being fed into the PP server, parallelizing that way
         ppservers = ()
-        inputs = [x for x in xrange(len(self.func2))]
-        job_server = pp.Server(ncpus,ppservers=ppservers)
-        from sympycore import exp
-        from sympycore import log
-        from sympycore import FunctionRing
-        imports = ('numpy','copy','numpy.matlib',)
-#job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None) 
-#    Submits function to the execution queue                            
-   
-#    func - function to be executed
-#    args - tuple with arguments of the 'func'
-#    depfuncs - tuple with functions which might be called from 'func'
-#    modules - tuple with module names to import
-#    callback - callback function which will be called with argument
-#            list equal to callbackargs+(result,)
-#            as soon as calculation is done
-#    callbackargs - additional arguments for callback function
-#    group - job group, is used when wait(group) is called to wait for
-#    jobs in a given group to finish
-#    globals - dictionary from which all modules, functions and classes
-#    will be imported, for instance: globals=globals()
-        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,exp,log),(),imports) for input in inputs]
+        inputs = [x for x in xrange(len(funco2))]
+        job_server = pp.Server(2,ppservers=ppservers)
+        print "Building Jacobian and Hessian with", job_server.get_ncpus(), "CPU Cores in parallel..."
+        # Packages to be passed to pp job_server
+        imports = ('copy','numpy','numpy.matlib','sympy',)        
+        
+        # Create list of jobs
+        jobs = [job_server.submit(mkjaheseq,(inputo,funco2,jcols,symdic,tmpli,paramdico,sstateo,evaldic,mk_hessian,exp,log,conjugate),(),imports) for inputo in inputs]
         if mk_hessian:
             jdic = {}
             hdic = {}
@@ -1522,6 +1489,8 @@ class DSGEmodel(object):
                 jdic[i1+1] = job()[1]
             self.numj = numj
             self.jdic = jdic
+            
+        job_server.print_stats()
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
@@ -1925,7 +1894,7 @@ class DSGEmodel(object):
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         # import local sympycore
-        import sympycore
+        import sympy
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1992,7 +1961,7 @@ class DSGEmodel(object):
             evaldic[x[1]] = evalli[i]
 
         # Now make the 2D and 3D symbolic and numeric Jacobian and Hessian
-        def mkjaheseq(lcount,func2,jcols,tmpli,paramdic,sstate,evaldic,mk_hessian,exp,log,jdic,hdic):
+        def mkjaheseq(lcount,func2,jcols,tmpli,paramdic,sstate,evaldic,mk_hessian,jdic,hdic):
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 numh = numpy.matlib.zeros((jcols,jcols))
@@ -2033,10 +2002,8 @@ class DSGEmodel(object):
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
         job_server = pp.Server(ncpus,ppservers=ppservers)
-        from sympycore import exp
-        from sympycore import log
         imports = ('numpy','copy','numpy.matlib',)
-        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,exp,log,self.jdic,self.hdic),(),imports) for input in inputs]
+        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for input in inputs]
         if mk_hessian:
             job_0 = jobs[0]
             numj = job_0()[0]

@@ -365,7 +365,9 @@ A Description of the model file's individual sections
   Note that not only steady-state variables like `x_bar` can be supplied here, but indeed any variable who's steady-state value has to be
   determined endogenously withing the model. Sometimes, depending on the model builder's assumptions taken, this could also involve the'
   determination of a parameter such as `betta`. Sometimes the model's full steady-state can best be determined as a combination of closed form
-  expressions AND the additional numerical solution of a system on nonlinear equations. 
+  expressions AND the additional numerical solution of a system on nonlinear equations, as is the case in the model file provided above. Notice
+  that here one set of steady state variables are calculated in closed from, given the knowledge of a set of other steady state variables, while
+  these in turn are first solved for in the section using the nonlinear root-finding algorithm.
    
 
 *Steady State Non-Linear System [Manual] Section*
