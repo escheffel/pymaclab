@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy.matlib as mat
 import sys
 # This used to import sympycore, but should now also work with sympy
-import sympy as SP
+import sympycore as SP
 
 
 #TODO: why have these as nested functions?
@@ -1205,7 +1205,12 @@ def differ_out(self):
             for elem in self.ssidic.keys():
                 tmp_dic[elem] = SP.Symbol(elem)
             locals().update(tmp_dic)
-            expr = eval(evalstr)
+            try:
+                expr = eval(evalstr)
+            except:
+                print "Parse ERROR: Could not evaluate/differentiate expression: "
+                print list_tmp2[kk1][0]+" = "+list_tmp2[kk1][1]
+                sys.exit()
             resstr = expr.diff(locals()[str(differo_new)])
             resstr = str(resstr)
             # Now switch back to normal notation with brackets

@@ -48,9 +48,16 @@ The Python DSGE instance
 
   1) The empty shell DSGE model instance gets instantiated
 
-  2) The DSGE model instance reads the model file provided to it and any other arguments and saves them by attaching them to itself. If you want
-     the model instance to do ONLY this step and stop there for you to explore further interactively, you must call the command with and extra
-     argument like this:
+  2) The DSGE model instance reads the model file provided to it and any other arguments and saves them by attaching them to itself.
+
+  3) Instantiation Step 1: The files get read in and a method defined on the instance simply splits the file into its individual sections
+     and saves these raw sections by attaching them to itself.
+
+  4) Instantiation Step 2: A parser method is called which disaggregates the raw information provided in each section of the model file and begins
+     to extract meaningful information from it, each time saving this information by attaching it to itself as data fields. Also, the DSGE model
+     instance is prepared and set up in order to attempt to solve for the steady state of it manually at the command line, instead of doing it
+     automatically. If you want the model instance to do ONLY this next step and stop there for you to explore further interactively,
+     you must call the command with and extra argument like this:
 
   .. sourcecode:: ipython
 
@@ -61,11 +68,7 @@ The Python DSGE instance
     # Instantiate a new DSGE model instance like so, but adding initlev=0 as extra argument
     In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=0)
 
-  3) Instantiation Step 1: The files get read in and a method defined on the instance simply splits the file into its individual sections
-     and saves these raw sections by attaching them to itself.
-
-  4) Instantiation Step 2: A parser method is called which disaggregates the raw information provided in each section of the model file and begins
-     to extract meaningful information from it, each time saving this information by attaching it to itself as data fields. If you want the model
+  5) Instantiation Step 3: The information is used in order to attempt to compute the numerical steady-state of the model. If you want the model
      instance to do ONLY this next step and stop there for you to explore further interactively, you must call the command with and extra
      argument like this:
 
@@ -78,16 +81,54 @@ The Python DSGE instance
     # Instantiate a new DSGE model instance like so, but adding initlev=1 as extra argument
     In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=1)
 
-  5) Instantiation Step 3: The information is used in order to attempt to compute the numerical steady-state of the model and if successful the
-     model's analytical and numerical Jacobian and Hessian are computed. Finally a preferred dynamic solution method is called which solves the
-     model for its policy function and other laws of motion.
+
+  6) Instantiation Step 4:  If the steady state was computed successfully then the model's analytical and numerical Jacobian and
+     Hessian are computed. Finally a preferred dynamic solution method is called which solves the model for its policy function and
+     other laws of motion.
+
+  To give users a choice of "solution depths" at DSGE object instantiation time is important and useful, especially in the initial
+  experimentation phase during which the DSGE model file gets populated. That way researchers can first carefully solve one part of the
+  problem (i.e. looking for the steady state) and indeed choose to do so manually on the IPython interactive command shell, allowing them
+  to immediately inspect any errors.
 
 Digging deeper into the DSGE model's instance's structure
 ==========================================================
 
+*Instantiation options for DSGE model instances*
+
+  There are a couple of instance invocation or instantiation arguments one should be aware of. At the time of writing these lines there are in
+  total 5 other arguments (besides the DSGE model template file path) which can be passed to the pymaclab.newMOD function out of which 1 is
+  currently not (yet) supported and not advisable to employ. The other 4 options determine the initiation level of the DSGE model (i.e. how
+  far it should be solved if at all), whether diagnosis messages should be printed to screen during instantiation, how many CPU cores to employ
+  when building the Jacobian and Hessian of the model, and finally whether the expensive-to-compute Hessian should be computed at all. Remember
+  that the last option is useful as many researchers often - at least initially - want to explore the solution to their model to a first order of
+  approximation before taking things further. So here are the options again in summary with their default values:
+
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  | Option with default value          |                                  Description                                                       |
+  +====================================+====================================================================================================+
+  |``pm.newMOD(mpath,initlev=2)``      | Initlev=0 only parses and prepares for manual steady state calculation                             |
+  |                                    +----------------------------------------------------------------------------------------------------+ 
+  |                                    | Initlev=1 does initlev=0 and attempts to solve for the model's steady state automatically          |
+  |                                    +----------------------------------------------------------------------------------------------------+
+  |                                    | Initlev=2 does initlev=0, initlev=1 and generates Jacobian and Hessian and solves model dynamically|
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,mesg=False)``     | Prints very useful runtime instantiation messages to the screen for users to follow progress       |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,ncpus=1)``        | CPU cores to be used in expensive computation of model's derivatives, 'auto' for auto-detection    |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,mk_hessian=True)``| Should Hessian be computed at all, as is expensive?                                                |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+
+  Needless to say, all of the options can be and usually are called in combination, they are only shown separately here for sake of expositional
+  clarity. Medium-sized to large-sized models can take considerable time to compute the Jacobian alone, let alone the Hessian. On the other hand
+  passing more (real as opposed to virtual) CPU cores to the instantiation process can significantly cut down computation time. In this case,
+  the FOCs nonlinear equations are distributed to individual cores for analytical differentiation as opposed to doing this serially on one CPU
+  core.
+
 *Working with DSGE model instances*
 
-  The most useful feature is to call the model with the option `initlev=1`, because this will allow you more control over the steady-state
+  The most useful feature is to call the model with the option `initlev=0`, because this will allow you more control over the steady-state
   computation of the model by permitting a closer interactive `inspection` of the DSGE model instance as created thus far. Let's demonstrate this
   here:
 
@@ -97,8 +138,8 @@ Digging deeper into the DSGE model's instance's structure
     In [1]: import pymaclab as pm
     In [2]: from pymaclab.modfiles import models
 
-    # Instantiate a new DSGE model instance like so, but adding initlev=1 as extra argument
-    In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=1)
+    # Instantiate a new DSGE model instance like so, but adding initlev=0 as extra argument
+    In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=0)
 
     # This datafield contains the original nonlinear system expressed as g(x)=0
     In [4]: rbc1.sssolvers.fsolve.ssm
@@ -281,6 +322,6 @@ DSGE modelling made intuitive
    :include-source:
 
   That was nice and simple, wasn't it? So with the power and flexibility of PyMacLab DSGE model instances we can relatively painlessly explore
-  simply questions such as how differing deep parameter specifications for the impatience factor can affect the steady state level of physical
+  simple questions such as how differing deep parameter specifications for the impatience factor :math:`\beta` can affect the steady state level of physical
   capital. And indeed, as intuition would suggest, less patient consumers are less thrifty and more spend-thrifty thus causing a lower steady
   state level of physical capital in the economy.

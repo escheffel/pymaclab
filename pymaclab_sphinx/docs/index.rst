@@ -28,7 +28,7 @@ Features at a Glance
   * DSGE models are Python DSGE class instances, treat them as if they were data structures, pass them around, copy them, stack them into arrays,
     and work with many of them simultaneously!
   * Loop over a DSGE model instance thousands of times to alter the parameter space, each time re-computing the solution.
-  * Choose from closed form or non-linear steady state solvers.
+  * Choose from closed form or non-linear steady state solvers or a combination of both.
   * Choose from a number of tried and tested perturbation methods, such as Klein's 1st order accurate and Klein & Gomme's 2nd order accurate methods.
   * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of Jacobian and Hessian employs parallelized multi-core CPU approach.
   * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
@@ -103,7 +103,9 @@ Dependencies
   your system, such as `Numpy <http://numpy.scipy.org/>`_, `Scipy <http://www.scipy.org/>`_,
   `Sympy <http://www.sympy.org>`_, `Matplotlib <http://matplotlib.sourceforge.net/>`_ and
   `scikits.timeseries <http://pytseries.sourceforge.net/>`_. All of these are great libraries by themselves and
-  should be checked out by any serious scientist interested in doing work in Python.
+  should be checked out by any serious scientist interested in doing work in Python. However, the installation
+  of `Parallel Python <http://www.parallelpython.com/>`_ is also highly recommended, as this allows exploiting
+  multi-core CPUs in the computation of DSGE models' Jacobian and Hessian significantly speeding up execution speed.
 
   Also, if you want to enjoy a Matlab-style interactive environment in which to execute and inspect DSGE and other
   data structures, you'd be hard-pressed to pass over the brilliant and now extra features-ladden
@@ -130,7 +132,7 @@ Option 2
 
   Otherwise get the latest source code compressed as a tarball here:
 
-    `pymaclab.tar.gz <http://github.com/escheffel/pymaclab/tarball/v0.85>`_
+    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.88.1.tar.gz>`_
 
   And install it in the usual way by running in a Linux shell the command::
 

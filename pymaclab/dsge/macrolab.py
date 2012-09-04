@@ -1,5 +1,6 @@
 #from __future__ import division
 from scikits import timeseries as ts
+import copy
 from copy import deepcopy
 import os
 import re
@@ -40,7 +41,7 @@ import threading as THR
 import glob
 try:
     # Import Sympy
-    import sympy
+    import sympycore
 except:
     print "You need to have Sympy installed for PyMacLab to work properly"
     print "Get is via: sudo pip install sympy"
@@ -95,21 +96,13 @@ except:
 
 # Should the Model Jacobian and Hessian be calculated symbolically?
 use_anaderiv = True
-# Should the Hessian be computed at all? (For 2nd order accurate methods)
-mk_hessian = True
 
 # Number of cores used for calculations
 #ncpus = 2
 try:    # no mp in 2.5
     import pp
-    from multiprocessing import cpu_count
-    ncpus = cpu_count()
 except:
-    ncpus = 1
-# For now leave ncpus at 1
-ncpus = 1
-# Update level
-updlev = 0
+    print "Install PP Python if you want multicore CPU support."
 
 # Empty locdic for the locate helper function
 locdic = {}
@@ -328,7 +321,7 @@ class DSGEmodel(object):
     lots of interesting solution and other features.
     '''
     # Initializes the absolute basics, errors difficult to occur
-    def __init__(self,ffile=None,dbase=None,initlev=2):
+    def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True):
         """
         DSGE Model Class
 
@@ -348,6 +341,9 @@ class DSGEmodel(object):
         A DSGE model instance
         """
         self._initlev = initlev #TODO: remove this as an option
+        self._mesg = mesg
+        self._ncpus = ncpus
+        self._mk_hessian = mk_hessian
         # Set no author
         self.setauthor()
         # Open the switches dic and initiate
@@ -367,50 +363,76 @@ class DSGEmodel(object):
         parsing and computations whatsoever. init2() parses and ready's the model for
         calculating the steady state and the dynamic solution to the model.
         
-        init_lev = 0: only parsing, no calculations
+        init_lev = 0: only parsing, no calculations, but preparing for manual SS solution
         init_lev = 1: parsing and steady state calculations
         init_lev = 2: parsing, steady state calculations and dynamic solution computation
         '''
         initlev = self._initlev
+        ncpus = self._ncpus
+        mk_hessian = self._mk_hessian
+        if self._mesg: print "INIT: Instantiating DSGE model with INITLEV="+str(initlev)+" and NCPUS="+str(ncpus)+"..."
+        if self._mesg: print "INIT: Attaching model properties to DSGE model instance..."
 
         # Create None tester regular expression
-#        _nreg = '^\s*None\s*$'
-#        nreg = re.compile(_nreg)
-
+        #        _nreg = '^\s*None\s*$'
+        #        nreg = re.compile(_nreg)
+        
+        if self._mesg: print "INIT: Parsing model file into DSGE model instance..."
         txtpars = parse_mod(self.modfile)
         self.txtpars = txtpars  # do we need txtpars attached for anything else?
         secs = txtpars.secs # do we need txtpars attached for anything else?
-
+        if self._mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
         # Initial population method of model, does NOT need steady states
         self = populate_model_stage_one(self, secs)
         # This is an additional populator which creates subsitution dictionary
         # and uses this to already get rid of @s in the manuall sstate list
+        if self._mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
         self = populate_model_stage_one_b(self,secs)
 
         # Attach the data from database
         if self.dbase != None:
             self.getdata(dbase=self.dbase)
-        if initlev == 0: 
-            return
-
-################## STEADY STATE CALCULATIONS !!! ####################
+        if self._mesg: print "INIT: Preparing DSGE model instance for steady state solution..."            
+        # Attach the steady state class branch, and add Fsolve if required but do no more !
         self.sssolvers = SSsolvers()
-        # Solve for steady-state using fsolve
         # check if the Steady-State Non-Linear system .mod section has an entry
         if any([False if 'None' in x else True for x in secs['manualss'][0]]):
             intup = (self.ssys_list,self.ssidic,self.paramdic)
-            self.sssolvers.fsolve = Fsolve(intup)
+        self.sssolvers.fsolve = Fsolve(intup)
+        if initlev == 0: 
+            return
+        if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
+################## STEADY STATE CALCULATIONS !!! ####################
+        # ONLY NOW try to solve !
+        # check if the Steady-State Non-Linear system .mod section has an entry
+        if any([False if 'None' in x else True for x in secs['manualss'][0]]):
             self.sssolvers.fsolve.solve()
             if self.sssolvers.fsolve.ier == 1:
                 self.sstate = self.sssolvers.fsolve.fsout
                 self.numssdic = self.sssolvers.fsolve.fsout
+                # Attach solutions to intial variable dictionaries, for further analysis
+                self.ssidic_modfile = deepcopy(self.ssidic)
+                self.ssidic = self.sssolvers.fsolve.fsout
+                self.sssolvers.fsolve.ssi = self.sssolvers.fsolve.fsout
                 self.switches['ss_suc'] = ['1','1']
+                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
             else:
                 self.switches['ss_suc'] = ['1','0']
+                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
 
+        if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
         # Solve for steady-state using manss
+        # Check for existence of closedform AND numerical steady state
+        # We need to stop the model instantiation IFF numerical solver was attempted but failed AND closed form solver depends on it.
+        if any([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           any([False if 'None' in x else True for x in secs['manualss'][0]]):
+            if self.switches['ss_suc'] == ['1','0']:
+                print "ERROR: You want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
+                print "However, the numerical steady state solver FAILED to find a root, so I am stopping model instantiation here."
+                SYST.exit()
         # Check if the Steady States [Closed Form] has an entry
         if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
             if self.switches['ss_suc'] == ['1','1']:
                 alldic = {}
                 alldic.update(self.sstate)
@@ -424,8 +446,15 @@ class DSGEmodel(object):
                 self.sssolvers.manss = ManualSteadyState(intup)
                 self.sssolvers.manss.solve()
                 self.sstate = self.sssolvers.manss.sstate
+            # Double check if no steady state values are negative, as LOGS may have to be taken.
+            for keyo in self.sstate.keys():
+                if '_bar' in keyo and float(self.sstate[keyo]) < 0.0:
+                    print "WARNING: Steady state value "+keyo+ " is NEGATIVE!"
+                    print "This is very likely going to either error out or produce strange results"
+                    print "Re-check your model declarations carefully!"        
         if initlev == 1: return
 
+        if self._mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
         # No populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
 
@@ -434,6 +463,7 @@ class DSGEmodel(object):
         ######################## LINEAR METHODS !!! ############################
         # see if there are any log-linearized equations
         if any([False if 'None' in x else True for x in secs['modeq'][0]]):
+            if self._mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -477,10 +507,13 @@ class DSGEmodel(object):
             # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
             if use_anaderiv:
                 if ncpus > 1 and mk_hessian:
+                    if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
                     self.mkjahepp()
                 elif ncpus > 1 and not mk_hessian:
+                    if self._mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
                     self.mkjahepp()
                 else:
+                    if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
                     self.mkjahe()
             else:
                 self.mkjahenmat()
@@ -1015,6 +1048,7 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
+        mk_hessian = self._mk_hessian
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
@@ -1051,7 +1085,7 @@ class DSGEmodel(object):
         subli = []
         symdic = {}
         for x in dicli.values():
-            symdic[x] = sympy.Symbol(x)
+            symdic[x] = sympycore.Symbol(x)
         locals().update(symdic)
 #NOTE: don't do this?
 # or don't modify _existing_ contents?
@@ -1059,9 +1093,9 @@ class DSGEmodel(object):
 #also locals() is no longer a dictionary in Python 3
 #NOTE: just use the dictionary itself
         for x in self.paramdic.keys():
-            locals()[x] = sympy.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in self.sstate.keys():
-            locals()[x] = sympy.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1085,13 +1119,13 @@ class DSGEmodel(object):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympy.log('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
             eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympy.exp('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
             func.append(eval(str_tmp))
         self.func1 = func
         
@@ -1126,7 +1160,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1140,7 +1174,7 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
         # Create list with log of steady states
         evalli = []
@@ -1149,17 +1183,18 @@ class DSGEmodel(object):
         for x in intup:
             vma = self.vreg(patup, x, False, 'min')
             vari = vma[2][1]
+            ssvar = float(alldic[vari+'_bar'])
             if 'log' in moddic[lookdic[vari]]:
-                evalli.append(np.log(alldic[vari+'_bar']))
+                evalli.append(np.log(ssvar))
             else:
-                evalli.append(alldic[vari+'_bar'])
+                evalli.append(ssvar)
         evaldic = {}
         for i,x in enumerate(tmpli):
             evaldic[x[1]] = evalli[i]
 
         # Make 2D symbolic and numeric Jacobian
         def mkjac(jrows=jrows,jcols=jcols):
-            from sympy import conjugate,exp,log
+            mesg = self._mesg
             rdic = dict([[x,'0'] for x in range(jcols)])
             jdic = dict([[x,deepcopy(rdic)] for x in range(jrows)])
             jdicc = deepcopy(jdic)
@@ -1174,6 +1209,11 @@ class DSGEmodel(object):
             locals().update(alldic)
             for x in range(jrows):
                 jdicc[x] = {}
+                if mesg:
+                    # This will not work in Python 3.0
+                    to = "INIT: Computing DSGE model's Jacobian: Equation ("+str(x+1)+"/"+str(jrows)+")..."
+                    delete = "\b" * (len(to) + 1)
+                    print "{0}{1}".format(delete, to),
                 for y in range(jcols):
                     jdic[x][y] = func2[x].diff(symdic[tmpli[y][1]])
                     suba_dic = self.subs_dic2
@@ -1193,11 +1233,12 @@ class DSGEmodel(object):
             for keyo in jdicc.keys():
                 if keyo > (lengor-1):
                     jdicc.pop(keyo)
+            if mesg: print " DONE",
             return numj,jdic,jdicc,carry_over_dic
 
         # Now make 3D symbolic and numeric Hessian
         def mkhes(jrows=jrows,jcols=jcols,trans_dic=None):
-            from sympy import conjugate,exp,log
+            mesg = self._mesg
             rdic = dict([[x,'0'] for x in range(jcols)])
             rdic1 = dict([[x,deepcopy(rdic)] for x in range(jcols)])
             hdic = dict([[x,deepcopy(rdic1)] for x in range(jrows)])
@@ -1215,6 +1256,11 @@ class DSGEmodel(object):
             count = 0
             for x in range(jrows):
                 hdicc[x] = {}
+                if mesg:
+                    # This will not work in Python 3.0
+                    to = "INIT: Computing DSGE model's Hessian: Equation ("+str(x+1)+"/"+str(jrows)+")..."
+                    delete = "\b" * (len(to) + 1)
+                    print "{0}{1}".format(delete, to),
                 for y in range(jcols):
                     hdicc[x][trans_dic[y]] = {}
                     for z in range(jcols):
@@ -1236,9 +1282,12 @@ class DSGEmodel(object):
             for keyo in hdicc.keys():
                 if keyo > (lengor-1):
                     hdicc.pop(keyo)
+            if mesg: print " DONE",
             return numh,hdic,hdicc
 
         self.numj,self.jdic,self.jdicc,carry_over_dic = mkjac()
+        # To make line between Jacobian's and Hessian's computation
+        if self._mesg: print
         numj = self.numj
         if mk_hessian:
             self.numh,self.hdic,self.hdicc = mkhes(trans_dic=carry_over_dic)
@@ -1262,6 +1311,7 @@ class DSGEmodel(object):
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
     # The parallelized mkjahe version using parallel python
+
     def mkjahepp(self):
         '''
         A parallelized method using native Python and Sympy in oder
@@ -1281,6 +1331,12 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
+        # import local sympycore
+        import sympycore
+        
+        ncpus = self._ncpus
+        mk_hessian = self._mk_hessian
+        mesg = self._mesg
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1294,12 +1350,12 @@ class DSGEmodel(object):
         patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
-        nlsys = deepcopy(self.nlsys_list)
+        nlsys = copy.deepcopy(self.nlsys_list)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
             jrows = jrows + lsubs
-            nlsys = nlsys + deepcopy(self.nlsubsys)
+            nlsys = nlsys + copy.deepcopy(self.nlsubsys)
 
         # Create substitution var list and dictionary
         tmpli = []
@@ -1314,12 +1370,12 @@ class DSGEmodel(object):
         subli = []
         symdic = {}
         for x in dicli.values():
-            symdic[x] = sympy.Symbol(x)
+            symdic[x] = sympycore.Symbol(x)
         locals().update(symdic)
         for x in self.paramdic.keys():
-            locals()[x] = sympy.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in self.sstate.keys():
-            locals()[x] = sympy.Symbol(x)
+            locals()[x] = sympycore.Symbol(x)
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1343,13 +1399,13 @@ class DSGEmodel(object):
                 ma = elog.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympy.log('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympycore.log('+str_tmp[poe:]
             eexp = re.compile('EXP\(')
             while eexp.search(str_tmp):
                 ma = eexp.search(str_tmp)
                 pos = ma.span()[0]
                 poe = ma.span()[1]
-                str_tmp = str_tmp[:pos]+'sympy.exp('+str_tmp[poe:]
+                str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
             func.append(eval(str_tmp))
         self.func1 = func
 
@@ -1361,8 +1417,8 @@ class DSGEmodel(object):
         list2 = list2 + [x for x in self.vardic['con']['mod']]
         list2 = list2 + [x for x in self.vardic['exo']['mod']]
         if self.vardic['other']['var']:
-            list1 = list1 +  [x[1] for x in self.vardic['other']['var']]
-            list2 = list2 +  [x for x in self.vardic['other']['mod']]
+            list1 = list1 + [x[1] for x in self.vardic['other']['var']]
+            list2 = list2 + [x for x in self.vardic['other']['mod']]
         moddic = {}
         for x,y in zip(list1,list2):
             moddic[x] = y
@@ -1383,7 +1439,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1397,7 +1453,7 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
         # Create list with log of steady states
         evalli = []
@@ -1416,13 +1472,15 @@ class DSGEmodel(object):
             evaldic[x[1]] = evalli[i]
 
         # Now make the 2D and 3D symbolic and numeric Jacobian and Hessian
-        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian,exp,log,conjugate):
+        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian,deepcopy):
+
             jdic = dict([[x,'0'] for x in range(jcols)])
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 rdic = dict([[x,'0'] for x in range(jcols)])
-                hdic = dict([[x,copy.deepcopy(rdic)] for x in range(jcols)])
+                hdic = dict([[x,deepcopy(rdic)] for x in range(jcols)])
                 numh = numpy.matlib.zeros((jcols,jcols))
+
             alldic = {}
             alldic.update(paramdic)
             alldic.update(sstate)
@@ -1445,23 +1503,28 @@ class DSGEmodel(object):
             else:
                 return (numj,jdic)
 
-
-        funco2 = deepcopy(self.func2)
-        paramdico = deepcopy(self.paramdic)
-        sstateo = deepcopy(self.sstate)
-        from sympy import exp,log,conjugate
-
         # Start parallel Python job server
-        # Notice that here distinct equations of the system are being fed into the PP server, parallelizing that way
         ppservers = ()
-        inputs = [x for x in xrange(len(funco2))]
-        job_server = pp.Server(2,ppservers=ppservers)
-        print "Building Jacobian and Hessian with", job_server.get_ncpus(), "CPU Cores in parallel..."
-        # Packages to be passed to pp job_server
-        imports = ('copy','numpy','numpy.matlib','sympy',)        
-        
-        # Create list of jobs
-        jobs = [job_server.submit(mkjaheseq,(inputo,funco2,jcols,symdic,tmpli,paramdico,sstateo,evaldic,mk_hessian,exp,log,conjugate),(),imports) for inputo in inputs]
+        inputs = [x for x in xrange(len(self.func2))]
+        job_server = pp.Server(ncpus,ppservers=ppservers)
+        imports = ('numpy','copy','numpy.matlib','copy','sympycore',)
+        #job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None)
+        # Submits function to the execution queue
+           
+        # func - function to be executed
+        # args - tuple with arguments of the 'func'
+        # depfuncs - tuple with functions which might be called from 'func'
+        # modules - tuple with module names to import
+        # callback - callback function which will be called with argument
+        # list equal to callbackargs+(result,)
+        # as soon as calculation is done
+        # callbackargs - additional arguments for callback function
+        # group - job group, is used when wait(group) is called to wait for
+        # jobs in a given group to finish
+        # globals - dictionary from which all modules, functions and classes
+        # will be imported, for instance: globals=globals()
+        from copy import deepcopy
+        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,deepcopy),(),imports) for input in inputs]
         if mk_hessian:
             jdic = {}
             hdic = {}
@@ -1489,8 +1552,7 @@ class DSGEmodel(object):
                 jdic[i1+1] = job()[1]
             self.numj = numj
             self.jdic = jdic
-            
-        job_server.print_stats()
+        if mesg: job_server.print_stats()
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
@@ -1527,7 +1589,7 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
-
+        mk_hessian = self._mk_hessian
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
@@ -1621,7 +1683,7 @@ class DSGEmodel(object):
                 suba = ma.group()
                 if 'log' in moddic[lookdic[self.vreg(patup,dicli2[suba],False,'min')[2][1]]]\
                    and suba not in doneli:
-                    func2[i] = func2[i].subs(sympy.Symbol(suba),sympy.exp(sympy.Symbol(suba)))
+                    func2[i] = func2[i].subs(sympycore.Symbol(suba),sympycore.exp(sympycore.Symbol(suba)))
                     doneli.append(suba)
         self.func2 = func2
 
@@ -1635,11 +1697,11 @@ class DSGEmodel(object):
                 else:
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
                     vma = self.vreg(patup,vari0,False,'min')
                     vmavar = vma[2][1]+'_bar'
-                    self.func2[i1] = sympy.Symbol(vmavar)*(self.func2[i1])
+                    self.func2[i1] = sympycore.Symbol(vmavar)*(self.func2[i1])
 
 
         # Transform python exponentiation into matlab exponentiation
@@ -1740,6 +1802,7 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
+        mk_hessian = self._mk_hessian
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
@@ -1893,8 +1956,9 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
+        mk_hessian = self._mk_hessian
         # import local sympycore
-        import sympy
+        import sympycore
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]

@@ -5,6 +5,9 @@ import re
 import numpy as np
 import copy
 from scipy import optimize
+# Switch off runtime warnings here
+import warnings
+warnings.filterwarnings("ignore")
 
 class SSsolvers(object):
     def __init__(self):

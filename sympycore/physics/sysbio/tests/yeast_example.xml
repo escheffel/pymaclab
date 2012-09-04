@@ -1,0 +1,1222 @@
+<sbml xmlns="http://www.sbml.org/sbml/level3/version1/core" level="3" version="1">
+  <model id="ModelID" name="&lt;isotopomer.stoichiometric_matrix.StoichiometricMatrix object at 0x370d690&gt;">
+    <listOfCompartments>
+      <compartment id="mitochondrial" size="1" constant="true"/>
+      <compartment id="external" size="1" constant="true"/>
+      <compartment id="cytosolic" size="1" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="ZviGOGm" name="Six carbon analogue used in GLU-OG stoichiometry." compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="THRo" name="C00188 L-Threonine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZviGOGo" name="Six carbon analogue used in GLU-OG stoichiometry." compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="THRm" name="C00188 L-Threonine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SiiiPo" name="C03175 Shikimate 3-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GviPx" name="C00668 alpha-D-Glucose 6-phosphate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZivALTo" name="Used to link the stoichiometry of the ALT reaction." compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZivALTm" name="Used to link the stoichiometry of the ALT reaction." compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="THRx" name="C00188 L-Threonine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GviPo" name="C00668 alpha-D-Glucose 6-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="YiGOGo" name="One carbon analogue used in GLU-OG stoichiometry." compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="YiGOGm" name="One carbon analogue used in GLU-OG stoichiometry." compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLNo" name="C00064 L-Glutamine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLNm" name="C00064 L-Glutamine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CPo" name="C00169 Carbamoyl phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OAo" name="C00036 Oxaloacetate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OAm" name="C00036 Oxaloacetate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLNx" name="C00064 L-Glutamine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OAx" name="C00036 Oxaloacetate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AcCoAx" name="C00024 Acetyl-CoA" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="IPo" name="C03506 Indoleglycerol phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AcCoAo" name="C00024 Acetyl-CoA" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AcCoAm" name="C00024 Acetyl-CoA" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZiiPYm" name="Part of PY used in ILE, VAL, and LEU biosynthesis." compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PYm" name="C00022 Pyruvate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PYo" name="C00022 Pyruvate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="MAm" name="C00149 Malate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZiiiFviPo" name="Intermediate product of reaction R01827 (TAL1)" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GPo" name="C00111 Glycerone phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="VALo" name="C00183 L-Valine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="VALm" name="C00183 L-Valine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CHo" name="C00251 Chorismate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="VALx" name="C00183 L-Valine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PEPo" name="C00074 Phosphoenolpyruvate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="HISo" name="C00135 L-Histidine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="RvPx" name="C00117 D-Ribose 5-phosphate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SERx" name="C00065 L-Serine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SERo" name="C00065 L-Serine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZiiXvPo" name="Intermediate product of reaction R01641 (TKL1 or TKL2)" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="RvPo" name="C00117 D-Ribose 5-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="HISx" name="C00135 L-Histidine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ARGx" name="C00062 L-Arginine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OAGo" name="C05533 Oxaloglutarate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLUx" name="C00025 L-Glutamate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PvRAo" name="C04302 N-(5-Phospho-beta-D-ribosyl)anthranilate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="METx" name="C00073 L-Methionine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLUo" name="C00025 L-Glutamate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLUm" name="C00025 L-Glutamate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ARGo" name="C00062 L-Arginine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="FUo" name="C00122 Fumarate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="FUm" name="C00122 Fumarate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="METo" name="C00073 L-Methionine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ANo" name="C00108 Anthranilate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PROx" name="C00148 L-Proline" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="TYRx" name="C00082 L-Tyrosine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PROo" name="C00148 L-Proline" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="MOo" name="C00141 3-Methyl-2-oxobutanoic acid" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="MOm" name="C00141 3-Methyl-2-oxobutanoic acid" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="IOSm" name="C04236 (2S)-2-Isopropyl-3-oxosuccinate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="TYRo" name="C00082 L-Tyrosine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="IOSo" name="C04236 (2S)-2-Isopropyl-3-oxosuccinate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SUCoAm" name="C00091 Succinyl-CoA" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="YiiXvPo" name="Intermediate product of reaction R01830 (TKL1 or TKL2)" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PHEo" name="C00079 L-Phenylalanine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="PHEx" name="C00079 L-Phenylalanine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="HCo" name="C00155 L-Homocysteine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="LYSo" name="C00047 L-Lysine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASPm" name="C00049 L-Aspartate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASPo" name="C00049 L-Aspartate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="LYSx" name="C00047 L-Lysine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="XvPo" name="C00231 D-Xylulose 5-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASPx" name="C00049 L-Aspartate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="BCm" name="C00288 Bicarbonate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="BCo" name="C00288 Bicarbonate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASo" name="C03406 N-(L-Arginino)succinate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLo" name="C00031 D-Glucose" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SUm" name="C00042 Succinate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ACo" name="C00033 Acetate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ALAm" name="C00041 L-Alanine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ACm" name="C00033 Acetate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ALAo" name="C00041 L-Alanine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLx" name="C00031 D-Glucose" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ALAx" name="C00041 L-Alanine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASNx" name="C00152 L-Asparagine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CDm" name="C00011 Carbon dioxide" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CDo" name="C00011 Carbon dioxide" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ASNo" name="C00152 L-Asparagine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ORm" name="C00077 L-Ornithine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CDx" name="C00011 Carbon dioxide" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="FviPx" name="C05345 beta-D-Fructose 6-phosphate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="RLvPo" name="C00199 D-Ribulose 5-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="Co" name="C00327 L-Citrulline" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="TRPo" name="C00078 L-Tryptophan" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ILEm" name="C00407 L-Isoleucine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ILEo" name="C00407 L-Isoleucine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="TRPx" name="C00078 L-Tryptophan" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="FviPo" name="C05345 beta-D-Fructose 6-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ILEx" name="C00407 L-Isoleucine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GiiiPx" name="C00118 D-Glyceraldehyde 3-phosphate" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="LEUo" name="C00123 L-Leucine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="LEUm" name="C00123 L-Leucine" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GiiiPo" name="C00118 D-Glyceraldehyde 3-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="LEUx" name="C00123 L-Leucine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AAm" name="C00084 Acetaldehyde" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AAo" name="C00084 Acetaldehyde" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="CIm" name="C00158 Citrate/Isocitrate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="EivPo" name="C00279 D-Erythrose 4-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZvAATm" name="Used to link the stoichiometry of the AAT1 and AAT2 reactions." compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ZvAATo" name="Used to link the stoichiometry of the AAT1 and AAT2 reactions." compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLYx" name="C00037 Glycine" compartment="external" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="AHo" name="C01077 O-Acetyl-L-homoserine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OGm" name="C00026 2-Oxoglutarate" compartment="mitochondrial" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="OGo" name="C00026 2-Oxoglutarate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="SviiPo" name="C05382 D-Sedoheptulose 7-phosphate" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="GLYo" name="C00037 Glycine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="ORo" name="C00077 L-Ornithine" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="XviCPAo" name="Six carbon analogue used in the CPA reaction." compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+      <species id="Io" name="C00463 Indole" compartment="cytosolic" initialAmount="0" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="true"/>
+    </listOfSpecies>
+    <listOfReactions>
+      <reaction id="R_ACm_AcCoAm" name="ACm -&gt; AcCoAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ACm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AcCoAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TYR" name="CHo -&gt; TYRo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="CHo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="TYRo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_US_AS_FU_ARG" name="ASo -&gt; FUo + ARGo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FUo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ARGo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GLT" name="OGm + GLNm -&gt; 2 GLUm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="GLNm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUm" stoichiometry="2" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GiiiP_PEP" name="GiiiPo -&gt; PEPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PEPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OAm_ASP_02" name="ZvAATm -&gt; YiGOGm + ASPm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZvAATm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="YiGOGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="ASPm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_MET_out" name="METo -&gt; METx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="METo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="METx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ACo_AcCoAo" name="ACo -&gt; AcCoAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ACo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AcCoAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_LEUm_LEUo" name="LEUm -&gt; LEUo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="LEUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="LEUo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GviP_FviP" name="GviPo -&gt; FviPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FviPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ILE_out" name="ILEo -&gt; ILEx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ILEo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ILEx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_M2" name="ZiiPYm + PYm -&gt; MOm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZiiPYm" stoichiometry="1" constant="false"/>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="MOm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_SER_out" name="SERo -&gt; SERx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="SERo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SERx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_M1" name="PYm -&gt; ZiiPYm + CDm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZiiPYm" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_MOm_MOo" name="MOm -&gt; MOo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="MOm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="MOo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_XvP_RLvP" name="XvPo -&gt; RLvPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="XvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="RLvPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ALA_out" name="ALAo -&gt; ALAx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ALAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ALAx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OAm_ASP_01" name="OAm + BCm -&gt; ZvAATm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAm" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZvAATm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_CD_BC" name="CDo -&gt; BCo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PHE_out" name="PHEo -&gt; PHEx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PHEo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PHEx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GiiiP_out" name="GiiiPo -&gt; GiiiPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GiiiPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_AcCoA_C" name="AcCoAo + MOo -&gt; IOSo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AcCoAo" stoichiometry="1" constant="false"/>
+          <speciesReference species="MOo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IOSo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_AcCoA_M" name="AcCoAm + MOm -&gt; IOSm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AcCoAm" stoichiometry="1" constant="false"/>
+          <speciesReference species="MOm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IOSm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_HIS_out" name="HISo -&gt; HISx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="HISo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="HISx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLN_out" name="GLNo -&gt; GLNx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLNo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLNx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TRP_out" name="TRPo -&gt; TRPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="TRPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="TRPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_SUCoAm_SUm" name="SUCoAm -&gt; SUm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="SUCoAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SUm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OA_AcCoA_MET" name="HCo + BCo -&gt; METo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="HCo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="METo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_AAo_ACo" name="AAo -&gt; ACo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ACo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_ALA_M1" name="PYm + BCm -&gt; ZivALTm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZivALTm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GP_GiiiP" name="GPo -&gt; GiiiPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_ALA_M2" name="ZivALTm -&gt; YiGOGm + ALAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZivALTm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="YiGOGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="ALAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_VAL_out" name="VALo -&gt; VALx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="VALo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="VALx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ASPm_ASPo" name="ASPm -&gt; ASPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASPm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PRO_out" name="PROo -&gt; PROx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PROo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PROx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_OA_PEP" name="OAo -&gt; PEPo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PEPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLNo_GLNm" name="GLNo -&gt; GLNm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLNo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLNm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_RvP_HIS" name="RvPo + BCo -&gt; HISo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="RvPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="HISo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_OAo_OAm" name="OAo -&gt; OAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GviP_RLvP" name="GviPo -&gt; RLvPo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="RLvPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ALAm_ALAo" name="ALAm -&gt; ALAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ALAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ALAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_FviP_GP_GiiiP" name="FviPo -&gt; GPo + GiiiPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="FviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_AC_01" name="AHo -&gt; HCo + ACo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AHo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="HCo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ACo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_IOSm_IOSo" name="IOSm -&gt; IOSo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="IOSm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IOSo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_01" name="PEPo + EivPo -&gt; SiiiPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PEPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="EivPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SiiiPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_AAm_ACm" name="AAm -&gt; ACm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ACm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_CIm_OGm" name="CIm -&gt; OGm + CDm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="CIm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_OA_out" name="OAo -&gt; OAx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OAx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLUm_OGm_02" name="ZviGOGm -&gt; OGm + BCm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZviGOGm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLUm_OGm_01" name="YiGOGm + GLUm -&gt; ZviGOGm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="YiGOGm" stoichiometry="1" constant="false"/>
+          <speciesReference species="GLUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZviGOGm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_LYS_C1" name="OGo + AcCoAo -&gt; OAGo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGo" stoichiometry="1" constant="false"/>
+          <speciesReference species="AcCoAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OAGo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_LYS_C2" name="OAGo -&gt; CDo + LYSo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+          <speciesReference species="LYSo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TRP_04" name="IPo -&gt; Io + GiiiPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="IPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Io" stoichiometry="1" constant="false"/>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TRP_03" name="PvRAo -&gt; IPo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PvRAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="IPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TRP_02" name="ANo + RvPo -&gt; PvRAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ANo" stoichiometry="1" constant="false"/>
+          <speciesReference species="RvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PvRAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_FviP_EivP_SviiP_GiiiP_01" name="ZiiiFviPo + GiiiPo -&gt; FviPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZiiiFviPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FviPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ILEm_ILEo" name="ILEm -&gt; ILEo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ILEm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ILEo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_MAm_OAm" name="MAm -&gt; OAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="MAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_OAm_AcCoAm_CIm" name="OAm + AcCoAm -&gt; CIm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAm" stoichiometry="1" constant="false"/>
+          <speciesReference species="AcCoAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CIm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_US_ARG_OR" name="ARGo -&gt; ORo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ARGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ORo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_FviP_EivP_SviiP_GiiiP_02" name="SviiPo -&gt; EivPo + ZiiiFviPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="SviiPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="EivPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ZiiiFviPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GLU_GLN" name="GLUo -&gt; GLNo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLNo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_SviiP_GiiiP_XvP_RvP_01" name="ZiiXvPo + RvPo -&gt; SviiPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZiiXvPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="RvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SviiPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PEP_PY" name="PEPo -&gt; PYo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PEPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_VAL_C" name="MOo -&gt; VALo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="MOo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="VALo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_VAL_M" name="MOm -&gt; VALm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="MOm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="VALm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLUm_GLUo" name="GLUm -&gt; GLUo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_THR_out" name="THRo -&gt; THRx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="THRo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="THRx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OAo_ASP_02" name="ZvAATo -&gt; YiGOGo + ASPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZvAATo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="YiGOGo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OAo_ASP_01" name="OAo + BCo -&gt; ZvAATo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OAo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZvAATo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_LYS_out" name="LYSo -&gt; LYSx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="LYSo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="LYSx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TRP_05" name="Io + SERo -&gt; TRPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="Io" stoichiometry="1" constant="false"/>
+          <speciesReference species="SERo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="TRPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_RvP_out" name="RvPo -&gt; RvPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="RvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="RvPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_OGm_SUCoAm" name="OGm -&gt; SUCoAm + CDm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SUCoAm" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_THR_ILE" name="THRm + ZiiPYm -&gt; ILEm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="THRm" stoichiometry="1" constant="false"/>
+          <speciesReference species="ZiiPYm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ILEm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ASP_out" name="ASPo -&gt; ASPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ASPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GLU_OR" name="GLUm -&gt; ORm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ORm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_TRP_01" name="CHo -&gt; ANo + PYo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="CHo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ANo" stoichiometry="1" constant="false"/>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_CDm_CDo" name="CDm -&gt; CDo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_VALm_VALo" name="VALm -&gt; VALo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="VALm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="VALo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ORm_ORo" name="ORm -&gt; ORo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ORm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ORo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GLU_PRO" name="GLUo -&gt; PROo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PROo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GL_in" name="GLx -&gt; GLo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLx" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_CD_out" name="CDo -&gt; CDx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CDx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_EivP_PHE" name="CHo -&gt; PHEo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="CHo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PHEo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_LEU_out" name="LEUo -&gt; LEUx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="LEUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="LEUx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GiiiP_SER" name="GiiiPo -&gt; SERo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="SERo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_ASP_THR" name="ASPo -&gt; THRo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="THRo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PEP_01" name="SiiiPo + PEPo -&gt; CHo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="SiiiPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="PEPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CHo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PYo_PYm" name="PYo -&gt; PYm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_FviP_out" name="FviPo -&gt; FviPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="FviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FviPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_RLvP_RvP" name="RLvPo -&gt; RvPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="RLvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="RvPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OG_GLU_C" name="OGo -&gt; GLUo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_AcCoA_01" name="ASPo + AcCoAo -&gt; AHo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="AcCoAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AHo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_OG_GLU_M" name="OGm -&gt; GLUm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GviP_out" name="GviPo -&gt; GviPx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GviPx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLU_out" name="GLUo -&gt; GLUx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_AcCoA_LEU_M" name="IOSm -&gt; CDm + LEUm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="IOSm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+          <speciesReference species="LEUm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_AAo_AAm" name="AAo -&gt; AAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="AAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_AcCoA_LEU_C" name="IOSo -&gt; CDo + LEUo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="IOSo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+          <speciesReference species="LEUo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_FUo_FUm" name="FUo -&gt; FUm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="FUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FUm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_ASP_ASN" name="ASPo -&gt; ASNo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ASNo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_THRo_THRm" name="THRo -&gt; THRm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="THRo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="THRm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TYR_out" name="TYRo -&gt; TYRx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="TYRo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="TYRx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_GiiiP_GLY" name="SERo -&gt; GLYo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="SERo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLYo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ASN_out" name="ASNo -&gt; ASNx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ASNo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ASNx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_MAm_PYm" name="MAm -&gt; PYm + CDm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="MAm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLY_out" name="GLYo -&gt; GLYx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLYo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLYx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLUo_OGo_02" name="ZviGOGo -&gt; OGo + BCo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZviGOGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OGo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GLUo_OGo_01" name="YiGOGo + GLUo -&gt; ZviGOGo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="YiGOGo" stoichiometry="1" constant="false"/>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZviGOGo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_PYm_AcCoAm" name="PYm -&gt; AcCoAm + CDm" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AcCoAm" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PYo_OAo" name="PYo + BCo -&gt; OAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_GL_GviP" name="GLo -&gt; GviPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GLo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GviPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_OGo_OGm" name="OGo -&gt; OGm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="OGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="OGm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_FviP_GiiiP_XvP_EivP_02" name="GiiiPo + YiiXvPo -&gt; XvPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="YiiXvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="XvPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_FviP_GiiiP_XvP_EivP_01" name="FviPo -&gt; YiiXvPo + EivPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="FviPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="YiiXvPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="EivPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_US_C_ASP_AS" name="Co + ASPo -&gt; ASo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="Co" stoichiometry="1" constant="false"/>
+          <speciesReference species="ASPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ASo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_ALA_C2" name="ZivALTo -&gt; YiGOGo + ALAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ZivALTo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="YiGOGo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ALAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_PY_ALA_C1" name="PYo + BCo -&gt; ZivALTo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ZivALTo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_BCo_CPo_01" name="BCo + GLNo -&gt; XviCPAo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="BCo" stoichiometry="1" constant="false"/>
+          <speciesReference species="GLNo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="XviCPAo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_FUm_MAm" name="FUm -&gt; MAm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="FUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="MAm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_B_THR_GLY" name="THRo -&gt; GLYo + ACo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="THRo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLYo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ACo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_BCo_CPo_02" name="XviCPAo -&gt; GLUo + CPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="XviCPAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GLUo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PYo_AAo" name="PYo -&gt; AAo + CDo" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="PYo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AAo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CDo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_AcCoA_out" name="AcCoAo -&gt; AcCoAx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="AcCoAo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="AcCoAx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_PPP_SviiP_GiiiP_XvP_RvP_02" name="XvPo -&gt; GiiiPo + ZiiXvPo" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="XvPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="GiiiPo" stoichiometry="1" constant="false"/>
+          <speciesReference species="ZiiXvPo" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_US_OR_C" name="ORo + CPo -&gt; Co" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="ORo" stoichiometry="1" constant="false"/>
+          <speciesReference species="CPo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="Co" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_TCA_SUm_FUm" name="SUm -&gt; FUm" reversible="true" fast="false">
+        <listOfReactants>
+          <speciesReference species="SUm" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="FUm" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+      <reaction id="R_ARG_out" name="ARGo -&gt; ARGx" reversible="false" fast="false">
+        <listOfReactants>
+          <speciesReference species="ARGo" stoichiometry="1" constant="false"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="ARGx" stoichiometry="1" constant="false"/>
+        </listOfProducts>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

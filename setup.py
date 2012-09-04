@@ -5,6 +5,7 @@ from datetime import datetime
 # import setuptools # have to do this to be able to setup.py develop
 from numpy.distutils.core import setup
 from numpy import get_include
+import os
 
 DESCRIPTION="The Python Macroeconomics Library"
 LONG_DESCRIPTION="""
@@ -62,8 +63,8 @@ DOWNLOAD_URL="http://github.com/escheffel/pymaclab/tarball/v0.85"
 CLASSIFIERS=["Scientific", "Macroeconomics", "General Equilibrium", "DSGE", "Time Series"]
 
 MAJOR = 0
-MINOR = 85
-MICRO = 0
+MINOR = 88
+MICRO = 1
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 FULLVERSION = VERSION
@@ -108,3 +109,5 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           platforms='any',
           configuration=configuration)
+    # Now call setup of sympycore     
+    os.system('python setup_sympyc.py install')

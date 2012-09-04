@@ -28,8 +28,8 @@ def db_graph(dbase,tseries):
 	fsp.legend()
 	P.show()
 
-def newMOD(txtfile=None,dbase=None,initlev=2):
-	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev)
+def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True):
+	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,mk_hessian=mk_hessian)
 	modobj.init2()
 	return modobj
 

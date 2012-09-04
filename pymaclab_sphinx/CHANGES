@@ -4,6 +4,22 @@
 Release History
 ===============
 
+**0.89.1-dev** (2012-9-3)
+=========================
+
+    * PyMacLab's parser now also replaces substituted items in the closed form steady state section.
+
+    * A new parameter can be passed to pymaclab.newMOD(mesg=True|False) to generate diagnosis print-outs during instantiation.
+
+    * Another new parameter is pymaclab.newMOD(ncpus='auto'|INT) where INT is some integer. Number of CPU cores to be used. Default=1.
+
+    * Another new parameter is pymaclab.newMOD(mk_hessian=True|False). Should expensive Hessian be computed? Default=True.
+
+    * Improved various DSGE model templates. Monika Merz's unemployment RBC DSGE model is now working.
+
+    * Further improvements to the online documentation
+
+
 **0.88.1** (2012-9-3)
 ====================
 

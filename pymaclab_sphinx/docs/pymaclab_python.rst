@@ -81,6 +81,19 @@ Advantages of PyMacLab in Python
   reason to expect that one day a fully-fledged Python compiler may appear, giving developers the choice to compile their programs all the way
   down to machine code.
 
+*PyMacLab in Python encourages learning and extending*
+
+  Many routines aimed at solving DSGE models often feel like canned algorithms which by their very design encourage use of them as simple
+  and unreflective input-blackbox-output procedures in which the users are mostly concerned with learning the syntactic rules of the program
+  to quickly "get out of it what they need". I feel that for the sake of productivity this is not an entirely wrong or indeed deplorable
+  circumstance, quite to the contrary. But it often does imply that users substitute away from learning and understanding under-the-hood
+  details of implementation which in themselves would be worthwhile try to come to grasp with as a means of learning. PyMacLab, as a result
+  of the language it is written in and the way it chooses to implement DSGE modelling in form of an "intelligent" DSGE model instance,
+  encourages students and researchers to look underneath the hood and to use the structure of the DSGE data type as it exists at any given
+  point in time in order to develop easy-to-add extensions. The open-source, improved readability and maintainability nature of Python and
+  PyMacLab itself further enforce this advantage. Canned routines encourage unreflective use, but does human capital theory not teach us that
+  learning-by-doing is an important aspect of stimulating economic growth?
+
 
 
 Disadvantages of PyMacLab in Python
