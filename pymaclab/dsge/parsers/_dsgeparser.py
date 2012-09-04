@@ -1576,6 +1576,24 @@ def mk_msstate_subs(self):
     self.ssys_list = deepcopy(tmp_list)
     return self
 
+#This function is needed in population stage 1, at the end
+def mk_cfstate_subs(self):
+    """
+    This function takes the closed form defined numerical sstate conditions and then replaces
+    any @terms with the corresponding substitutions
+    """
+    _mreg = '@[a-zA-Z]*_bar'
+    mreg = re.compile(_mreg)
+    tmp_list = deepcopy(self.manss_sys)
+    sub_dic = deepcopy(self.nlsubs)
+    for i1,x in enumerate(tmp_list):
+        while mreg.search(tmp_list[i1]):
+            ma = mreg.search(tmp_list[i1])
+            str_tmp = ma.group()
+            tmp_list[i1] = tmp_list[i1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
+    self.manss_sys = deepcopy(tmp_list)
+    return self
+
 
 # Extra population stage factored out, which is needed before steady state calculations
 def populate_model_stage_one_b(self, secs):
@@ -1600,6 +1618,11 @@ def populate_model_stage_one_b(self, secs):
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
        any([False if 'None' in x else True for x in secs['manualss'][0]]):
         self = mk_msstate_subs(self)
+    # Do substitutions inside the closed form steady state list
+    # Check and do substitutions
+    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
+       any([False if 'None' in x else True for x in secs['closedformss'][0]]):
+        self = mk_cfstate_subs(self)
     return self
 
 
