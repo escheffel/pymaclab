@@ -45,13 +45,13 @@ the project (using Latex) as:
 
 Dependencies
 -------
-[numpy](http://numpy.scipy.org/)  
-[scipy](http://www.scipy.org/)  
-[sympycore](http://sympy.org/en/index.html) (comes supplied with pymaclab)
-[pp](http://www.parallelpython.com/) (optional - but highly recommended for speed)
-[ipython](http://ipython.org/) (optional)    
-[mlabwrap](http://mlabwrap.sourceforge.net/) (optional)  
-[scikits.timeseries](http://pytseries.sourceforge.net/) (optional) 
+[numpy](http://numpy.scipy.org/) (required)   
+[scipy](http://www.scipy.org/) (required)   
+[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)   
+[pp](http://www.parallelpython.com/) (optional - but highly recommended for speed)   
+[ipython](http://ipython.org/) (optional)   
+[mlabwrap](http://mlabwrap.sourceforge.net/) (optional)   
+[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)   
 
 While numpy, scipy, and sympycore are absolutely necessary to run PyMacLab, Parallel Python (PP)
 can autodetect multi-core processors and can potentially speed up the computation of elements such as the analytical
