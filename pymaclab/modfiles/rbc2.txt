@@ -16,7 +16,7 @@ delta	= 0.025;
 #Gross Real Interest Rate
 R_bar	= 1.01;
 #Utility parameter
-eta	= 1.0;
+eta	= 2.0;
 #Autocorrelation shock 
 psi	= 0.95;
 #Steady State of Shock
@@ -88,7 +88,8 @@ None
 
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-inv_bar = @inv_bar;
+[1]  inv_bar = @inv_bar;
+[2]  y_bar   = @F_bar;
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -96,17 +97,15 @@ inv_bar = @inv_bar;
 [2]   @r_bar+(1-delta)-R_bar = 0;
 [3]   betta*R_bar-1 = 0;
 [4]   @w_bar-w_bar = 0;
-[5]   @F_bar-y_bar = 0;
-[6]   @MUc_bar-lam_bar = 0;
-[7]   @MUl_bar-lam_bar*w_bar = 0;
+[5]   @MUc_bar-lam_bar = 0;
+[6]   @MUl_bar-lam_bar*w_bar = 0;
 
 [1]  c_bar   = 1.0;
 [2]  k_bar   = 1.0;
-[3]  y_bar   = 1.0;
-[4]  w_bar   = 1.0;
-[5]  A       = 1.0;
-[6]  lam_bar = 1.0;
-[7]  betta   = 1.0;
+[3]  w_bar   = 1.0;
+[4]  A       = 1.0;
+[5]  lam_bar = 1.0;
+[6]  betta   = 0.99;
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

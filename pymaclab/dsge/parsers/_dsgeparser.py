@@ -5,6 +5,7 @@ import re
 from copy import deepcopy
 import numpy.matlib as mat
 import sys
+import os
 # This used to import sympycore, but should now also work with sympy
 import sympycore as SP
 
@@ -147,11 +148,15 @@ from __future__ import division
                 counter = counter + 1
             elif '...' not in x:
                 if counter == 0:
+                    # Just in case people have used [1] markers...
+                    if ']' in x: x = x.split(']')[1].lstrip().rstrip()
                     list_tmp1.append(x)
                 elif counter > 0:
                     str_tmp = ''
                     for y in mansys[i1-counter:i1+1]:
                         str_tmp = str_tmp + y.replace('...','')
+                    # Just in case people have used [1] markers...
+                    if ']' in str_tmp: str_tmp = str_tmp.split(']')[1].lstrip().rstrip()
                     list_tmp1.append(str_tmp)
                     counter = 0 
             i1=i1+1

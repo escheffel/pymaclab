@@ -8,13 +8,14 @@ __date__ = '$Date: 2007-08-05$'
 """
 
 __author__ = "Eric Michael Scheffel"
-__version__ = '0.8'
+__version__ = '0.88.1'
 __revision__ = "$Revision: 1001 $"
 __date__ = '$Date: 2012-08-21$'
 
 import os as OPS
 from dsge import macrolab
 import linalg
+import sys
 
 # Some helper functions
 def db_graph(dbase,tseries):

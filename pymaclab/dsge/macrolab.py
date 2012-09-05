@@ -8,7 +8,6 @@ from helpers import now_is
 import numpy as np
 from numpy import matlib as mat
 from scipy.linalg import eig as scipyeig
-#from scikits.timeseries.lib import plotlib as tsplt
 from tempfile import mkstemp
 import trace
 import time
@@ -39,17 +38,10 @@ from errors import *
 import tempfile as TMF
 import threading as THR
 import glob
-try:
-    # Import Sympy
-    import sympycore
-except:
-    print "You need to have Sympy installed for PyMacLab to work properly"
-    print "Get is via: sudo pip install sympy"
-try:
-    import pp
-except:
-    print "You need to install pp (easy_install)"
-    print "this is optional"
+# Import Sympycore, now comes supplied and installed with pymaclab
+import sympycore
+# Import PP, now comes supplied and installed with pymaclab
+import pp
 
 #NOTE: Imports from the refactor
 from pymaclab.filters._hpfilter import hpfilter
@@ -93,24 +85,13 @@ try:
 except:
     use_matlab = False
     sess1 = None
-
-# Should the Model Jacobian and Hessian be calculated symbolically?
-use_anaderiv = True
-
-# Number of cores used for calculations
-#ncpus = 2
-try:    # no mp in 2.5
-    import pp
-except:
-    print "Install PP Python if you want multicore CPU support."
+# Open mlab session
+if use_matlab:
+    sess1 = mlabraw.open('matlab - nojvm -nosplash')
 
 # Empty locdic for the locate helper function
 locdic = {}
 
-
-# Open mlab session
-if use_matlab:
-    sess1 = mlabraw.open('matlab - nojvm -nosplash')
 
 ################THE TIMESERIES DATABASE CLASS (WORKS)#################
 class TSDataBase:
@@ -504,19 +485,15 @@ class DSGEmodel(object):
     ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['focs'][0]]):
 
-            # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
-            if use_anaderiv:
-                if ncpus > 1 and mk_hessian:
-                    if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
-                    self.mkjahepp()
-                elif ncpus > 1 and not mk_hessian:
-                    if self._mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
-                    self.mkjahepp()
-                else:
-                    if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
-                    self.mkjahe()
+            if ncpus > 1 and mk_hessian:
+                if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                self.mkjahepp()
+            elif ncpus > 1 and not mk_hessian:
+                if self._mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                self.mkjahepp()
             else:
-                self.mkjahenmat()
+                if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                self.mkjahe()
 
             # Open the MatWood object
             intup = (self.jAA,self.jBB,
@@ -1196,7 +1173,7 @@ class DSGEmodel(object):
         def mkjac(jrows=jrows,jcols=jcols):
             mesg = self._mesg
             rdic = dict([[x,'0'] for x in range(jcols)])
-            jdic = dict([[x,deepcopy(rdic)] for x in range(jrows)])
+            jdic = dict([[x,rdic.copy()] for x in range(jrows)])
             jdicc = deepcopy(jdic)
             jcols = len(jdic[0])
             jrows = len(jdic)
@@ -1240,7 +1217,7 @@ class DSGEmodel(object):
         def mkhes(jrows=jrows,jcols=jcols,trans_dic=None):
             mesg = self._mesg
             rdic = dict([[x,'0'] for x in range(jcols)])
-            rdic1 = dict([[x,deepcopy(rdic)] for x in range(jcols)])
+            rdic1 = dict([[x,rdic.copy()] for x in range(jcols)])
             hdic = dict([[x,deepcopy(rdic1)] for x in range(jrows)])
             hdicc = deepcopy(hdic)
             hcols = len(hdic[0])
@@ -1334,9 +1311,9 @@ class DSGEmodel(object):
         # import local sympycore
         import sympycore
         
-        ncpus = self._ncpus
-        mk_hessian = self._mk_hessian
-        mesg = self._mesg
+        ncpus = copy.deepcopy(self._ncpus)
+        mk_hessian = copy.deepcopy(self._mk_hessian)
+        mesg = copy.deepcopy(self._mesg)
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1472,13 +1449,13 @@ class DSGEmodel(object):
             evaldic[x[1]] = evalli[i]
 
         # Now make the 2D and 3D symbolic and numeric Jacobian and Hessian
-        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian,deepcopy):
+        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian):
 
             jdic = dict([[x,'0'] for x in range(jcols)])
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 rdic = dict([[x,'0'] for x in range(jcols)])
-                hdic = dict([[x,deepcopy(rdic)] for x in range(jcols)])
+                hdic = dict([[x,rdic.copy()] for x in range(jcols)])
                 numh = numpy.matlib.zeros((jcols,jcols))
 
             alldic = {}
@@ -1507,7 +1484,7 @@ class DSGEmodel(object):
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
         job_server = pp.Server(ncpus,ppservers=ppservers)
-        imports = ('numpy','copy','numpy.matlib','copy','sympycore',)
+        imports = ('numpy','copy','numpy.matlib','copy',)
         #job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None)
         # Submits function to the execution queue
            
@@ -1523,8 +1500,8 @@ class DSGEmodel(object):
         # jobs in a given group to finish
         # globals - dictionary from which all modules, functions and classes
         # will be imported, for instance: globals=globals()
-        from copy import deepcopy
-        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,deepcopy),(),imports) for input in inputs]
+        
+        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for input in inputs]
         if mk_hessian:
             jdic = {}
             hdic = {}
@@ -2190,16 +2167,13 @@ class DSGEmodel(object):
         ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if sum([nreg.search(x)!=None for x in self.txtpars.secs['focs'][0]]) == 0:
 
-            # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
-            if use_anaderiv:
-                if ncpus > 1 and mk_hessian:
-                    self.mkjahepp()
-                elif ncpus > 1 and not mk_hessian:
-                    self.mkjahepp()
-                else:
-                    self.mkjahe()
+        # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
+            if ncpus > 1 and mk_hessian:
+                self.mkjahepp()
+            elif ncpus > 1 and not mk_hessian:
+                self.mkjahepp()
             else:
-                self.mkjahenmat()
+                self.mkjahe()
 
             # Open the MatWood object
             intup = (self.jAA,self.jBB,

@@ -7,6 +7,10 @@ Release History
 **0.89.1-dev** (2012-9-3)
 =========================
 
+    * Re-introduced sympycore as default CAS. It is MUCH faster than sympy. Now comes packaged with PyMacLab.
+
+    * Also decided to always package the latest (working and tested) parallel python(pp) library with PyMacLab.
+
     * PyMacLab's parser now also replaces substituted items in the closed form steady state section.
 
     * A new parameter can be passed to pymaclab.newMOD(mesg=True|False) to generate diagnosis print-outs during instantiation.

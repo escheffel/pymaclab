@@ -1,0 +1,68 @@
+pp-1.6.2:
+    1) Made socket timeout configurable via constructor argument socket_timeout and cgi argument of ppserver.py -k.
+    2) Fixed sresult referenced before assignment bug
+    3) Removed shell from subprocess.Popen call.
+    4) Fixed race condition in autodiscovery.
+
+pp-1.6.1:
+    1) Fixed struct.unpack("!Q", size_packed) bug which started to happen with Python 2.7 on certain platforms.
+    2) Fixed bug with auto-discovery not working after ppserver is restarted.
+    3) Added full support of python import statements. 
+       For instance "from numpy.linalg import det as determinant" is now supported.
+       For compatibility old module name imports will continue to work.
+    4) Exposed more detailed network error messages in ppserver.py.
+
+pp-1.6.0:
+    1) Changed logging mechanism. Now logger is obtained as logging.getLogger('pp').
+    2) Modified ppworker to use exec instead of eval.
+    3) Modified exception handling on destruction. Now if server was destroyed,
+       uncompleted jobs throw DestroyedServerError exception on call.
+    4) Fixed issue with submitting a method of an instance of a class inherited from another.
+    5) Added timeouts to all socket operations.
+    6) Changed default proto type to 2.
+    7) Moved from thread module to threading. Made all pp threads daemons.
+    8 ) Refactored ppserver.py to improve testability
+    9) Fixed bug with ppsecret in user module
+Changes w.r.t RC1:
+    10) Fixed issue with argument which is an instance of an imported class
+Changes w.r.t RC2:
+    11) Fixed DEBUG logging in ppserver.
+    12) Added a flag (-f) to ppserver to set a custom log format. Changed default log format.
+    13) Made printing of the expected exceptions optional and improved the way they are handled.
+    14) Removed default logging handler from pp module (to improve logging flexibility).
+Changes w.r.t RC3:
+    15) Created a common module ppcommon.py and moved common functions there.
+    16) Fixed issue with pipes not being closed.
+Changes w.r.t. RC4:
+    17) Fixed issues with ppserver exiting on first connection.
+    18) Fixed deadlock when using ppworker restart option.
+    19) Enables support for submodule importing.
+
+pp-1.5.7:
+    1) Added ppworker restart after task completion functionality
+    2) Added pickle protocol option  
+    3) Merged patch for Python 2.6 compatibility (contributed by mrtss)
+    4) Merged patch for config file support (contributed by stevemilner)
+    5) Documentation has been moved to doc folder
+
+pp-1.5.6
+    1) Fixed problem with autodiscovery service on Winsows XP and Vista
+    2) Merged new code quality improvement patches (contributed by stevemilner)
+
+pp-1.5.5
+    1) Fixed bug which caused segmentation fault when calling destroy() method. 
+    2) Merged performance and quality improvement patches (contributed by stevemilner)
+
+pp-1.5.4
+    1) Fixed bug with unindented comments
+    2) easy_intall functionality repaired
+    3) Code quality improved (many small changes)
+
+pp-1.5.3
+    1) Added support for methods of new-style classes.
+    2) Added ability to read secret key from pp_secret variable of .pythonrc.py
+    3) ppdoc.html and ppserver.1 are included in the distribution
+    4) examples bundled with the distribution
+CHANGELOG started
+
+* - nicknames of the contributors refer to the PP forum profile login names.

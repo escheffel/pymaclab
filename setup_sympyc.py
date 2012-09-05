@@ -14,7 +14,7 @@ Operating System :: MacOS
 """
 
 import os
-if os.path.exists('MANIFEST'): os.remove('MANIFEST')
+import sys
 
 from distutils.core import Extension, Command
 from distutils.command.build_py import build_py as _build_py
@@ -173,9 +173,11 @@ class build_py(_build_py):
                     revision = int(m.group('revision'))
         return revision
 
+
         
 if __name__ == '__main__':
     from distutils.core import setup
+
     setup(name='sympycore',
           version='0.2-svn',
           author = 'Pearu Peterson, Fredrik Johansson',

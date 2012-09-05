@@ -1,0 +1,15 @@
+include AUTHORS
+include COPYING
+include MANIFEST.in
+include CHANGELOG
+include PKG-INFO
+include README
+include python-restlib.spec
+include examples/auto_diff.py
+include examples/callback.py
+include examples/dynamic_ncpus.py
+include examples/quicksort.py
+include examples/reverse_md5.py
+include examples/sum_primes.py
+include examples/sum_primes_functor.py
+recursive-include doc *

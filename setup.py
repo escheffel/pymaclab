@@ -6,6 +6,11 @@ from datetime import datetime
 from numpy.distutils.core import setup
 from numpy import get_include
 import os
+import sys
+import shutil
+
+# Remove the build directory
+if 'build' in os.listdir(os.getcwd()): shutil.rmtree(os.path.join(os.getcwd(),'build'))
 
 DESCRIPTION="The Python Macroeconomics Library"
 LONG_DESCRIPTION="""
@@ -109,5 +114,7 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           platforms='any',
           configuration=configuration)
-    # Now call setup of sympycore     
+    # Now call setup of sympycore
     os.system('python setup_sympyc.py install')
+    # No call setup of pp
+    os.system('python setup_pp.py install')

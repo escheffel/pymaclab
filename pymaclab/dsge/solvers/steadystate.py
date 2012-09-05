@@ -75,6 +75,11 @@ class Fsolve(SSsolvers):
         self.ssm = intup[0]
         self.ssi = intup[1]
         self.paramdic = intup[2]
+        # create a dic holding non _bar values in ssi
+        tmp_dic = {}
+        for keyo in self.ssi.keys():
+            if '_bar' not in keyo: tmp_dic[keyo] = self.ssi[keyo]
+        self.nonbardic = tmp_dic
 
     def solve(self):
 
@@ -107,6 +112,7 @@ class Fsolve(SSsolvers):
         # to fsolve
         def func(invar):
             locals().update(self.paramdic)
+            locals().update(self.nonbardic)
             fdot = np.zeros((len(func_repr)),float)
             i1=0
             for x in func_repr:
