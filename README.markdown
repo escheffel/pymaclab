@@ -45,15 +45,15 @@ the project (using Latex) as:
 
 Dependencies
 -------
-[numpy](http://numpy.scipy.org/)  
-[scipy](http://www.scipy.org/)  
-[sympy](http://sympy.org/en/index.html)   
-[ipython](http://ipython.org/) (optional)  
-[pp](http://www.parallelpython.com/) (optional)  
-[mlabwrap](http://mlabwrap.sourceforge.net/) (optional)  
-[scikits.timeseries](http://pytseries.sourceforge.net/) (optional) 
+[numpy](http://numpy.scipy.org/) (required)   
+[scipy](http://www.scipy.org/) (required)   
+[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)   
+[pp](http://www.parallelpython.com/) (optional - but highly recommended for speed)   
+[ipython](http://ipython.org/) (optional)   
+[mlabwrap](http://mlabwrap.sourceforge.net/) (optional)   
+[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)   
 
-While numpy, scipy, and sympy are absolutely necessary to run PyMacLab, Parallel Python (PP)
+While numpy, scipy, and sympycore are absolutely necessary to run PyMacLab, Parallel Python (PP)
 can autodetect multi-core processors and can potentially speed up the computation of elements such as the analytical
 Hessian of a non-linear DSGE model, while mlabwrap have been marked as deprecated and are in the process of
 being pruned from the code. Scikits.timeseries is not used in any of the classes themselves, but is used in the example
