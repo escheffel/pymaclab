@@ -8,6 +8,7 @@ from numpy import get_include
 import os
 import sys
 import shutil
+import glob
 
 # Remove the build directory
 if 'build' in os.listdir(os.getcwd()): shutil.rmtree(os.path.join(os.getcwd(),'build'))
@@ -114,7 +115,54 @@ if __name__ == '__main__':
           classifiers=CLASSIFIERS,
           platforms='any',
           configuration=configuration)
-    # Now call setup of sympycore
-    os.system('python setup_sympyc.py install')
-    # No call setup of pp
-    os.system('python setup_pp.py install')
+    '''
+    # Find the standard site-packages absolute path
+    for elem in sys.path:
+        if 'site-packages' in elem: pathos = os.path.join(elem.split('site-packages')[0],'site-packages','pymaclab')
+    '''
+    # Install pp and sympycore, but first remove old stuff
+    # Delte old sympycore stuff
+    try:
+        # We don't want to import the package in the current working directory!
+        sys.path.pop(0)
+        import sympycore as sc
+        patho = sc.__path__
+        shutil.rmtree(patho[0])
+        globo = glob.glob(patho[0]+'*')
+        for elem in globo:
+            lasto = elem.split(r'/')[-1]
+            if lasto in os.listdir(elem.split(lasto)[0]):
+                shutil.rmtree(elem)
+    except:
+        pass
+    # Delete old pp stuff
+    try:
+        # We don't want to import the package in the current working directory!
+        sys.path.pop(0)
+        import pp as ppp
+        filo = ppp.__file__
+        nameos = ['pptransport.py','pptransport.pyc',
+                  'ppauto.py','ppauto.pyc',
+                  'ppcommon.py','ppcommon.pyc',
+                  'pp.py','pp.pyc',
+                  'ppworker.py','ppworker.pyc',
+                  'pp-*.egg-info']
+        diro = filo.split('pp.')[0]
+        for elem in nameos:
+            if '*' not in nameos:
+                if elem in os.listdir(diro):
+                    shutil.rmtree(os.path.join(diro,elem))
+            else:
+                globo = glob.glob(os.path.join(diro,elem))
+                for elem2 in globo:
+                    lasto = elem2.split(r'/')[-1]
+                    if lasto in os.listdir(elem2.split(lasto)[0]):
+                        shutil.rmtree(elem2)
+        shutil.rmtree(patho[0])
+    except:
+        pass
+    
+    # Now insert the current directory back in
+    sys.path[0] = ''    
+    os.system("python setup_pp.py install")
+    os.system("python setup_sympycore.py install")

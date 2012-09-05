@@ -7,12 +7,8 @@ Standard build tool for python libraries.
 """
 
 import os.path
-import os
 from distutils.core import setup
-import sys
 
-# Insert the path and then get version
-sys.path.insert(0,os.path.join(os.getcwd(),'pp'))
 from pp import version as VERSION
 
 
@@ -35,8 +31,8 @@ setup(
             VERSION),
         author="Vitalii Vanovschi",
         author_email="support@parallelpython.com",
-        py_modules=["pp/pp", "pp/ppauto", "pp/ppcommon", "pp/pptransport", "pp/ppworker"],
-        scripts=["pp/ppserver.py"],
+        py_modules=["pp", "ppauto", "ppcommon", "pptransport", "ppworker"],
+        scripts=["ppserver.py"],
         description="Parallel and distributed programming for Python",
         platforms=["Windows", "Linux", "Unix"],
         long_description=LONG_DESCRIPTION,

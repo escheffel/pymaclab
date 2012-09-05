@@ -1308,12 +1308,13 @@ class DSGEmodel(object):
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
-        # import local sympycore
-        import sympycore
         
+        # Import some configuration options for the DSGE model instance
         ncpus = copy.deepcopy(self._ncpus)
         mk_hessian = copy.deepcopy(self._mk_hessian)
         mesg = copy.deepcopy(self._mesg)
+        
+        import sympycore
 
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
@@ -1483,8 +1484,13 @@ class DSGEmodel(object):
         # Start parallel Python job server
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
-        job_server = pp.Server(ncpus,ppservers=ppservers)
-        imports = ('numpy','copy','numpy.matlib','copy',)
+        # Support auto-detection of CPU cores
+        if ncpus != 'auto':
+            job_server = pp.Server(ncpus,ppservers=ppservers)
+        else:
+            job_server = pp.Server(ppservers=ppservers)
+        imports = ('numpy','numpy.matlib',)
+        
         #job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None)
         # Submits function to the execution queue
            
@@ -1501,7 +1507,7 @@ class DSGEmodel(object):
         # globals - dictionary from which all modules, functions and classes
         # will be imported, for instance: globals=globals()
         
-        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for input in inputs]
+        jobs = [job_server.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for inputo in inputs]
         if mk_hessian:
             jdic = {}
             hdic = {}

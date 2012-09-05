@@ -14,13 +14,13 @@ Operating System :: MacOS
 """
 
 import os
-import sys
+if os.path.exists('MANIFEST'): os.remove('MANIFEST')
 
 from distutils.core import Extension, Command
 from distutils.command.build_py import build_py as _build_py
 
 expr_ext = Extension('sympycore.expr_ext',
-                     sources = [os.path.join('sympycore','src','expr_ext.c')],
+                     sources = [os.path.join('src','expr_ext.c')],
                      )
 
 combinatorics_ext = Extension('sympycore.arithmetic.combinatorics',
@@ -173,30 +173,27 @@ class build_py(_build_py):
                     revision = int(m.group('revision'))
         return revision
 
-
         
-if __name__ == '__main__':
-    from distutils.core import setup
-
-    setup(name='sympycore',
-          version='0.2-svn',
-          author = 'Pearu Peterson, Fredrik Johansson',
-          author_email = 'sympycore@googlegroups.com',
-          license = 'http://sympycore.googlecode.com/svn/trunk/LICENSE',
-          url = 'http://sympycore.googlecode.com',
-          download_url = 'http://code.google.com/p/sympycore/downloads/',
-          classifiers=filter(None, CLASSIFIERS.split('\n')),
-          description = 'SympyCore: an efficient pure Python Computer Algebra System',
-          long_description = '''\
+from distutils.core import setup
+setup(name='sympycore',
+      version='0.2-svn',
+      author = 'Pearu Peterson, Fredrik Johansson',
+      author_email = 'sympycore@googlegroups.com',
+      license = 'http://sympycore.googlecode.com/svn/trunk/LICENSE',
+      url = 'http://sympycore.googlecode.com',
+      download_url = 'http://code.google.com/p/sympycore/downloads/',
+      classifiers=filter(None, CLASSIFIERS.split('\n')),
+      description = 'SympyCore: an efficient pure Python Computer Algebra System',
+      long_description = '''\
 SympyCore project provides a pure Python package sympycore for
 representing symbolic expressions using efficient data structures as
 well as methods to manipulate them. Sympycore uses a clear algebra
 oriented design that can be easily extended.
 ''',
-          platforms = ["All"],
-          packages = packages,
-          ext_modules = extensions,
-          package_dir = {'sympycore': 'sympycore'},
-          cmdclass=dict(test=tester, build_py=build_py)
-          )
+      platforms = ["All"],
+      packages = packages,
+      ext_modules = extensions,
+      package_dir = {'sympycore': 'sympycore'},
+      cmdclass=dict(test=tester, build_py=build_py)
+      )
 
