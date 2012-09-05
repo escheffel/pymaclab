@@ -48,10 +48,6 @@ from pymaclab.filters._hpfilter import hpfilter
 from pymaclab.filters._bkfilter import bkfilter
 from ..stats.var import VAR #TODO: remove for statsmodels version
 from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
-#TODO: delay above and only import if needed
-from solvers.modsolvers import (MODsolvers, PyUhlig, MatUhlig, MatKlein,
-        MatKleinD, MatWood, ForKlein, PyKlein2D, MatKlein2D, ForKleinD,
-        FairTaylor)
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_b,populate_model_stage_two
 from tools import dicwrap
@@ -379,7 +375,7 @@ class DSGEmodel(object):
         # check if the Steady-State Non-Linear system .mod section has an entry
         if any([False if 'None' in x else True for x in secs['manualss'][0]]):
             intup = (self.ssys_list,self.ssidic,self.paramdic)
-        self.sssolvers.fsolve = Fsolve(intup)
+            self.sssolvers.fsolve = Fsolve(intup)
         if initlev == 0: 
             return
         if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
@@ -438,12 +434,14 @@ class DSGEmodel(object):
         if self._mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
         # No populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
-
+        #TODO: delay above and only import if needed
+        from solvers.modsolvers import MODsolvers
         # Open the model solution tree branch
         self.modsolvers = MODsolvers()
         ######################## LINEAR METHODS !!! ############################
         # see if there are any log-linearized equations
         if any([False if 'None' in x else True for x in secs['modeq'][0]]):
+            from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein           
             if self._mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
@@ -484,7 +482,7 @@ class DSGEmodel(object):
             self.modsolvers.forklein = ForKlein(intup)
     ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['focs'][0]]):
-
+            from solvers.modsolvers import (MatWood, ForKleinD)
             if ncpus > 1 and mk_hessian:
                 if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
                 self.mkjahepp()
@@ -521,6 +519,7 @@ class DSGEmodel(object):
 
     ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
+            from solvers.modsolvers import (PyKlein2D, MatKlein2D)
             # Open the MatKlein2D object
             if 'nlsubsys' in dir(self):
                 intup = (self.numj,self.numh,
