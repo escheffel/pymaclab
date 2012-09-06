@@ -17,7 +17,7 @@ betarr = 1.0/betarr
 
 ss_capital = []
 for betar in betarr:
-    rbc1.paramdic['R_bar'] = betar
+    rbc1.params['R_bar'] = betar
     rbc1.sssolvers.fsolve.solve()
     ss_capital.append(rbc1.sssolvers.fsolve.fsout['k_bar'])
 

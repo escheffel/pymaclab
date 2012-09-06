@@ -3,40 +3,15 @@ from scikits import timeseries as ts
 import copy
 from copy import deepcopy
 import os
+import sys
 import re
 from helpers import now_is
 import numpy as np
 from numpy import matlib as mat
 from scipy.linalg import eig as scipyeig
 from tempfile import mkstemp
-import trace
 import time
 import datetime
-import subprocess
-import numpy.ma as MA
-from numpy.ma import nomask
-from scikits import timeseries as TSS
-import copy as COP
-import os as OPS
-import re as RE
-import sys as SYST
-import re as RE
-import string as STR
-import scipy as S
-from scipy import io
-import scipy.stats
-import helpers as HLP
-import numpy as N
-import pylab as P
-from numpy import matlib as MAT
-from scipy import linalg as LIN
-from scipy import stats as STA
-from scikits.timeseries.lib import plotlib as TPL
-import macrolab as MACLAB
-import errors
-from errors import *
-import tempfile as TMF
-import threading as THR
 import glob
 # Import Sympycore, now comes supplied and installed with pymaclab
 import sympycore
@@ -49,7 +24,8 @@ from pymaclab.filters._bkfilter import bkfilter
 from ..stats.var import VAR #TODO: remove for statsmodels version
 from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
-from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_b,populate_model_stage_two
+from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
+     populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
 from tools import dicwrap
 
 #Define a list of the Greek Alphabet for Latex
@@ -120,7 +96,6 @@ class TSDataBase:
             i1 = i1 + 1
         output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
         output.write(datacsv)
-#        pdata = P.load('tmp_001.csv',delimiter=',')
         pdata = np.loadtxt('tmp_001.csv', delimiter=",")
         os.remove(os.getcwd()+'/'+'tmp_001.csv')
         if dat_Freq == 'D':
@@ -178,7 +153,6 @@ class TSDataBase:
             i1 = i1 + 1
         output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
         output.write(datacsv)
-#        pdata = P.load('tmp_001.csv',delimiter=',')
         pdate = np.loadtxt('tmp_001.csv', delimiter=",")
         os.remove(os.getcwd()+'/'+'tmp_001.csv')
         if dat_Freq == 'D':
@@ -233,9 +207,9 @@ class TSDataBase:
     def mkhpf(self,tsname,tsout,lam=1600):
         tsinf = self.datdic[tsname]['infile']
         tsin = self.datdic[tsname]
-        tsoutf = hpfilter(tsinf,N.zeros((N.shape(tsinf)[0],3)),
-            N.shape(tsinf)[0],lam,0)
-        tsoutf = TSS.time_series\
+        tsoutf = hpfilter(tsinf,np.zeros((np.shape(tsinf)[0],3)),
+            np.shape(tsinf)[0],lam,0)
+        tsoutf = ts.time_series\
                (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])
         self.tsim(tsout,tsin['Dat_Desc']+',hp-filtered',tsoutf)
 
@@ -309,7 +283,7 @@ class DSGEmodel(object):
         dbase : DataBase object
             Not sure what this is for yet
         initlev : int
-            0 just parse the modfile
+            0 just parse the modfile and prepare for manual steady state calculation
             1 parse modfile and solve steady state
             2 Jacobian (and Hessian)
             
@@ -333,105 +307,200 @@ class DSGEmodel(object):
         self.dbase = dbase
 
     # Initializes all of the rest, errors can occur here ! (steady state, jacobian, hessian)
-    def init2(self):
-        '''
-        Model's second intialisation method called by newMOD() function call. The model's
-        __init__() method only creates the instance and adds information, but does no
-        parsing and computations whatsoever. init2() parses and ready's the model for
-        calculating the steady state and the dynamic solution to the model.
-        
-        init_lev = 0: only parsing, no calculations, but preparing for manual SS solution
-        init_lev = 1: parsing and steady state calculations
-        init_lev = 2: parsing, steady state calculations and dynamic solution computation
-        '''
+    def init1(self):
         initlev = self._initlev
         ncpus = self._ncpus
         mk_hessian = self._mk_hessian
-        if self._mesg: print "INIT: Instantiating DSGE model with INITLEV="+str(initlev)+" and NCPUS="+str(ncpus)+"..."
-        if self._mesg: print "INIT: Attaching model properties to DSGE model instance..."
+        mesg = self._mesg
+        # Attach the data from database
+        if self.dbase != None:
+            self.getdata(dbase=self.dbase)        
+        if mesg: print "INIT: Instantiating DSGE model with INITLEV="+str(initlev)+" and NCPUS="+str(ncpus)+"..."
+        if mesg: print "INIT: Attaching model properties to DSGE model instance..."
 
         # Create None tester regular expression
         #        _nreg = '^\s*None\s*$'
         #        nreg = re.compile(_nreg)
         
-        if self._mesg: print "INIT: Parsing model file into DSGE model instance..."
+        if mesg: print "INIT: Parsing model file into DSGE model instance..."
         txtpars = parse_mod(self.modfile)
         self.txtpars = txtpars  # do we need txtpars attached for anything else?
         secs = txtpars.secs # do we need txtpars attached for anything else?
-        if self._mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
+        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
         # Initial population method of model, does NOT need steady states
         self = populate_model_stage_one(self, secs)
         # This is an additional populator which creates subsitution dictionary
         # and uses this to already get rid of @s in the manuall sstate list
-        if self._mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
+        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
+        # This function only creates the raw substitution dictionary and list from modfile
+        self = populate_model_stage_one_a(self,secs)
+        
+    def init1a(self):
+        initlev = self._initlev
+        secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
+        # Wrap the nlsubsdic
+        self.nlsubsdic = dicwrap(self,'self._nlsubsdic',initlev)
+        # Wrap the paramdic
+        self.params = dicwrap(self,'self.paramdic',initlev)        
+        
+    def init1b(self):
+        '''
+        Separate sub-initializor useful when we want to re-define subsituted variables at runtime
+        and intelligently update the model.
+        '''
+        initlev = self._initlev
+        secs = self.txtpars.secs
+        mesg = self._mesg
+        if mesg: print "INIT: Substituting out @ variables in steady state sections..."
+        self = populate_model_stage_one_bb(self,secs)
 
-        # Attach the data from database
-        if self.dbase != None:
-            self.getdata(dbase=self.dbase)
-        if self._mesg: print "INIT: Preparing DSGE model instance for steady state solution..."            
+
+    def init2(self):
+        mesg = self._mesg
+        secs = self.txtpars.secs
+        initlev = self._initlev
+        '''
+        Sub-initializor which prepares the DSGE model instance for SS calculation, BUT
+        it does not do the calculation itself yet.
+        '''
+        if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."            
         # Attach the steady state class branch, and add Fsolve if required but do no more !
         self.sssolvers = SSsolvers()
         # check if the Steady-State Non-Linear system .mod section has an entry
-        if any([False if 'None' in x else True for x in secs['manualss'][0]]):
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]):
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
-        if initlev == 0: 
-            return
-        if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
-################## STEADY STATE CALCULATIONS !!! ####################
-        # ONLY NOW try to solve !
-        # check if the Steady-State Non-Linear system .mod section has an entry
-        if any([False if 'None' in x else True for x in secs['manualss'][0]]):
-            self.sssolvers.fsolve.solve()
-            if self.sssolvers.fsolve.ier == 1:
-                self.sstate = self.sssolvers.fsolve.fsout
-                self.numssdic = self.sssolvers.fsolve.fsout
-                # Attach solutions to intial variable dictionaries, for further analysis
-                self.ssidic_modfile = deepcopy(self.ssidic)
-                self.ssidic = self.sssolvers.fsolve.fsout
-                self.sssolvers.fsolve.ssi = self.sssolvers.fsolve.fsout
-                self.switches['ss_suc'] = ['1','1']
-                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
-            else:
-                self.switches['ss_suc'] = ['1','0']
-                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
+        # check if the Steady-State Non-Linear system closed form has an entry
+        #  we do this here with ELIF because we only want to set this up for solving if manualss does not exist
+        elif all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            alldic = {}
+            alldic.update(self.paramdic)
+            intup = (self.manss_sys,alldic)
+            self.sssolvers.manss = ManualSteadyState(intup)
 
+    def init3(self):
+        '''
+        This sub-initializor calls all the methods which are required to compute the steady state.
+        '''
+        txtpars = self.txtpars
+        secs = txtpars.secs
+        initlev = self._initlev
+################################## STEADY STATE CALCULATIONS !!! #######################################
+        if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
+        # ONLY NOW try to solve !
+        ##### OPTION 1: There is only information on closed-form steady state, BUT NO info on numerical steady state
+        # Solve using purely closed form solution if no other info on model is available
+        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           not all([False if 'None' in x else True for x in secs['manualss'][0]]):
+            if self._mesg: print "SS: ONLY closed form steady state information supplied...attempting to solve SS..."
+            alldic = {}
+            alldic.update(self.paramdic)
+            intup = (self.manss_sys,alldic)
+            self.sssolvers.manss = ManualSteadyState(intup)
+            self.sssolvers.manss.solve()
+            self.sstate = {}
+            self.sstate.update(self.sssolvers.manss.sstate)
+        ##### OPTION 2: There is information on closed-form AND on numerical steady state
+        # Check if the numerical and closed form sections have entries
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            # Create unordered Set of closed from solution variables
+            manss_set = set()
+            for elem in self.manss_sys:
+                manss_set.add(elem.split('=')[0].lstrip().rstrip())
+            # If ssidic is not empty we need to make sure it perfectly overlaps with manss_set in order to replace ssidic
+            if self.ssidic != {}:
+                numss_set = set()
+                for keyo in self.ssidic.keys():
+                    numss_set.add(keyo)
+                ##### OPTION 1a: If there is an ssidic and its keys are identical to manss_set, the use as suggestion for new ssi_dic
+                if manss_set == numss_set:
+                    if self._mesg: print "SS: CF-SS and NUM-SS (overlapping) information information supplied...attempting to solve SS..."
+                    alldic = {}
+                    alldic.update(self.paramdic)
+                    intup = (self.manss_sys,alldic)
+                    self.sssolvers.manss = ManualSteadyState(intup)
+                    self.sssolvers.manss.solve()
+                    self.ssidic.update(self.sssolvers.manss.sstate)
+            ##### OPTION 1b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
+            # If it is empty, then just compute the closed form SS and pass to ssidic as starting value
+            elif self.ssidic == {}:
+                if self._mesg: print "SS: CF-SS and NUM-SS (empty ssdic) information information supplied...attempting to solve SS..."
+                alldic = {}
+                alldic.update(self.paramdic)
+                intup = (self.manss_sys,alldic)
+                self.sssolvers.manss = ManualSteadyState(intup)
+                self.sssolvers.manss.solve()
+                self.ssidic.update(self.sssolvers.manss.sstate)
+                # Test at least if the number of ssidic vars equals number of equations
+                if len(self.ssidic.keys()) != len(self.ssys_list):
+                    print "Error: Number of variables in initial starting values dictionary != number of equations"
+                    sys.exit()
+        ######## Finally start the numerical root finder with old or new ssidic from above
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           not all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            if self._mesg: print "SS: ONLY numerical steady state information information supplied...attempting to solve SS..."            
+            self.sssolvers.fsolve.solve()
+        elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]):           
+            self.sssolvers.fsolve.solve()
+        if self.sssolvers.fsolve.ier == 1:
+            self.sstate = self.sssolvers.fsolve.fsout
+            self.numssdic = self.sssolvers.fsolve.fsout
+            # Attach solutions to intial variable dictionaries, for further analysis
+            self.ssidic_modfile = deepcopy(self.ssidic)
+            # Update old ssidic with found solutions
+            self.ssidic = deepcopy(self.sssolvers.fsolve.fsout)
+            self.sssolvers.fsolve.ssi = self.ssidic
+            self.switches['ss_suc'] = ['1','1']
+            if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
+        else:
+            self.switches['ss_suc'] = ['1','0']
+            if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
+
+        ########## Here we are trying to merge numerical SS solver's results with result closed-form calculations, if required
         if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
-        # Solve for steady-state using manss
         # Check for existence of closedform AND numerical steady state
         # We need to stop the model instantiation IFF numerical solver was attempted but failed AND closed form solver depends on it.
-        if any([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
-           any([False if 'None' in x else True for x in secs['manualss'][0]]):
+        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['manualss'][0]]) and self.ssidic != {}:
             if self.switches['ss_suc'] == ['1','0']:
-                print "ERROR: You want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
+                print "ERROR: You probably want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
                 print "However, the numerical steady state solver FAILED to find a root, so I am stopping model instantiation here."
-                SYST.exit()
-        # Check if the Steady States [Closed Form] has an entry
-        if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
+                sys.exit()
             # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
-            if self.switches['ss_suc'] == ['1','1']:
+            elif self.switches['ss_suc'] == ['1','1'] and manss_set != numss_set:
+                if self._mesg: print "SS: CF-SS (residual) and NUM-SS information information supplied...attempting to solve SS..."
                 alldic = {}
                 alldic.update(self.sstate)
                 alldic.update(self.paramdic)
                 intup = (self.manss_sys,alldic)
                 self.sssolvers.manss = ManualSteadyState(intup)
                 self.sssolvers.manss.solve()
+                # Here merging takes place
                 self.sstate.update(self.sssolvers.manss.sstate)
-            else:
-                intup = (self.manss_sys,self.paramdic)
-                self.sssolvers.manss = ManualSteadyState(intup)
-                self.sssolvers.manss.solve()
-                self.sstate = self.sssolvers.manss.sstate
-            # Double check if no steady state values are negative, as LOGS may have to be taken.
+
+        # Double check if no steady state values are negative, as LOGS may have to be taken.
+        if 'sstate' in dir(self):
             for keyo in self.sstate.keys():
                 if '_bar' in keyo and float(self.sstate[keyo]) < 0.0:
                     print "WARNING: Steady state value "+keyo+ " is NEGATIVE!"
                     print "This is very likely going to either error out or produce strange results"
-                    print "Re-check your model declarations carefully!"        
-        if initlev == 1: return
-
-        if self._mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
+                    print "Re-check your model declarations carefully!"
+######################################### STEADY STATE CALCULATION SECTION DONE ##################################
+    def init4(self):
+        '''
+        This model instance sub-initializor only calls the section which use the computed steady state
+        in order to compute derivatives and open dynamic solver branches on the instance.
+        '''
+        txtpars = self.txtpars
+        secs = txtpars.secs
+        initlev = self._initlev
+        ncpus = self._ncpus
+        mk_hessian = self._mk_hessian
+        mesg = self._mesg
+        if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
         # No populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
         #TODO: delay above and only import if needed
@@ -442,7 +511,7 @@ class DSGEmodel(object):
         # see if there are any log-linearized equations
         if any([False if 'None' in x else True for x in secs['modeq'][0]]):
             from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein           
-            if self._mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
+            if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -484,13 +553,13 @@ class DSGEmodel(object):
         if any([False if 'None' in x else True for x in secs['focs'][0]]):
             from solvers.modsolvers import (MatWood, ForKleinD)
             if ncpus > 1 and mk_hessian:
-                if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
                 self.mkjahepp()
             elif ncpus > 1 and not mk_hessian:
-                if self._mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
                 self.mkjahepp()
             else:
-                if self._mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
                 self.mkjahe()
 
             # Open the MatWood object
@@ -542,12 +611,15 @@ class DSGEmodel(object):
             # Open the PyKlein2D object
             intup = intup[:-1]
             self.modsolvers.pyklein2d = PyKlein2D(intup)
-
+            
+    def init_out(self):
+        '''
+        The final intializor section does some extra stuff after all has been done.
+        '''
+        initlev = self._initlev
+        # Compute the Eigenvalues of the AA matrix for inspection
         if 'jAA' in dir(self):
             self.mkeigv()
-        
-        # Wrap the paramdic at the end of model initialization
-        self.params = dicwrap(self,initlev)
 
     # html info of model opened with webbrowser
     def info(self):
@@ -763,7 +835,6 @@ class DSGEmodel(object):
                 str_tmp = str_tmp + x1+'\n'
             output.write(str_tmp)
             output.close()
-#            rawdata = P.load('tmp_001.csv',delimiter=',')
             rawdata = np.loadtxt('tmp_001.csv', delimiter=",")
             os.remove(os.getcwd()+'/'+'tmp_001.csv')
             self.rawdata = rawdata

@@ -30,9 +30,32 @@ def db_graph(dbase,tseries):
 	P.show()
 
 def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True):
+	'''
+	Model's second intialisation method called by newMOD() function call. The model's
+	__init__() method only creates the instance and adds information, but does no
+	parsing and computations whatsoever. init2() parses and ready's the model for
+	calculating the steady state and the dynamic solution to the model.
+	
+	init_lev = 0: only parsing, no calculations, but preparing for manual SS solution
+	init_lev = 1: parsing and steady state calculations
+	init_lev = 2: parsing, steady state calculations and dynamic solution computation
+	'''
 	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,mk_hessian=mk_hessian)
+	modobj.init1()
+	modobj.init1a()
+	modobj.init1b()
 	modobj.init2()
-	return modobj
+	if initlev == 0:
+		modobj.init_out()
+		return modobj
+	modobj.init3()
+	if initlev == 1:
+		modobj.init_out()
+		return modobj
+	modobj.init4()
+	if initlev == 2:
+		modobj.init_out()
+		return modobj
 
 def newDB():
 	return macrolab.TSDataBase()

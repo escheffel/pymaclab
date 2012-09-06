@@ -34,7 +34,7 @@ None
 [2]   @F(t)     = z(t)*k(t-1)**rho;
 [2]   @F_bar    = SS{@F(t)};
 [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-[4]   @R_bar    = SS{R(t)};
+[4]   @R_bar    = SS{@R(t)};
 [3]   @R(t+1)   = FF_1{@R(t)};
 [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
@@ -51,7 +51,8 @@ None
 [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
 
 
-%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
 betta   = 1.0/R_bar;
 k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
 y_bar   = @F_bar;

@@ -6,6 +6,7 @@ from copy import deepcopy
 import numpy.matlib as mat
 import sys
 import os
+from pymaclab.dsge.tools import dicwrap
 # This used to import sympycore, but should now also work with sympy
 import sympycore as SP
 
@@ -170,12 +171,15 @@ from __future__ import division
         indx = []
         ssidic={}
         list_tmp = []
+        anyssi_found = False
         i1=0
         counter=0
         for x in secs['manualss'][0]:
             if mreg.search(x):
+                anyssi_found = True
                 ma = mreg.search(x)
-                str1 = ma.group().split('=')[0].split(']')[1].strip()
+                if ']' in ma.group(): str1 = ma.group().split('=')[0].split(']')[1].strip()
+                else: str1 = ma.group().split('=')[0].lstrip().rstrip()
                 str2 = ma.group().split('=')[1].strip()
                 ssidic[str1] = eval(str2)
                 indx.append(i1)
@@ -191,7 +195,11 @@ from __future__ import division
                     list_tmp.append(str_tmp.split(']')[1].split('=')[0].replace(';','').strip())
                     counter = 0 
             i1=i1+1
-        self.ssidic = ssidic
+        if anyssi_found:
+            self.ssidic = ssidic
+        else:
+            #Make empty to be filled by other procedure
+            self.ssidic = {}
         self.ssys_list = list_tmp
 
     return self
@@ -733,6 +741,8 @@ def mk_subs_dic(self, secs):
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
 
     self.nlsubs_raw1 = deepcopy(list_tmp2)
+    self._nlsubsdic = dict(list_tmp2)
+    
     return self
 
 def subs_in_subs(self):
@@ -1604,13 +1614,17 @@ def mk_cfstate_subs(self):
     self.manss_sys = deepcopy(tmp_list)
     return self
 
+# Extra population stage factored out, which is needed before steady state calculations
+def populate_model_stage_one_a(self, secs):
+    # Check and calculate the substitution list and dictionary
+    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        # Create the raw nlsubs list 1
+        self = mk_subs_dic(self, secs)
 
 # Extra population stage factored out, which is needed before steady state calculations
 def populate_model_stage_one_b(self, secs):
     # Check and calculate the substitution list and dictionary
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
-        # Create the raw nlsubs list 1
-        self = mk_subs_dic(self, secs)
         # Create the raw nlsubs list 2 by replacing substitutions inside substitutions
         self = subs_in_subs(self)
         # Apply steady state transformation where needed
@@ -1623,6 +1637,10 @@ def populate_model_stage_one_b(self, secs):
         self = mk_steady(self)
         # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
+        self.nlsubs_update = dicwrap(self,[self.nlsubs,self.nlsubs_list],self._initlev)
+    return self
+
+def populate_model_stage_one_bb(self, secs):
     # Do substitutions inside the numerical steady state list
     # Check and do substitutions
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\

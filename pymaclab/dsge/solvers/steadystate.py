@@ -26,10 +26,8 @@ class ManualSteadyState(SSsolvers):
         # Create manual (closed-form) steady state dictionary
         _rlog = 'LOG\('
         _rexp = 'EXP\('
-        _fsolve = 'ROOT\((?P<nlexp>.*),\s*(?P<vari>.*)\s*=\s*(?P<init>.*)\s*,\s*fail\s*=\s*(?P<fval>.*)\);'
         rlog = re.compile(_rlog)
         rexp = re.compile(_rexp)
-        fexp = re.compile(_fsolve)
         manss={}
         locals().update(self.paramdic)
         globals().update(self.paramdic)
@@ -39,28 +37,6 @@ class ManualSteadyState(SSsolvers):
                 str_tmp3 = re.sub(rlog,'np.log(',str_tmp3)
             while rexp.search(str_tmp3):
                 str_tmp3 = re.sub(rexp,'np.exp(',str_tmp3)           
-
-            # Do fsolve root finding, if ROOT detected
-            #NOTE: use ROOT() to solve non-linear FOCs (see modfiles/max2.txt)
-            if fexp.search(str_tmp3):
-                asvari = str_tmp3.split('=')[0].strip()
-                ma = fexp.search(str_tmp3)
-                nlexp = ma.group('nlexp')
-                vari = ma.group('vari')
-                init = np.float(ma.group('init'))
-                fval = np.float(ma.group('init'))
-                solu,infodict,ier,mesg = \
-                    optimize.fsolve(eval('lambda '+vari+':'+nlexp),
-                                        init,full_output=1)
-                if ier == 1:
-                    manss[asvari] = solu
-                    locals()[asvari] = solu
-                    globals().update(manss)
-                else:
-                    manss[asvari] = fval
-                    locals()[asvari] = fval
-                    globals().update(manss)
-                continue
             str_tmp = str_tmp3.split(';')[0]
             list_tmp = str_tmp.split('=')
             str_tmp1 = list_tmp[0].strip()
