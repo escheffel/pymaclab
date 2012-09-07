@@ -26,7 +26,7 @@ from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
      populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
-from tools import dicwrap
+from updaters.tools import Updaters, dicwrap
 
 #Define a list of the Greek Alphabet for Latex
 greek_alph = ['alpha','beta','gamma','delta','epsilon',
@@ -339,10 +339,12 @@ class DSGEmodel(object):
         initlev = self._initlev
         secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
+        # Open updaters path
+        self.updaters = Updaters()
         # Wrap the nlsubsdic
-        self.nlsubsdic = dicwrap(self,'self._nlsubsdic',initlev)
+        self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
         # Wrap the paramdic
-        self.params = dicwrap(self,'self.paramdic',initlev)        
+        self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
         
     def init1b(self):
         '''

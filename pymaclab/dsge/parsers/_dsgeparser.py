@@ -6,7 +6,7 @@ from copy import deepcopy
 import numpy.matlib as mat
 import sys
 import os
-from pymaclab.dsge.tools import dicwrap
+from ..updaters.tools import dicwrap
 # This used to import sympycore, but should now also work with sympy
 import sympycore as SP
 
@@ -741,7 +741,7 @@ def mk_subs_dic(self, secs):
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
 
     self.nlsubs_raw1 = deepcopy(list_tmp2)
-    self._nlsubsdic = dict(list_tmp2)
+    self.nlsubsdic = dict(list_tmp2)
     
     return self
 
