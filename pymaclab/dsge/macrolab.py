@@ -26,7 +26,8 @@ from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
      populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
-from updaters.tools import Updaters, dicwrap
+from updaters.tools import Updaters, dicwrap, listwrap
+from updaters_queued.tools import Updaters_Queued, dicwrap_queued, listwrap_queued, Process_Queue, queue
 
 #Define a list of the Greek Alphabet for Latex
 greek_alph = ['alpha','beta','gamma','delta','epsilon',
@@ -339,6 +340,16 @@ class DSGEmodel(object):
         initlev = self._initlev
         secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
+        
+        # Open the updaters_queued path
+        self.updaters_queued = Updaters_Queued()
+        # Add the empty queue
+        self.updaters_queued.queue = queue
+        # Wrap the nlsubsdic
+        self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
+        # Wrap the paramdic
+        self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
+        
         # Open updaters path
         self.updaters = Updaters()
         # Wrap the nlsubsdic
@@ -356,6 +367,14 @@ class DSGEmodel(object):
         mesg = self._mesg
         if mesg: print "INIT: Substituting out @ variables in steady state sections..."
         self = populate_model_stage_one_bb(self,secs)
+        
+        # Wrap foceqs
+        self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
+        # Wrap foceqs
+        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
+        ####### All queued updaters initialized, no add processing instance
+        # Add the queue process instance
+        self.updaters_queued.process_queue = Process_Queue(other=self)        
 
 
     def init2(self):

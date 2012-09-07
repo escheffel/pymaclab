@@ -1263,10 +1263,10 @@ def differ_out(self):
     self.nlsubs_list = deepcopy(list_tmp2)
     return self
 
-def mknonlinsys(self, secs):
-    """
-    Create Non-Linear FOC System
-    """
+def premknonlinsys(self,secs):
+    '''
+    This takes the raw lines of the FOCs and does some joining, splitting and stripping
+    '''
     # Make the non-linear system by joining lines and stripping
     variables = deepcopy(self.subs_vars)
     list_tmp1 = []
@@ -1277,20 +1277,31 @@ def mknonlinsys(self, secs):
             linecounter += 1
         else:
             if linecounter == 0:
-                line = x.replace(';','').split(']')[1].strip()
+                if ']' in x: line = x.replace(';','').split(']')[1].strip()
+                else: line = x.replace(';','').strip()
                 line = line.split('=')[0].strip()
                 list_tmp1.append(line)
             elif linecounter > 0:
                 str_tmp = ''
                 for y in secs['focs'][0][i1-linecounter:i1+1]:
-                    str_tmp += y.replace('...','').replace('\\',
-                                                           '').replace(';','').strip()
-                line = str_tmp.split(']')[1].strip()
+                    str_tmp += y.replace('...','').replace('\\','').replace(';','').strip()
+                if ']' in x: line = str_tmp.split(']')[1].strip()
+                else: line = str_tmp.strip()
                 linecounter = 0 
                 line = line.split('=')[0].strip()
                 list_tmp1.append(line)
         i1 += 1
+    self.foceqs = deepcopy(list_tmp1)
+    return self
 
+def mknonlinsys(self, secs):
+    """
+    Create Non-Linear FOC System
+    """
+    list_tmp1 = deepcopy(self.foceqs)
+    variables = deepcopy(self.subs_vars)
+    i1 = 0    
+    for x in list_tmp1:
         # substitute out in main nonlinear equation system
         list_tmp2 = deepcopy(self.nlsubs_list)
         mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
@@ -1304,6 +1315,7 @@ def mknonlinsys(self, secs):
                 rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
                     rhs_eq[poe:]
             list_tmp1[i] = rhs_eq
+        i1+=1
 
     self, list_tmp1 = mkaug2(self, list_tmp1)
     list_tmp3 = [x[1] for x in list_tmp2]
@@ -1651,6 +1663,9 @@ def populate_model_stage_one_bb(self, secs):
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
        any([False if 'None' in x else True for x in secs['closedformss'][0]]):
         self = mk_cfstate_subs(self)
+    # Prepare the nonlinear FOC system but only stripping the raw format
+    if any([False if 'None' in x else True for x in secs['focs'][0]]):
+        self = premknonlinsys(self,secs)    
     return self
 
 
