@@ -26,8 +26,9 @@ from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
      populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
-from updaters.tools import Updaters, dicwrap, listwrap
-from updaters_queued.tools import Updaters_Queued, dicwrap_queued, listwrap_queued, Process_Queue, queue
+from updaters.tools import Updaters, dicwrap, listwrap, matwrap
+from updaters_queued.tools import Updaters_Queued, dicwrap_queued, listwrap_queued,\
+     matwrap_queued, Process_Queue, queue
 
 #Define a list of the Greek Alphabet for Latex
 greek_alph = ['alpha','beta','gamma','delta','epsilon',
@@ -330,34 +331,44 @@ class DSGEmodel(object):
         if mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
         # Initial population method of model, does NOT need steady states
         self = populate_model_stage_one(self, secs)
+
+        # Open updaters path
+        self.updaters = Updaters()        
+        # Open the updaters_queued path
+        self.updaters_queued = Updaters_Queued()
+        # Add the empty queue
+        self.updaters_queued.queue = queue
+
+        # Wrap the vardic
+        self.updaters.vardic = dicwrap(self,'self.vardic',initlev)
+        self.updaters_queued.vardic = dicwrap_queued(self,'self.vardic',initlev)
+        
+    def init1a(self):
+        mesg = self._mesg
+        secs = self.txtpars.secs
         # This is an additional populator which creates subsitution dictionary
         # and uses this to already get rid of @s in the manuall sstate list
         if mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
         # This function only creates the raw substitution dictionary and list from modfile
         self = populate_model_stage_one_a(self,secs)
         
-    def init1a(self):
+    def init1b(self):
         initlev = self._initlev
         secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
         
-        # Open the updaters_queued path
-        self.updaters_queued = Updaters_Queued()
-        # Add the empty queue
-        self.updaters_queued.queue = queue
         # Wrap the nlsubsdic
         self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
         # Wrap the paramdic
         self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
         
-        # Open updaters path
-        self.updaters = Updaters()
+
         # Wrap the nlsubsdic
         self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
         # Wrap the paramdic
         self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
         
-    def init1b(self):
+    def init1c(self):
         '''
         Separate sub-initializor useful when we want to re-define subsituted variables at runtime
         and intelligently update the model.
@@ -371,10 +382,7 @@ class DSGEmodel(object):
         # Wrap foceqs
         self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
         # Wrap foceqs
-        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
-        ####### All queued updaters initialized, no add processing instance
-        # Add the queue process instance
-        self.updaters_queued.process_queue = Process_Queue(other=self)        
+        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)       
 
 
     def init2(self):
@@ -524,6 +532,23 @@ class DSGEmodel(object):
         if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
         # No populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
+
+        # Need to wrap variance covariance matrix here
+        self.updaters.sigma = matwrap(self,'self.sigma',initlev)
+        # Need to wrap variance covariance matrix here
+        self.updaters_queued.sigma = matwrap_queued(self,'self.sigma',initlev)
+
+        ####### All queued updaters initialized, no add processing instance
+        # Add the queue process instance
+        self.updaters_queued.process_queue = Process_Queue(other=self)
+
+    def init5(self):
+        txtpars = self.txtpars
+        secs = txtpars.secs
+        initlev = self._initlev
+        ncpus = self._ncpus
+        mk_hessian = self._mk_hessian
+        mesg = self._mesg
         #TODO: delay above and only import if needed
         from solvers.modsolvers import MODsolvers
         # Open the model solution tree branch

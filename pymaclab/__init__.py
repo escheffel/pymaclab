@@ -44,6 +44,7 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True)
 	modobj.init1()
 	modobj.init1a()
 	modobj.init1b()
+	modobj.init1c()
 	modobj.init2()
 	if initlev == 0:
 		modobj.init_out()
@@ -53,6 +54,7 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True)
 		modobj.init_out()
 		return modobj
 	modobj.init4()
+	modobj.init5()
 	if initlev == 2:
 		modobj.init_out()
 		return modobj
