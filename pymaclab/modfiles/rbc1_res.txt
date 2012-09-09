@@ -10,7 +10,6 @@ Name = Standard RBC Model;
 rho       = 0.36;
 delta     = 0.025;
 R_bar     = 1.01;
-betta     = 1/R_bar; 
 eta	  = 2.0; 
 psi	  = 0.95;
 z_bar     = 1.0;
@@ -33,12 +32,15 @@ None
 [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
 [2]   @inv_bar  = SS{@inv(t)};
 [2]   @F(t)     = z(t)*k(t-1)**rho;
+[2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
+[2]   @Fk_bar   = SS{@Fk(t)};
 [2]   @F_bar    = SS{@F(t)};
 [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
 [4]   @R_bar    = SS{@R(t)};
 [3]   @R(t+1)   = FF_1{@R(t)};
 [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
+[5]   @MU_bar   = SS{@U(t)};
 [6]   @MU(t+1)  = FF_1{@MU(t)};
 
 
@@ -53,23 +55,17 @@ None
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-None
-betta   = 1.0/R_bar;
-k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
-y_bar   = @F_bar;
-c_bar   = y_bar - @inv_bar;
+[1]   y_bar = @F_bar;
+
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   @F_bar-@inv_bar-c_bar = 0;
-[2]   @R_bar-R_bar = 0;
-[3]   (betta*R_bar)-1 = 0;
-[4]   @F_bar-y_bar = 0;
+[2]   betta*@R_bar-1 = 0;
+[3]   betta*R_bar-1 = 0;
 
-[1]  c_bar = 1.0;
-[2]  k_bar = 1.0;
-[3]  y_bar = 1.0;
-[4]  betta = 1.0;
-
+[1]   c_bar = 1.0;
+[2]   k_bar = 1.0;
+[3]   betta = 0.9;
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

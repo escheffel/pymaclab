@@ -70,7 +70,15 @@ class Fsolve(SSsolvers):
         for var in self.ssi.keys():
             _mreg = '(\+|\*|-|/|^|[(])'+var
             mreg = re.compile(_mreg)
+            _rlog = 'LOG\('
+            _rexp = 'EXP\('
+            rlog = re.compile(_rlog)
+            rexp = re.compile(_rexp)            
             for i1,line in enumerate(list_tmp1):
+                while rlog.search(list_tmp1[i1]):
+                    list_tmp1[i1] = re.sub(rlog,'np.log(',list_tmp1[i1])
+                while rexp.search(list_tmp1[i1]):
+                    list_tmp1[i1] = re.sub(rexp,'np.exp(',list_tmp1[i1])                 
                 while mreg.search(list_tmp1[i1]):
                     ma = mreg.search(list_tmp1[i1])
                     if len(ma.group(1))>0:

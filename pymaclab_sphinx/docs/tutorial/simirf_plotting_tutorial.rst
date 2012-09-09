@@ -86,8 +86,8 @@ Simulating DSGE models
   This produces the following nice graph. Notice that you must specify the variables to be graphed and all simulated data is filtered according
   to the argument passed to each variable in the model file. So hp gave hp-filtered data while bk gave Baxter-King-filtered data.
 
-.. plot:: ../../pymaclab/examples/test4.py
-   :include-source:
+  .. plot:: ../../pymaclab/examples/test4.py
+
 
   That was nice and simple, was it not?
 

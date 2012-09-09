@@ -12,6 +12,8 @@ class dicwrap:
     def __init__(self,other,wrapobj_str,initlev):
         self.other = other
         self.wrapobj_str = wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        self.wrapobj = wrapobj
         self.initlev = initlev
         if wrapobj_str == 'self.vardic':
             if 'vardic' not in dir(other.updaters_queued):
@@ -36,22 +38,21 @@ class dicwrap:
         other = self.other
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
-        # Create the wrapobj using the passed string
-        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        wrapobj = self.wrapobj
         wrapobj[key] = value
         # Test if the dictionary has changed relative to self.wrapdic
         if self.wrapdic != wrapobj:
+            queue1 = deepcopy(other.updaters_queued.queue)
+            self.wrapdic.update(wrapobj)
+            queue2 = deepcopy(other.updaters_queued.queue)            
             ##### THE INITS #####################
             other.init1()
-            queue1 = deepcopy(other.updaters_queued.queue)
-            self.wrapdic[key] = deepcopy(wrapobj[key])
-            queue2 = deepcopy(other.updaters_queued.queue)
             # Remove from queue
             if queue1 != queue2:
                 for elem in queue2:
                     if elem not in queue1: other.updaters_queued.queue.remove(elem)
             if wrapobj_str == 'self.vardic':
-                other.paramdic.update(self.wrapdic)
+                wrapobj.update(self.wrapdic)
 
             other.init1a()
             if wrapobj_str == 'self.nlsubsdic':
@@ -89,8 +90,7 @@ class dicwrap:
         other = self.other
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
-        # Create the wrapobj using the passed string
-        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        wrapobj = self.wrapobj
         wrapobj.update(dico)
         # Check if new keys are already present in wrapdic
         for keyo in dico.keys():
@@ -431,17 +431,21 @@ class listwrap:
     def __init__(self,other,wrapobj_str,initlev):
         self.other = other
         self.wrapobj_str = wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        self.wrapobj = wrapobj
         self.initlev = initlev
-        if wrapobj_str == 'self.foceqs':
-            self.wrapli = other.foceqs
+        self.wrapli = deepcopy(wrapobj)
+
             
     def __getattr__(self,attrname):
         return getattr(self.wrapli,attrname)
 
     def __setslice__(self,ind1,ind2,into):
         other = self.other
-        wrapob_str = self.wrapobj_str
+        wrapobj_str = self.wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
         initlev = self.initlev
+        do_rest = False
         lengo = len(self.wrapli)
         if ind2 >= lengo:
             print "ERROR: Assignment out of bounds of original list"
@@ -451,10 +455,12 @@ class listwrap:
         #other.init1a()
         #other.init1b()
         #other.init1c()
-        if self.wrapli[ind1:ind2] != into and wrapob_str == 'self.foceqs':
+        if self.wrapli[ind1:ind2] != into:
             self.wrapli[ind1:ind2] = into
-            other.foceqs[ind1:ind2] = into
+            wrapobj[ind1:ind2] = into
+            do_rest = True
 
+        if do_rest:
             # Prepare DSGE model instance for manual SS computation
             other.init2()
             if initlev == 0:
@@ -473,8 +479,10 @@ class listwrap:
     
     def __setitem__(self,ind,into):
         other = self.other
-        wrapob_str = self.wrapobj_str
+        wrapobj_str = self.wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
         initlev = self.initlev
+        do_rest = False
         lengo = len(self.wrapli)
         if ind >= lengo:
             print "ERROR: Assignment out of bounds of original list"
@@ -484,10 +492,12 @@ class listwrap:
         #other.init1a()
         #other.init1b()
         #other.init1c()
-        if self.wrapli[ind] != into and wrapob_str == 'self.foceqs':
+        if self.wrapli[ind] != into:
             self.wrapli[ind] = into
-            other.foceqs[ind] = into
+            wrapobj[ind] = into
+            do_rest = True
 
+        if do_rest:
             # Prepare DSGE model instance for manual SS computation
             other.init2()
             if initlev == 0:

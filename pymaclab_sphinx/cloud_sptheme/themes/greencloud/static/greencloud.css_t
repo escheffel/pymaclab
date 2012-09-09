@@ -1,0 +1,59 @@
+/*****************************************************
+ * greencloud.css_t
+ * ~~~~~~~~~~~
+ *
+ * stylesheet for "GreenCloud" theme for Sphinx.
+ *
+ * :copyright: Copyright 2012 by Assurance Technologies
+ * :license: BSD
+ *
+ *****************************************************/
+
+@import url("cloud.css");
+
+div.related
+{
+ box-sizing: border-box;
+ -moz-box-sizing: border-box;
+ -webkit-box-sizing: border-box;
+ border: 1px solid rgba(0,0,0,.15);
+ border-width: 0 3px;
+}
+
+div.body
+{
+ border-width: 0 0 0 4px;
+}
+
+div.sidebartoggle button
+{
+ border-width: 0 0 1px 3px;
+}
+
+div.document.collapsed-sidebar div.body
+{
+ border-width: 0;
+}
+
+div.document.collapsed-sidebar div.sidebartoggle button
+{
+ border-width: 0 3px 1px;
+}
+
+div.body h2, div.body p.rubric, div.section.emphasized > h3
+{
+ border-width: 0 3px 3px 0;
+}
+
+div.highlight pre,
+div.highlight-python pre
+{
+    border-width: 1px 4px;
+}
+
+div.admonition, p.deprecated
+{
+    border-radius: 0 .7em 0 .7em;
+    -webkit-border-radius: 0 .7em 0 .7em;
+    -moz-border-radius: 0 .7em 0 .7em;
+}

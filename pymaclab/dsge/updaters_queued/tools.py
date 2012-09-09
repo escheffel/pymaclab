@@ -15,6 +15,8 @@ class dicwrap_queued:
         self.other = other
         self.queue = other.updaters_queued.queue
         self.wrapobj_str = wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        self.wrapobj = wrapobj
         self.initlev = initlev
         if wrapobj_str == 'self.vardic':
             if 'vardic' not in dir(other.updaters):
@@ -39,12 +41,11 @@ class dicwrap_queued:
         other = self.other
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
-        # Create the wrapobj using the passed string
-        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        wrapobj = self.wrapobj
         # ...and assign before test of inequality
-        wrapobj[key] = deepcopy(value)
+        wrapobj[key] = value
         if self.wrapdic != wrapobj:
-            self.wrapdic[key] = deepcopy(wrapobj[key])
+            self.wrapdic.update(wrapobj)
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
@@ -62,8 +63,7 @@ class dicwrap_queued:
         other = self.other
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
-        # Create the wrapobj using the passed string
-        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        wrapobj = self.wrapobj
         # ...and update befor test of inequality
         wrapobj.update(dico)
         # Check if new keys are already present in wrapdic
@@ -260,37 +260,50 @@ class listwrap_queued:
         self.other = other
         self.queue = other.updaters_queued.queue
         self.wrapobj_str = wrapobj_str
+        wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        self.wrapobj = wrapobj
         self.initlev = initlev
-        if wrapobj_str == 'self.foceqs':
-            self.wrapli = deepcopy(other.foceqs)
+        self.wrapli = deepcopy(wrapobj)
 
     def __setslice__(self,ind1,ind2,into):
         other = self.other
-        wrapob_str = self.wrapobj_str
+        wrapobj_str = self.wrapobj_str
+        wrapobj = self.wrapobj
         initlev = self.initlev
         lengo = len(self.wrapli)
         if ind2 >= lengo:
             print "ERROR: Assignment out of bounds of original list"
             return
 
-        if self.wrapli[ind1:ind2] != into and wrapob_str == 'self.foceqs':
+        if self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.foceqs':
             self.wrapli[ind1:ind2] = into
-            other.foceqs[ind1:ind2] = into
             self.queue.append('self.foceqs')
+        elif self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.manss_sys':
+            self.wrapli[ind1:ind2] = into
+            self.queue.append('self.manss_sys')
+        elif self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.ssys_list':
+            self.wrapli[ind1:ind2] = into
+            self.queue.append('self.ssys_list')
     
     def __setitem__(self,ind,into):
         other = self.other
-        wrapob_str = self.wrapobj_str
+        wrapobj_str = self.wrapobj_str
+        wrapobj = self.wrapobj
         initlev = self.initlev
         lengo = len(self.wrapli)
         if ind >= lengo:
             print "ERROR: Assignment out of bounds of original list"
             return
 
-        if self.wrapli[ind] != into and wrapob_str == 'self.foceqs':
+        if self.wrapli[ind] != into and wrapobj_str == 'self.foceqs':
             self.wrapli[ind] = into
-            other.foceqs[ind] = into
             self.queue.append('self.foceqs')
+        elif self.wrapli[ind] != into and wrapobj_str == 'self.manss_sys':
+            self.wrapli[ind] = into
+            self.queue.append('self.manss_sys')
+        elif self.wrapli[ind] != into and wrapobj_str == 'self.ssys_list':
+            self.wrapli[ind] = into
+            self.queue.append('self.ssys_list')
 
     def __getitem__(self,ind):
         lengo = len(self.wrapli)
@@ -343,6 +356,12 @@ class Process_Queue(object):
         self.paramdic = other.updaters_queued.paramdic
         # The foceqs
         self.foceqs = other.updaters_queued.foceqs
+        # The manss_sys
+        if 'manss_sys' in dir(other.updaters_queued):
+            self.manss_sys = other.updaters_queued.manss_sys
+        # The ssys_list
+        if 'ssys_list' in dir(other.updaters_queued):
+            self.ssys_list = other.updaters_queued.ssys_list
         # The sigma
         self.sigma = other.updaters_queued.sigma
         
@@ -373,7 +392,11 @@ class Process_Queue(object):
         
         other.init1c()
         if 'self.foceqs' in queue:
-            other.foceqs = deepcopy(self.foceqs)       
+            other.foceqs = deepcopy(self.foceqs)
+        if 'self.manss_sys' in queue:
+            other.manss_sys = deepcopy(self.manss_sys)
+        if 'self.ssys_list' in queue:
+            other.ssys_list = deepcopy(self.ssys_list)
 
         # Prepare DSGE model instance for manual SS computation
         other.init2()

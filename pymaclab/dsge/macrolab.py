@@ -299,6 +299,8 @@ class DSGEmodel(object):
         self._mk_hessian = mk_hessian
         self._use_focs = use_focs
         self._ssidic = ssidic
+        if self._use_focs and self._ssidic != None:
+            self.ssidic = deepcopy(self._ssidic)
         # Set no author
         self.setauthor()
         # Open the switches dic and initiate
@@ -381,18 +383,27 @@ class DSGEmodel(object):
         if mesg: print "INIT: Substituting out @ variables in steady state sections..."
         self = populate_model_stage_one_bb(self,secs)
         
+        # Wrap foceqs
+        self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
+        # Wrap foceqs
+        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
+        
         # Allow for numerical SS to be calculated using only FOCs
-        if self._use_focs:
+        if self._use_focs and self._ssidic != None:
             list_tmp = []
             for elem in self._use_focs:
                 list_tmp.append(self.foceqss[elem])
             self.ssys_list = deepcopy(list_tmp)
             self.ssidic = copy.deepcopy(self._ssidic)
-        
-        # Wrap foceqs
-        self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
-        # Wrap foceqs
-        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
+            
+        # Wrap manss_sys
+        if 'manss_sys' in dir(self):
+            self.updaters.manss_sys = listwrap(self,'self.manss_sys',initlev)
+            self.updaters_queued.manss_sys = listwrap_queued(self,'self.manss_sys',initlev)
+        # Wrap ssys_list
+        if 'ssys_list' in dir(self):
+            self.updaters.ssys_list = listwrap(self,'self.ssys_list',initlev)
+            self.updaters_queued.ssys_list = listwrap_queued(self,'self.ssys_list',initlev)
 
 
     def init2(self):
@@ -403,11 +414,13 @@ class DSGEmodel(object):
         Sub-initializor which prepares the DSGE model instance for SS calculation, BUT
         it does not do the calculation itself yet.
         '''
-        if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."            
+        if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."
+
         # Attach the steady state class branch, and add Fsolve if required but do no more !
         self.sssolvers = SSsolvers()
+
         # check if the Steady-State Non-Linear system .mod section has an entry
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]):
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) or self._use_focs:
             intup = (self.ssys_list,self.ssidic,self.paramdic)
             self.sssolvers.fsolve = Fsolve(intup)
         # check if the Steady-State Non-Linear system closed form has an entry
@@ -428,6 +441,11 @@ class DSGEmodel(object):
 ################################## STEADY STATE CALCULATIONS !!! #######################################
         if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
         # ONLY NOW try to solve !
+        ##### OPTION 1: There is only information externally provided and we are using FOCs
+        if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           not all([False if 'None' in x else True for x in secs['manualss'][0]]) and self._use_focs and self._ssidic != None:
+            self.sssolvers.fsolve.solve()
+
         ##### OPTION 1: There is only information on closed-form steady state, BUT NO info on numerical steady state
         # Solve using purely closed form solution if no other info on model is available
         if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
@@ -478,11 +496,11 @@ class DSGEmodel(object):
                     sys.exit()
         ######## Finally start the numerical root finder with old or new ssidic from above
         if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           not all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+           not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:
             if self._mesg: print "SS: ONLY numerical steady state information information supplied...attempting to solve SS..."            
             self.sssolvers.fsolve.solve()
         elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['closedformss'][0]]):           
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:           
             self.sssolvers.fsolve.solve()
         if self.sssolvers.fsolve.ier == 1:
             self.sstate = self.sssolvers.fsolve.fsout
@@ -540,7 +558,7 @@ class DSGEmodel(object):
         mk_hessian = self._mk_hessian
         mesg = self._mesg
         if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
-        # No populate more with stuff that needs steady state
+        # Now populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
 
         # Need to wrap variance covariance matrix here

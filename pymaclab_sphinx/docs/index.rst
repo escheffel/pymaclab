@@ -66,11 +66,15 @@ Tutorial Series
     Brief tutorial on how to use PyMacLab to work with DSGE models.
 2) :doc:`PyMacLab DSGE instance tutorial <tutorial/dsge_instance_tutorial>`
     Succinct tutorial facilitating the understaning of the DSGE OOP data structure in PyMacLab.
-3) :doc:`PyMacLab DSGE dynamic solver tutorial <tutorial/dynamic_solver_tutorial>`
+3) :doc:`PyMacLab DSGE instance updater tutorial <tutorial/dsge_instance_updater_tutorial>`
+    Succinct tutorial facilitating the understaning of the DSGE OOP data structure in PyMacLab.
+4) :doc:`PyMacLab DSGE steady state solver tutorial <tutorial/steady_solver_tutorial>`
     This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
-4) :doc:`PyMacLab DSGE simulation and plotting tutorial <tutorial/simirf_plotting_tutorial>`
+5) :doc:`PyMacLab DSGE dynamic solver tutorial <tutorial/dynamic_solver_tutorial>`
+    This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
+6) :doc:`PyMacLab DSGE simulation and plotting tutorial <tutorial/simirf_plotting_tutorial>`
     Short tutorial on using convenience functions for simulations, IRFs and plotting.
-5) :doc:`Description of all template DSGE models <tutorial/started_allmodels>`
+7) :doc:`Description of all template DSGE models <tutorial/started_allmodels>`
     Detailed description of all of the template DSGE models which come supplied with PyMacLab.
 
 

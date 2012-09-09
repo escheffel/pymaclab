@@ -82,7 +82,7 @@ def get_version(release):
 #=============================================================================
 def is_cloud_theme(name):
     """[hack] internal helper to check if theme accepts cloud theme options"""
-    return name in ["cloud", "redcloud"]
+    return os.path.isfile(os.path.join(get_theme_dir(), name, "theme.conf"))
 
 #=============================================================================
 # internal py2/3 compat helpers

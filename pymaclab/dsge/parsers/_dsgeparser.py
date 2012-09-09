@@ -1297,7 +1297,8 @@ def premknonlinsys(self,secs):
             elif linecounter > 0:
                 str_tmp = ''
                 for y in secs['focs'][0][i1-linecounter:i1+1]:
-                    str_tmp += y.replace('...','').replace('\\','').replace(';','').strip()
+                    if ']' in y: str_tmp += y.split(']')[1].replace('...','').replace('\\','').replace(';','').strip()
+                    else: str_tmp += y.replace('...','').replace('\\','').replace(';','').strip()
                 if ']' in x: line = str_tmp.split(']')[1].strip()
                 else: line = str_tmp.strip()
                 linecounter = 0 

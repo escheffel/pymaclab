@@ -73,7 +73,7 @@ $(document).ready(function (){
     function contains_hash(){
       var hash = document.location.hash;
       return hash && (section[0].id == hash.substr(1) ||
-              section.find(hash.replace(".","\\.")).length>0);
+              section.find(hash.replace(/\./g,"\\.")).length>0);
     }
 
     // helper to control toggle state
@@ -166,22 +166,29 @@ $(document).ready(function (){
  * Instrument sidebar so that it sticks in place as page is scrolled.
  */
 $(document).ready(function (){
-  // grab ref to sidebar and setup static css
-  var holder = $('.document');
-  var sidebar = $('.sphinxsidebar');
+  // initialize references to relevant elements
+  var holder = $('.document'); // element that sidebar sits within
+  var sidebar = $('.sphinxsidebar'); // element we're making "sticky"
+  var toc_header = $('.sphinxlocaltoc h3'); // toc header + list control position
+      if(!toc_header.length) toc_header = null;
+  var toc_list = toc_header ? toc_header.next("ul") : null;
 {%- if theme_collapsiblesidebar | tobool %}
-  var toggle = $('.sidebartoggle');
+  var toggle = $('.sidebartoggle'); // also make collapse button sticky
 {%- endif %}
 
+  // initialize internal state
+  var sticky_disabled = false; // whether sticky is disabled for given window size
+  var sidebar_adjust = 0; // vertical offset within sidebar when sticky
+
   // function to set style for given state
-  function set_style(target, value)
+  function set_style(target, value, adjust)
   {
-    // XXX: disable sticky mode if sidebar (or at least toclist) is taller than window?
-    if(value <= 0){
+    if(value <= adjust || sticky_disabled){
       target.css({marginLeft: "", position: "", top: "", left: "", bottom: ""});
     }
-    else if (value < holder.height() - target.height()){
-      target.css({marginLeft: 0, position: "fixed", top: 0, left: holder.offset().left, bottom: ""});
+    else if (value <= holder.height() - target.height() + adjust){
+      target.css({marginLeft: 0, position: "fixed", top: -adjust,
+                 left: holder.offset().left, bottom: ""});
     }
     else{
       target.css({marginLeft: 0, position: "absolute", top: "", left: 0, bottom: 0});
@@ -190,23 +197,45 @@ $(document).ready(function (){
 
   // func to update sidebar position based on scrollbar & container positions
   function update_sticky(){
+    // set sidebar position
     var offset = $(window).scrollTop() - holder.offset().top;
-    set_style(sidebar, offset);
+    set_style(sidebar, offset, sidebar_adjust);
 {%- if theme_collapsiblesidebar | tobool %}
-    set_style(toggle, offset);
+    // collapse button should follow along as well
+    set_style(toggle, offset, 0);
 {%- endif %}
   };
 
+  // func to update sidebar measurements, and then call update_sticky()
+  function update_measurements(){
+    sticky_disabled = false;
+    sidebar_adjust = 0;
+    if(toc_header){
+      // check how much room we have to display top of sidebar -> end of toc list
+      var leftover = $(window).height() - (toc_list.height() + toc_list.offset().top - sidebar.offset().top);
+      if(leftover < 0){
+        // not enough room if we align top of sidebar to window,
+        // try aligning to top of toc list instead
+        sidebar_adjust = toc_header.offset().top - sidebar.offset().top - 8;
+        if(leftover + sidebar_adjust < 0){
+          // still not enough room - disable sticky sidebar
+          sticky_disabled = true;
+        }
+      }
+    }
+    update_sticky();
+  }
+
   // run function now, and every time window scrolls
-  update_sticky();
+  update_measurements();
   $(window).scroll(update_sticky)
-           .resize(update_sticky)
-           .bind('cloud-section-toggled', update_sticky);
+           .resize(update_measurements)
+           .bind('cloud-section-toggled', update_measurements);
 });
 
 {% endif %}
 
-{%- if theme_highlighttoc | tobool %}
+{%- if theme_highlighttoc | tobool and theme_stickysidebar | tobool %}
 /* ==========================================================================
  * sidebar toc highlighter
  * ==========================================================================
@@ -215,59 +244,74 @@ $(document).ready(function (){
  * only enabled under stick mode
  */
 $(document).ready(function (){
-  // pre-lookup all the links, hack in a class for css styling.
-  var links = $("div.sphinxsidebar p.logo + h3 + ul")
-              .addClass("sphinxtoclist")
-              .find("a");
-  var h1_section = $("h1").parent();
+  // find all links in sidebar toc
+  var links = $(".sphinxlocaltoc > ul a");
+  if(!links.length) return;
+
+  // build list of elems, and various constant metadata
+  var records = [];
+  for(var i=0; i<links.length; ++i){
+    var elem = $(links[i]);
+    var tag = elem.attr("href");
+    var section = (tag == "#") ? $("h1").parent() : $(tag);
+    var children = section.find("div.section");
+    records.push({elem: elem,
+                  section: section,
+                  first_child: children.length ? $(children[0]) : null
+                  });
+  }
 
   // function to update toc markers
-  function update_current(){
+  function update_visible_sections(){
     // determine viewable range
     var start = $(window).scrollTop();
     var stop = start + $(window).height();
 
     // clear flags from last pass
-    links.removeClass("toggled").removeClass("current");
-    var link_count = links.length;
+    links.removeClass("visible");
 
     // set 'current' class for all currently viewable sections in toc
-    for(var i=0; i < link_count; ++i){
-      var elem = $(links[i]); // XXX: could cache this in another list
+    for(var i=0; i < records.length; ++i){
+      var record = records[i];
 
       // hack to skip elements hidden w/in a toggled section
-      if(elem.hasClass("toggled")) continue;
-
-      // lookup section referenced by link
-      var tag = elem.attr("href");
-      var section = (tag == "#") ? h1_section : $(tag);
-
-      // hack to flag subsections w/in a toggled section
-      var toggle_children = null;
-      if(section.is(".html-toggle.collapsed")){
-        toggle_children = elem.parent().find("ul a").addClass("toggled");
-      }
+      if(record.elem.hasClass("toggled")) continue;
 
       // if section is off-screen, don't mark it
-      var top = section.offset().top;
-      if(top > stop || top + section.height() < start) continue;
+      var top = record.section.offset().top;
+      if(top > stop || top + record.section.height() < start) continue;
 
-      // if section has children, only count it if prologue is visible.
-      var child = section.find("div.section"); // FIXME: only need first match
-      if(child.length && child.offset().top < start) continue;
+      // if section has children, skip it once top of first subsection is offscreen
+      if(record.first_child && record.first_child.offset().top < start) continue;
 
-      // mark it!
-      elem.addClass("current");
-//      if(toggle_children) toggle_children.addClass("current");
+      // mark it as visible!
+      record.elem.addClass("visible");
     }
   }
 
+  // function to update is_hidden_child flag on records
+  function update_collapsed_sections(){
+    // clear toggled flag for all links
+    links.removeClass("toggled");
+    // re-add toggled flag for all links that are hidden w/in collapsed section
+    for(var i=0; i < records.length; ++i){
+      var record = records[i];
+      if(record.section.is(".html-toggle.collapsed")){
+        record.elem.parent().find("ul a").addClass("toggled");
+      }
+    }
+    // redo highlight after flag rebuild
+    update_visible_sections();
+  }
+
   // run function now, and every time window is resized
-  update_current();
-  $(window).scroll(update_current)
-           .resize(update_current)
-           .bind('cloud-section-toggled', update_current)
-           .bind('cloud-sidebar-toggled', update_current);
+  // TODO: disable when sidebar isn't sticky (including when window is too small)
+  //       and when sidebar is collapsed / invisible
+  update_collapsed_sections();
+  $(window).scroll(update_visible_sections)
+           .resize(update_visible_sections)
+           .bind('cloud-section-toggled', update_collapsed_sections)
+           .bind('cloud-sidebar-toggled', update_visible_sections);
 });
 {% endif %}
 
@@ -285,10 +329,10 @@ $(document).ready(function (){
   var orig = header[0].innerHTML;
   var shorter = orig;
   if($("h1 > a:first > tt > span.pre").length > 0){
-      shorter = orig.replace(/(<\/tt><\/a>\s*[-:]\s+)/im, "$1<br> ");
+      shorter = orig.replace(/(<\/tt><\/a>\s*[-\u2013\u2014:]\s+)/im, "$1<br> ");
   }
   else if($("h1 > tt.literal:first").length > 0){
-      shorter = orig.replace(/(<\/tt>\s*[-:]\s+)/im, "$1<br> ");
+      shorter = orig.replace(/(<\/tt>\s*[-\u2013\u2014:]\s+)/im, "$1<br> ");
   }
   if(shorter == orig){
     return;
