@@ -901,6 +901,19 @@ def mk_steady(self):
     self.nlsubs_raw2 = deepcopy(list_tmp2)  
     return self
 
+def mk_steady2(self):
+    list_tmp2 = deepcopy(self.foceqs2)
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    vreg = self.vreg
+    for i1,elem in enumerate(list_tmp2):
+        varli = list(vreg(patup,list_tmp2[i1],True,'max'))
+        varli.reverse()
+        for varo in varli:
+            vpos = varo[3]
+            list_tmp2[i1] = list_tmp2[i1][:vpos[0]]+varo[2][1]+'_bar'+list_tmp2[i1][vpos[1]:]
+    self.foceqss = deepcopy(list_tmp2)  
+    return self
+
 def mk_timeshift(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
     _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
@@ -1294,10 +1307,7 @@ def premknonlinsys(self,secs):
     self.foceqs = deepcopy(list_tmp1)
     return self
 
-def mknonlinsys(self, secs):
-    """
-    Create Non-Linear FOC System
-    """
+def premknonlinsys2(self, secs):
     list_tmp1 = deepcopy(self.foceqs)
     variables = deepcopy(self.subs_vars)
     i1 = 0    
@@ -1316,6 +1326,16 @@ def mknonlinsys(self, secs):
                     rhs_eq[poe:]
             list_tmp1[i] = rhs_eq
         i1+=1
+    self.foceqs2 = deepcopy(list_tmp1)
+    return self
+
+def mknonlinsys(self, secs):
+    """
+    Create Non-Linear FOC System
+    """
+    list_tmp1 = deepcopy(self.foceqs2)
+    variables = deepcopy(self.subs_vars)
+    list_tmp2 = deepcopy(self.nlsubs_list)
 
     self, list_tmp1 = mkaug2(self, list_tmp1)
     list_tmp3 = [x[1] for x in list_tmp2]
@@ -1649,7 +1669,6 @@ def populate_model_stage_one_b(self, secs):
         self = mk_steady(self)
         # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
-        self.nlsubs_update = dicwrap(self,[self.nlsubs,self.nlsubs_list],self._initlev)
     return self
 
 def populate_model_stage_one_bb(self, secs):
@@ -1665,7 +1684,11 @@ def populate_model_stage_one_bb(self, secs):
         self = mk_cfstate_subs(self)
     # Prepare the nonlinear FOC system but only stripping the raw format
     if any([False if 'None' in x else True for x in secs['focs'][0]]):
-        self = premknonlinsys(self,secs)    
+        self = premknonlinsys(self,secs)
+        # This takes the stripped system and does @ replacements
+        self = premknonlinsys2(self,secs)
+        # Also create a steady state version
+        self = mk_steady2(self)
     return self
 
 

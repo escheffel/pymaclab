@@ -29,7 +29,7 @@ def db_graph(dbase,tseries):
 	fsp.legend()
 	P.show()
 
-def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True):
+def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,use_focs=False,ssidic=None):
 	'''
 	Model's second intialisation method called by newMOD() function call. The model's
 	__init__() method only creates the instance and adds information, but does no
@@ -40,19 +40,23 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True)
 	init_lev = 1: parsing and steady state calculations
 	init_lev = 2: parsing, steady state calculations and dynamic solution computation
 	'''
-	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,mk_hessian=mk_hessian)
+	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,
+	                            mk_hessian=mk_hessian,use_focs=use_focs,ssidic=ssidic)
 	modobj.init1()
 	modobj.init1a()
 	modobj.init1b()
 	modobj.init1c()
 	modobj.init2()
+	# Ready to solve for SS manually at command prompt
 	if initlev == 0:
 		modobj.init_out()
 		return modobj
+	# SS solved automatically
 	modobj.init3()
 	if initlev == 1:
 		modobj.init_out()
 		return modobj
+	# Dynamic system prepared and solved
 	modobj.init4()
 	modobj.init5()
 	if initlev == 2:

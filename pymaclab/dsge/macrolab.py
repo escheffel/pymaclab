@@ -274,7 +274,7 @@ class DSGEmodel(object):
     lots of interesting solution and other features.
     '''
     # Initializes the absolute basics, errors difficult to occur
-    def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True):
+    def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,use_focs=False,ssidic=None):
         """
         DSGE Model Class
 
@@ -297,6 +297,8 @@ class DSGEmodel(object):
         self._mesg = mesg
         self._ncpus = ncpus
         self._mk_hessian = mk_hessian
+        self._use_focs = use_focs
+        self._ssidic = ssidic
         # Set no author
         self.setauthor()
         # Open the switches dic and initiate
@@ -379,10 +381,18 @@ class DSGEmodel(object):
         if mesg: print "INIT: Substituting out @ variables in steady state sections..."
         self = populate_model_stage_one_bb(self,secs)
         
+        # Allow for numerical SS to be calculated using only FOCs
+        if self._use_focs:
+            list_tmp = []
+            for elem in self._use_focs:
+                list_tmp.append(self.foceqss[elem])
+            self.ssys_list = deepcopy(list_tmp)
+            self.ssidic = copy.deepcopy(self._ssidic)
+        
         # Wrap foceqs
         self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
         # Wrap foceqs
-        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)       
+        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
 
 
     def init2(self):

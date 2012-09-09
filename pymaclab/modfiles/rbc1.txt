@@ -9,7 +9,8 @@ Name = Standard RBC Model;
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 rho       = 0.36;
 delta     = 0.025;
-R_bar     = 1.01; 
+R_bar     = 1.01;
+betta     = 1/R_bar; 
 eta	  = 2.0; 
 psi	  = 0.95;
 z_bar     = 1.0;
