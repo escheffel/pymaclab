@@ -26,8 +26,8 @@ from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
      populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
-from updaters.tools import Updaters, dicwrap, listwrap, matwrap
-from updaters_queued.tools import Updaters_Queued, dicwrap_queued, listwrap_queued,\
+from updaters.tools import Updaters, dicwrap, dicwrap_deep, listwrap, matwrap
+from updaters_queued.tools import Updaters_Queued, dicwrap_queued, dicwrap_deep_queued, listwrap_queued,\
      matwrap_queued, Process_Queue, queue
 
 #Define a list of the Greek Alphabet for Latex
@@ -340,8 +340,8 @@ class DSGEmodel(object):
         self.updaters_queued.queue = queue
 
         # Wrap the vardic
-        self.updaters.vardic = dicwrap(self,'self.vardic',initlev)
-        self.updaters_queued.vardic = dicwrap_queued(self,'self.vardic',initlev)
+        self.updaters.vardic = dicwrap_deep(self,'self.vardic',initlev)
+        self.updaters_queued.vardic = dicwrap_deep_queued(self,'self.vardic',initlev)
         
     def init1a(self):
         mesg = self._mesg

@@ -3,7 +3,6 @@ COLLECTION OF SUPPORTING FUNCTIONS AND CLASSES
 """
 from copy import deepcopy
 from ..solvers.steadystate import ManualSteadyState
-from pymaclab.dsge.helpers import deep_eq
 
 queue = []
 
@@ -18,11 +17,20 @@ class dicwrap_queued:
         self.wrapobj_str = wrapobj_str
         self.initlev = initlev
         if wrapobj_str == 'self.vardic':
-            self.wrapdic = deepcopy(other.vardic)
+            if 'vardic' not in dir(other.updaters):
+                self.wrapdic = deepcopy(other.vardic)
+            else:
+                self.wrapdic = other.updaters.vardic
         elif wrapobj_str == 'self.nlsubsdic':
-            self.wrapdic = deepcopy(other.nlsubsdic)
+            if 'nlsubsdic' not in dir(other.updaters):
+                self.wrapdic = other.nlsubsdic.copy()
+            else:
+                self.wrapdic = other.updaters.nlsubsdic
         elif wrapobj_str == 'self.paramdic':
-            self.wrapdic = deepcopy(other.paramdic)
+            if 'paramdic' not in dir(other.updaters):
+                self.wrapdic = other.paramdic.copy()
+            else:
+                self.wrapdic = other.updaters.paramdic
             
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
@@ -34,9 +42,9 @@ class dicwrap_queued:
         # Create the wrapobj using the passed string
         wrapobj = eval('other.'+wrapobj_str.split('.')[1])
         # ...and assign before test of inequality
-        wrapobj[key] = value
+        wrapobj[key] = deepcopy(value)
         if self.wrapdic != wrapobj:
-            self.wrapdic[key] = value
+            self.wrapdic[key] = deepcopy(wrapobj[key])
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
@@ -65,7 +73,7 @@ class dicwrap_queued:
                 return
         # Check if any key's value has been updated relative to wrapdic
         if self.wrapdic != wrapobj:
-            self.wrapdic.update(dico)
+            self.wrapdic.update(wrapobj)
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
@@ -80,6 +88,171 @@ class dicwrap_queued:
         return self.wrapdic.__repr__()
     def __str__(self):
         return self.wrapdic.__str__()
+
+class listwrapk:
+    def __init__(self,other,wrapobj,initlev):
+        self.other = other
+        self.wrapobj = wrapobj
+        self.initlev = initlev
+        self.wrapli = deepcopy(wrapobj)
+        self.queue = other.updaters_queued.queue
+            
+    def __getattr__(self,attrname):
+        return getattr(self.wrapli,attrname)
+
+    def __setslice__(self,ind1,ind2,into):
+        other = self.other
+        wrapobj = self.wrapobj
+        initlev = self.initlev
+        lengo = len(self.wrapli)
+        if ind2 >= lengo:
+            print "ERROR: Assignment out of bounds of original list"
+            return
+        ##### THE INITS #####################
+        #other.init1()
+        if self.wrapli[ind1:ind2] != into:
+            self.wrapli[ind1:ind2] = into
+            self.queue.append('self.vardic')
+    
+    def __setitem__(self,ind,into):
+        other = self.other
+        initlev = self.initlev
+        wrapobj = self.wrapobj
+        lengo = len(self.wrapli)
+        if ind >= lengo:
+            print "ERROR: Assignment out of bounds of original list"
+            return
+        ##### THE INITS #####################
+        #other.init1()
+        if self.wrapli[ind] != into:
+            self.wrapli[ind] = into
+            self.queue.append('self.vardic')
+            
+                  
+
+    def __getitem__(self,ind):
+        lengo = len(self.wrapli)
+        if ind >= lengo:
+            print "ERROR: Assignment out of bounds of original list"
+            return
+        else:
+            return self.wrapli[ind]
+
+    def __repr__(self):
+        return self.wrapli.__repr__()
+    def __str__(self):
+        return self.wrapli.__str__()
+
+class dicwrapk:
+    def __init__(self,other,wrapobj,initlev):
+        self.other = other
+        self.wrapobj = wrapobj
+        self.initlev = initlev
+        self.wrapdic = deepcopy(wrapobj)
+        self.queue = other.updaters_queued.queue
+
+    def __getattr__(self,attrname):
+        return getattr(self.wrapdic,attrname)
+
+    def __setitem__(self,key,value):
+        other = self.other
+        initlev = self.initlev
+        wrapobj = self.wrapobj
+        wrapobj[key] = value
+        # Test if the dictionary has changed relative to self.wrapdic
+        if self.wrapdic != wrapobj:
+            self.wrapdic[key] = deepcopy(wrapobj[key])
+            ##### THE INITS #####################
+            #other.init1()
+            self.queue.append('self.vardic')
+
+
+    def __getitem__(self,key):
+        return self.wrapdic[key]
+
+    def update(self,dico):
+        self.updic = dico
+        other = self.other
+        initlev = self.initlev
+        wrapobj = self.wrapobj
+        wrapobj.update(dico)
+        # Check if new keys are already present in wrapdic
+        for keyo in dico.keys():
+            if keyo not in self.wrapdic.keys():
+                print "ERROR: You can only update existing keys, not introduce new ones."
+                return
+        # Check if any key's value has been updated relative to wrapdic
+        if self.wrapdic != wrapobj:
+            self.wrapdic.update(wrapobj)
+            ##### THE INITS #####################
+            #other.init1()
+            self.queue.append('self.vardic')
+
+
+    def __repr__(self):
+        return self.wrapdic.__repr__()
+    def __str__(self):
+        return self.wrapdic.__str__()    
+
+class dicwrap_deep_queued:
+    def __init__(self,other,wrapobj_str,initlev):
+        self.other = other
+        self.wrapobj_str = wrapobj_str
+        self.initlev = initlev
+        self.queue = other.updaters_queued.queue
+        # Create the wrapobj using the passed string
+        self.wrapobj = eval('other.'+wrapobj_str.split('.')[1])
+        if wrapobj_str == 'self.vardic':
+            self.wrapdic = deepcopy(self.wrapobj)
+            for keyo in self.wrapdic.keys():
+                self.wrapdic[keyo] = dicwrapk(other,self.wrapdic[keyo],initlev)
+                for keyo2 in self.wrapdic[keyo].keys():
+                    self.wrapdic[keyo][keyo2] = dicwrapk(other,self.wrapdic[keyo][keyo2],initlev)
+                    for i1,elem in enumerate(self.wrapdic[keyo][keyo2]):
+                        self.wrapdic[keyo][keyo2][i1] = listwrapk(other,self.wrapdic[keyo][keyo2][i1],initlev)
+
+    def __getattr__(self,attrname):
+        return getattr(self.wrapdic,attrname)
+                       
+    def __setitem__(self,key,value):
+        other = self.other
+        initlev = self.initlev
+        wrapobj_str = self.wrapobj_str
+        wrapobj = self.wrapobj
+        wrapobj[key] = value
+        # Test if the dictionary has changed relative to self.wrapdic
+        if self.wrapdic != wrapobj:
+            self.wrapdic[key] = value
+            ##### THE INITS #####################
+            #other.init1()
+            if wrapobj_str == 'self.vardic':
+                self.queue.append('self.vardic')
+
+            other.init1a()
+            if wrapobj_str == 'self.nlsubsdic':
+                # not a deep dic
+                pass
+
+            other.init1b()
+            if wrapobj_str == 'self.paramdic':
+                # not a deep dic
+                pass
+
+
+    def __update__(self,dico):
+        other = self.other
+        initlev = self.initlev
+        wrapobj_str = self.wrapobj_str
+        wrapobj = self.wrapobj
+        wrapobj.update(dico)
+        # Test if the dictionary has changed relative to self.wrapdic
+        if self.wrapdic != wrapobj:
+            self.wrapdic.update(dico)
+            ##### THE INITS #####################
+            #other.init1()
+            if wrapobj_str == 'self.vardic':
+                self.queue.append('self.vardic')
+
 
 
 class listwrap_queued:
@@ -177,6 +350,12 @@ class Process_Queue(object):
         queue = self.queue
         other = self.other
         initlev = self.initlev
+        mesg = other._mesg
+        if mesg:
+            print "You have UPDATED the following items which are now PROCESSED:"
+            for elem in queue:
+                print elem
+            print '================================================================'
         ##### THE INITS #####################
         other.init1()
         if 'self.vardic' in queue:
@@ -186,11 +365,11 @@ class Process_Queue(object):
         if 'self.nlsubsdic' in queue:
             for i1,elem in enumerate(other.nlsubs_raw1):
                 other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
-            other.nlsubsdic = deepcopy(self.nlsubsdic)
+            other.nlsubsdic = self.nlsubsdic.copy()
 
         other.init1b()
         if 'self.paramdic' in queue:
-            other.paramdic = deepcopy(self.paramdic)
+            other.paramdic = self.paramdic.copy()
         
         other.init1c()
         if 'self.foceqs' in queue:
