@@ -49,11 +49,11 @@ class dicwrap_queued:
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
-                self.queue.append('self.nlsubsdic')
+                if 'self.nlsubsdic' not in self.queue: self.queue.append('self.nlsubsdic')
             elif wrapobj_str == 'self.paramdic':
-                self.queue.append('self.paramdic')
+                if 'self.paramdic' not in self.queue: self.queue.append('self.paramdic')
             elif wrapobj_str == 'self.vardic':
-                self.queue.append('self.vardic')           
+                if 'self.vardic' not in self.queue: self.queue.append('self.vardic')           
 
     def __getitem__(self,key):
         return self.wrapdic[key]
@@ -77,11 +77,11 @@ class dicwrap_queued:
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
-                self.queue.append('self.nlsubsdic')
+                if 'self.nlsubsdic' not in self.queue: self.queue.append('self.nlsubsdic')
             elif wrapobj_str == 'self.paramdic':
-                self.queue.append('self.paramdic')
+                if 'self.paramdic' not in self.queue: self.queue.append('self.paramdic')
             elif wrapobj_str == 'self.vardic':
-                self.queue.append('self.vardic')           
+                if 'self.vardic' not in self.queue: self.queue.append('self.vardic')           
 
 
     def __repr__(self):
@@ -126,7 +126,7 @@ class listwrapk:
         #other.init1()
         if self.wrapli[ind] != into:
             self.wrapli[ind] = into
-            self.queue.append('self.vardic')
+            if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
             
                   
 
@@ -164,7 +164,7 @@ class dicwrapk:
             self.wrapdic[key] = deepcopy(wrapobj[key])
             ##### THE INITS #####################
             #other.init1()
-            self.queue.append('self.vardic')
+            if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
 
 
     def __getitem__(self,key):
@@ -186,7 +186,7 @@ class dicwrapk:
             self.wrapdic.update(wrapobj)
             ##### THE INITS #####################
             #other.init1()
-            self.queue.append('self.vardic')
+            if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
 
 
     def __repr__(self):
@@ -226,7 +226,7 @@ class dicwrap_deep_queued:
             ##### THE INITS #####################
             #other.init1()
             if wrapobj_str == 'self.vardic':
-                self.queue.append('self.vardic')
+                if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
 
             other.init1a()
             if wrapobj_str == 'self.nlsubsdic':
@@ -251,7 +251,7 @@ class dicwrap_deep_queued:
             ##### THE INITS #####################
             #other.init1()
             if wrapobj_str == 'self.vardic':
-                self.queue.append('self.vardic')
+                if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
 
 
 
@@ -277,13 +277,13 @@ class listwrap_queued:
 
         if self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.foceqs':
             self.wrapli[ind1:ind2] = into
-            self.queue.append('self.foceqs')
+            if 'self.foceqs' not in self.queue: self.queue.append('self.foceqs')
         elif self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.manss_sys':
             self.wrapli[ind1:ind2] = into
-            self.queue.append('self.manss_sys')
+            if 'self.manss_sys' not in self.queue: self.queue.append('self.manss_sys')
         elif self.wrapli[ind1:ind2] != into and wrapobj_str == 'self.ssys_list':
             self.wrapli[ind1:ind2] = into
-            self.queue.append('self.ssys_list')
+            if 'self.ssys_list' not in self.queue: self.queue.append('self.ssys_list')
     
     def __setitem__(self,ind,into):
         other = self.other
@@ -297,13 +297,13 @@ class listwrap_queued:
 
         if self.wrapli[ind] != into and wrapobj_str == 'self.foceqs':
             self.wrapli[ind] = into
-            self.queue.append('self.foceqs')
+            if 'self.foceqs' not in self.queue: self.queue.append('self.foceqs')
         elif self.wrapli[ind] != into and wrapobj_str == 'self.manss_sys':
             self.wrapli[ind] = into
-            self.queue.append('self.manss_sys')
+            if 'self.manss_sys' not in self.queue: self.queue.append('self.manss_sys')
         elif self.wrapli[ind] != into and wrapobj_str == 'self.ssys_list':
             self.wrapli[ind] = into
-            self.queue.append('self.ssys_list')
+            if 'self.ssys_list' not in self.queue: self.queue.append('self.ssys_list')
 
     def __getitem__(self,ind):
         lengo = len(self.wrapli)
@@ -340,7 +340,7 @@ class matwrap_queued:
         if self.wrapmat[ind[0],ind[1]] != into and wrapob_str == 'self.sigma':
             self.wrapmat[ind[0],ind[1]] = into
             other.sigma[ind[0],ind[1]] = into
-            self.queue.append('self.sigma')
+            if 'self.sigma' not in self.queue: self.queue.append('self.sigma')
 
    
 class Process_Queue(object):

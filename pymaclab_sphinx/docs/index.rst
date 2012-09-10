@@ -59,17 +59,17 @@ Introduction
     In this section I touch upon the the pros and cons of doing Macroeconomics or scientific computing using Python in general.
 
 
-Tutorial Series
----------------
+Series of Brief Tutorials
+-------------------------
 
 1) :doc:`Basic DSGE tutorial <tutorial/started_tutorial>`
     Brief tutorial on how to use PyMacLab to work with DSGE models.
 2) :doc:`PyMacLab DSGE instance tutorial <tutorial/dsge_instance_tutorial>`
-    Succinct tutorial facilitating the understaning of the DSGE OOP data structure in PyMacLab.
+    Succinct tutorial facilitating the understanding of the DSGE OOP data structure in PyMacLab.
 3) :doc:`PyMacLab DSGE instance updater tutorial <tutorial/dsge_instance_updater_tutorial>`
-    Succinct tutorial facilitating the understaning of the DSGE OOP data structure in PyMacLab.
+    Tutorial on how to use DSGE model instance's intelligent runtime update features.
 4) :doc:`PyMacLab DSGE steady state solver tutorial <tutorial/steady_solver_tutorial>`
-    This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
+    This section illustrates various options available to solve DSGE models' steady state.
 5) :doc:`PyMacLab DSGE dynamic solver tutorial <tutorial/dynamic_solver_tutorial>`
     This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
 6) :doc:`PyMacLab DSGE simulation and plotting tutorial <tutorial/simirf_plotting_tutorial>`
@@ -86,6 +86,9 @@ API Documentation
 
 Reference
 ---------
+
+:doc:`linsci_scratch`
+    Building a Linux scientific environment from scratch.
 
 :doc:`bibliography`
     Reference list of academic articles related to the solution of DSGE models.
@@ -167,6 +170,11 @@ Credit & Thanks
   clean up some of the rough edges of my code. I would also like to thank colleagues at Nottingham University Business
   School China, especially `Gus Hooke <http://www.nottingham.edu.cn/en/business/staff/staffprofile/angushooke.aspx>`_
   and `Carl Fey <http://www.nottingham.edu.cn/en/business/people/staffprofile/carlfey.aspx>`_ for their kind support.
+
+  Last but most certainly not least, my expression of thanks go to my former PhD supervisor `Max Gillman <http://www.maxgillman.com>`_
+  who has introduced me to the world of general equilibrium macroeconomics and to monetary macroeconomics more deeply.
+  Similary, many of the lectures once delivered by `Martin Ellison <http://www.economics.ox.ac.uk/members/martin.ellison/>`_
+  formerly at the Economics Department at Warwick now at Oxford made a lasting impression on me.
 
 Online Resources
 ================

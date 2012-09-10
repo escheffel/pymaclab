@@ -1,8 +1,8 @@
 .. index:: cloud; installation
 
-=========================
-Installation Instructions
-=========================
+=======================================
+Building a Linux Scientific Environment
+=======================================
 
 Requirements
 ============

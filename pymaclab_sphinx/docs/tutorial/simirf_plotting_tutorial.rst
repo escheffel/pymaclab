@@ -89,11 +89,39 @@ Simulating DSGE models
   .. plot:: ../../pymaclab/examples/test4.py
 
 
-  That was nice and simple, was it not?
+  That was nice and simple, was it not? Notice that filtered simulations are always stored in data fields which means that statistics such as
+  correlations at leads and lags can easily be computed as well.
 
 Generating impulse-response functions
 =====================================
 
 *Introduction*
 
-  This is this.
+  Dynamic solutions obtained to first-order approximated DSGE models using the method of perturbations have a lot in common with standard
+  Vector Autoregression models commonly used in applied Macroeconometrics. This in turn implies that solved DSGE models can be described using
+  so-called impulse-responses functions (also abbreviated as IRFs) or impulse-response graphs which show how the solved model responds to a
+  one-off shock to a particular exogenous state variable. In PyMacLab this can easily be achieved as follows:
+
+  .. sourcecode:: ipython
+
+    # Import the pymaclab module into its namespace, also import os module
+    In [1]: import pymaclab as pm
+    In [2]: from pymaclab.modfiles import models
+
+    # Also import matplotlib.pyplot for showing the graph
+    In [3]: from matplotlib import pyplot as plt
+
+    # Instantiate a new DSGE model instance like so
+    In [4]: rbc1 = pm.newMOD(models.rbc1)
+
+    # Now solve and simulate the model
+    In [5]: rbc1.modsolvers.forkleind.solve()
+    In [6]: rbc1.modsolvers.forkleind.irf(100,('productivity',))
+
+    # Plot the simulation and show it on screen
+    In [7]: rbc1.modsolvers.forkleind.show_irf(('output','consumption'))
+    In [8]: plt.show()
+
+  This produces the following nice graph. Notice that here the shock to total productivity has been normalized to 100%.
+
+  .. plot:: ../../pymaclab/examples/test5.py

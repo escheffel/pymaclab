@@ -119,6 +119,10 @@ Digging deeper into the DSGE model's instance's structure
   +------------------------------------+----------------------------------------------------------------------------------------------------+
   |``pm.newMOD(mpath,mk_hessian=True)``| Should Hessian be computed at all, as is expensive?                                                |
   +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,use_focs=False)`` | Should only the model's FOCs be used to computed the steady state? Accepts Python list or tuple    |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,ssidic=None)``    | Use in conjunction with previous argument to specify initial starting values as Python dictionary  |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
 
   Needless to say, all of the options can be and usually are called in combination, they are only shown separately here for sake of expositional
   clarity. Medium-sized to large-sized models can take considerable time to compute the Jacobian alone, let alone the Hessian. On the other hand
@@ -300,7 +304,7 @@ DSGE modelling made intuitive
     # Loop over the RBC DSGE model, each time re-computing for new R_bar
     ss_capital = []
     for betar in betarr:
-	rbc1.paramdic['R_bar'] = betar # assign new R_bar to model
+	rbc1.updaters.paramdic['R_bar'] = betar # assign new R_bar to model
 	rbc1.sssolvers.fsolve.solve() # re-compute steady stae
 	ss_capital.append(rbc1.sssolvers.fsolve.fsout['k_bar']) # fetch and store k_bar
 
@@ -324,4 +328,6 @@ DSGE modelling made intuitive
   That was nice and simple, wasn't it? So with the power and flexibility of PyMacLab DSGE model instances we can relatively painlessly explore
   simple questions such as how differing deep parameter specifications for the impatience factor :math:`\beta` can affect the steady state level of physical
   capital. And indeed, as intuition would suggest, less patient consumers are less thrifty and more spend-thrifty thus causing a lower steady
-  state level of physical capital in the economy.
+  state level of physical capital in the economy. This last example also serves to make another important point. PyMacLab is `not` a `program`
+  such as Dynare, but instead an add-in `library` for Python prividing an advanced DSGE model data structure in form of a DSGE model class
+  which can be used in conjunction with any other library available in Python.

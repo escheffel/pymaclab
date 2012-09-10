@@ -1,8 +1,8 @@
 .. index:: cloud; sphinx theme, sphinx theme; cloud
 
-=======================
-PyMacLab Tutorial
-=======================
+========================
+PyMacLab Tutorial Series
+========================
 
 Dynamic Solution Methods - Building Blocks
 ==========================================

@@ -4,8 +4,8 @@
 Release History
 ===============
 
-**0.89.1-dev** (2012-9-3)
-=========================
+**0.89.1-dev** (2012-9-10)
+==========================
 
     * Re-introduced sympycore as default CAS. It is MUCH faster than sympy. Now comes packaged with PyMacLab.
 
@@ -19,13 +19,19 @@ Release History
 
     * Another new parameter is pymaclab.newMOD(mk_hessian=True|False). Should expensive Hessian be computed? Default=True.
 
+    * PyMacLab now supports 5 different ways of finding a DSGE model's steady state.
+
+    * One of the 5 SS methods uses externally passed arguments pymaclab.newMOD(use_focs=[],ssidic={}) to use FOCS to solve for SS.
+
+    * One-off and queued dynamic run-time DSGE model updaters objects have been added
+
     * Improved various DSGE model templates. Monika Merz's unemployment RBC DSGE model is now working.
 
-    * Further improvements to the online documentation
+    * Further improvements and additions to the online documentation
 
 
 **0.88.1** (2012-9-3)
-====================
+=====================
 
     * PyMacLab now only depends on Sympy and no longer the outdated Sympycore.
 
@@ -41,7 +47,7 @@ Release History
 
 
 **0.85** (2012-08-30)
-====================
+=====================
 
     * Added Sphinx Documentation with API Section.
 
