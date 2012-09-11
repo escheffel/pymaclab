@@ -4,55 +4,29 @@
 Building a Linux Scientific Environment
 =======================================
 
-Requirements
-============
-* Python >= 2.5 or Python 3
-* `Sphinx <http://sphinx.pocoo.org/>`_ 1.1 or newer.
+Understanding the wider system
+==============================
 
-Installing
-==========
-* To install from pypi using pip::
+*Introduction*
 
-   pip install cloud_sptheme
+  Many researchers wanting to do work within some scientific environment on their computers typically depend on software which handles at least
+  two kinds of tasks well. One of them is setting up and solving problems in linear algebra and/or problems requiring non-linear or other
+  optimisation techniques while the other one is declaring and manipulating algebraic expressions, usually done with so-called CASs, or computer
+  algebra systems. Also, sometimes it is not only important to be able to have access to environments which can handle these tasks, but also to
+  handle these tasks as fast and efficiently as possible, conditional on any given hardware platform researchers may work with. In this short
+  text I will describe how to set up a Python numerical/scientific environment in Linux which handles the above mentioned tasks - as well as
+  others - and focus on the step-by-step installation of various individual packages, which together make up such an environment. Among other,
+  this will make clear how many modern interactive scientific environments continue to follows the tried-and-tested approach of often exposing
+  their core functions as wrappers to open-source industry standard libraries of which many have been around for decades. PyMacLab which uses
+  Numpy and Scipy forms no exception here.
 
-* To install from pypi using easy_install::
+*Starting the Build*
 
-   easy_install cloud_sptheme
-
-* To install from source using ``setup.py``::
-
-    python setup.py build
-    sudo python setup.py install
-
-.. index:: readthedocs.org; installation on
-
-ReadTheDocs
-===========
-To use this theme on `<http://readthedocs.org>`_:
-
-1. If it doesn't already exist, add a pip ``requirments.txt`` file to your documentation (e.g. alongside ``conf.py``).
-   It should contain a minimum of the following lines::
-
-       sphinx
-       cloud_sptheme
-
-   ... as well as any other build requirements for your project's documentation.
-
-2. When setting up your project on ReadTheDocs, enter the path to ``requirements.txt``
-   in the *requirements file* field on the project configuration page.
-
-3. ReadTheDocs will now automatically download the latest version of :mod:`!cloud_sptheme`
-   when building your documentation.
-
-Documentation
-=============
-The latest copy of this documentation should always be available at:
-    `<http://packages.python.org/cloud_sptheme>`_
-
-If you wish to generate your own copy of the documentation,
-you will need to:
-
-1. Install `Sphinx <http://sphinx.pocoo.org/>`_ (1.1 or better)
-2. Download the :mod:`!cloud_sptheme` source.
-3. From the source directory, run ``python setup.py build_sphinx -E``.
-4. Once Sphinx is finished, point a web browser to the file :samp:`{SOURCE}/build/sphinx/html/index.html`.
+  As just mentioned PyMacLab makes use of the Numpy and Scipy libraries which users often tend to download in tandem. This is because Numpy
+  is a library, whose main contribution lies in the provision of Python numerical array and matrix classes, apart from some small number of
+  often statistical convenience methods employing these new data types, supplies little else in the domain of advanced scientific computing.
+  This is where Scipy then enters which provides many such routines, such as for instance many currently popular optimisation algorithms.
+  So Scipy requires Numpy to install and run, but does Numpy and its numerical data types also require some other package or library to run?
+  As it turns out, if one wishes to run Numpy as efficiently and as fast as possible, some reference BLAS and LAPACK implementations need to be
+  installed on the system in form of dynamically loadable libraries. One some systems and for inexperienced Linux users it may be no easy feat
+  to configure their system to correctly and most efficiently make use of these tried and tested industry standard libraries.

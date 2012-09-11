@@ -9,13 +9,13 @@ Getting started - Basics
 
 *Introduction*
 
-PyMacLab's strength or orginal design goal has been that of providing users with a rich and flexible DSGE data structure (also called
-class in object-oriented programming speak) which allows them to do lots of interesting things with DSGE models. Don't forget that another
-stated goal of PyMacLab is to permit researchers to work with DSGE models who know how to and enjoy to use the programming language Python.
-This tutorial assumes that you already know how to use Python, if you are completely new to it I suggest you consult one of the many tutorials
-available on the internet to get started with the language. Don't forget that Python is free as in free as freedom, no proprietary software such
-as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab. The easiest way to get started and explore the
-features of PyMacLab is to launch a IPython session and to import PyMacLab into it
+  PyMacLab's strength or orginal design goal has been that of providing users with a rich and flexible DSGE data structure (also called
+  class in object-oriented programming speak) which allows them to do lots of interesting things with DSGE models. Don't forget that another
+  stated goal of PyMacLab is to permit researchers to work with DSGE models who know how to and enjoy to use the programming language Python.
+  This tutorial assumes that you already know how to use Python, if you are completely new to it I suggest you consult one of the many tutorials
+  available on the internet to get started with the language. Don't forget that Python is free as in free as freedom, no proprietary software such
+  as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab. The easiest way to get started and explore the
+  features of PyMacLab is to launch a IPython session and to import PyMacLab into it
 
   .. sourcecode:: ipython
 
@@ -30,8 +30,8 @@ features of PyMacLab is to launch a IPython session and to import PyMacLab into 
     In [3]: pm.__author__
     'Eric M. Scheffel'
 
-Here we simply have imported the PyMacLab module and inspected some of its attributes, such as the current version numbering as well as them
-module's author's name. Let's look deeper into the recesses of the module though to better understand who it is organized
+  Here we simply have imported the PyMacLab module and inspected some of its attributes, such as the current version numbering as well as them
+  module's author's name. Let's look deeper into the recesses of the module though to better understand who it is organized
 
   .. sourcecode:: ipython
 
@@ -74,8 +74,8 @@ module's author's name. Let's look deeper into the recesses of the module though
     'stats',
     'texedit']
 
-As you can see the module contains a quite a few attributes, many of which are still expermimental and perhaps best not called at this stage. The most mature
-and arguable most interesting method call is that called ``pm.newMOD``, which allows users to instantiate a DSGE model instance, which would be done like so:
+  As you can see the module contains a quite a few attributes, many of which are still expermimental and perhaps best not called at this stage. The most mature
+  and arguable most interesting method call is that called ``pm.newMOD``, which allows users to instantiate a DSGE model instance, which would be done like so:
 
   .. sourcecode:: ipython
 
@@ -87,7 +87,7 @@ and arguable most interesting method call is that called ``pm.newMOD``, which al
     In [3]: modpath = "../pymaclab/modfiles/"
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(os.path.join(modpath,"rbc1.txt"))
+    In [4]: rbc1 = pm.newMOD(os.path.join(modpath,"rbc1_res.txt"))
 
     # As an example, check the models computed steady stated
     In [5]: print rbc1.sstate
@@ -96,8 +96,8 @@ and arguable most interesting method call is that called ``pm.newMOD``, which al
     'k_bar': 38.160700489842398,
     'y_bar': 3.7100681031791227}
 
-Alternatively, you can also test some of the DSGE model files which come supplied with PyMacLab's standard installation. For this to work all you have to do is
-to import a provided handler module, ``pymaclab.modfiles.models``, which contains all of the DSGE models' names and their correspoding full file paths:
+  Alternatively, you can also test some of the DSGE model files which come supplied with PyMacLab's standard installation. For this to work all you have to do is
+  to import a provided handler module, ``pymaclab.modfiles.models``, which contains all of the DSGE models' names and their correspoding full file paths:
     
   .. sourcecode:: ipython
 
@@ -122,18 +122,19 @@ to import a provided handler module, ``pymaclab.modfiles.models``, which contain
      'model2',
      'model3',
      'nk_nocapital',
-     'rbc1',
+     'rbc1_res',
+     'rbc1_ext',
      'rbc2',
      'sims']
 
     # The DSGE models objects in pymaclab.modfiles.models
     # are just references to full file paths, i.e.
 
-    In [4]: pm.modfiles.models.rbc1
-    '/usr/lib/python2.7/site-packages/pymaclab/modfiles/rbc1.txt'
+    In [4]: pm.modfiles.models.rbc1_res
+    '/usr/lib/python2.7/site-packages/pymaclab/modfiles/rbc1_res.txt'
 
     #Instantiate a new DSGE model instance like so
-    In [5]: rbc1 = pm.newMOD(models.rbc1)
+    In [5]: rbc1 = pm.newMOD(models.rbc1_res)
 
     #As an example, check the models computed steady stated
     In [6]: print rbc1.sstate
@@ -143,98 +144,101 @@ to import a provided handler module, ``pymaclab.modfiles.models``, which contain
     'y_bar': 3.7100681031791227}
 
 
-Now we have already seen some of the power and simplicity we can leverage by using PyMacLab. Before learning some of its additional power, we do however
-still need to take a quick detour to study the model file ``rbc1.txt`` which we had to pass as an argument to the ``pm.newMOD`` method call, as its
-structure is determined by a set of conventions which are important to adhere to in order to enable PyMacLab to parse and employ the information contained
-therein correctly and efficiently.
+  Now we have already seen some of the power and simplicity we can leverage by using PyMacLab. Before learning some of its additional power, we do however
+  still need to take a quick detour to study the model file ``rbc1.txt`` which we had to pass as an argument to the ``pm.newMOD`` method call, as its
+  structure is determined by a set of conventions which are important to adhere to in order to enable PyMacLab to parse and employ the information contained
+  therein correctly and efficiently.
 
 
 The PyMacLab DSGE model file
 ============================
-In order to be able to load or instantiate your first DSGE model and work with it, you have to make sure to first fill in a so-called PyMacLab
-DSGE model file. The idea behing this is the same as the Dynare model file which typically ends in .mod. PyMacLab already comes provided with a
-number of such files pre-compiled for you to experiment with. For instance the most basic real business cycle model is described in the model file
-``rbc1.txt`` which looks as follows
+
+  In order to be able to load or instantiate your first DSGE model and work with it, you have to make sure to first fill in a so-called PyMacLab
+  DSGE model file. The idea behing this is the same as the Dynare model file which typically ends in .mod. PyMacLab already comes provided with a
+  number of such files pre-compiled for you to experiment with. For instance the most basic real business cycle model is described in the model file
+  ``rbc1.txt`` which looks as follows
 
   ::
 
-      %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      This is just a standard RBC model, as you can see.
+    %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    This is just a standard RBC model, as you can see.
 
 
-      %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      Name = Standard RBC Model;
+    %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Name = Standard RBC Model;
 
 
-      %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      rho       = 0.36;
-      delta     = 0.025;
-      R_bar     = 1.01; 
-      eta	= 2.0; 
-      psi	= 0.95;
-      z_bar     = 1.0;
-      sigma_eps = 0.052; 
+    %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    rho       = 0.36;
+    delta     = 0.025;
+    R_bar     = 1.01;
+    eta	      = 2.0; 
+    psi	      = 0.95;
+    z_bar     = 1.0;
+    sigma_eps = 0.052; 
 
 
-      %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      [1]  k(t):capital{endo}[log,bk]
-      [2]  c(t):consumption{con}[log,bk]
-      [4]  y(t):output{con}[log,bk]      
-      [5]  z(t):eps(t):productivity{exo}[log,bk]
-      [6]  @inv(t):investment[log,bk]
-      [7]  @R(t):rrate
+    %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]  k(t):capital{endo}[log,bk]
+    [2]  c(t):consumption{con}[log,bk]
+    [4]  y(t):output{con}[log,bk]      
+    [5]  z(t):eps(t):productivity{exo}[log,bk]
+    [6]  @inv(t):investment[log,bk]
+    [7]  @R(t):rrate
 
-      %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      None
-
-
-      %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-      [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-      [2]   @F(t)     = z(t)*k(t-1)**rho;
-      [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-      [3]   @R(t+1)   = FF_1{@R(t)};
-      [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
-      [5]   @MU(t)    = DIFF{@U(t),c(t)};
-      [6]   @MU(t+1)  = FF_1{@MU(t)};
+    %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    None
 
 
-
-      %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      # Insert here the non-linear FOCs in format g(x)=0
-
-      [1]   @F(t)-@inv(t)-c(t) = 0;
-      [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
-      [3]   @F(t)-y(t) = 0;
-      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
-
-
-      %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      betta   = 1.0/R_bar;
-      k_bar   = ((rho*z_bar)/(R_bar - 1 + delta))**(1.0/(1 - rho));
-      y_bar   = (z_bar*k_bar)**rho;
-      c_bar   = y_bar - delta*k_bar;
-
-      %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-      [1]   z_bar*k_bar**(rho)-delta*k_bar-c_bar = 0;
-      [2]   rho*z_bar*k_bar**(rho-1)+(1-delta)-R_bar = 0;
-      [3]   (betta*R_bar)-1 = 0;
-      [4]   z_bar*k_bar**(rho)-y_bar = 0;
-
-      [1]  c_bar = 1.0;
-      [2]  k_bar = 1.0;
-      [3]  y_bar = 1.0;
-      [4]  betta = 1.0;
+    %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+    [2]   @inv_bar  = SS{@inv(t)};
+    [2]   @F(t)     = z(t)*k(t-1)**rho;
+    [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
+    [2]   @Fk_bar   = SS{@Fk(t)};
+    [2]   @F_bar    = SS{@F(t)};
+    [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+    [4]   @R_bar    = SS{@R(t)};
+    [3]   @R(t+1)   = FF_1{@R(t)};
+    [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+    [5]   @MU(t)    = DIFF{@U(t),c(t)};
+    [5]   @MU_bar   = SS{@U(t)};
+    [6]   @MU(t+1)  = FF_1{@MU(t)};
 
 
-      %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      None
+
+    %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Insert here the non-linear FOCs in format g(x)=0
+
+    [1]   @F(t)-@inv(t)-c(t) = 0;
+    [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
+    [3]   @F(t)-y(t) = 0;
+    [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
 
 
-      %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      Sigma = [sigma_eps**2];
+    %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]   y_bar = @F_bar;
 
 
-      %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]   @F_bar-@inv_bar-c_bar = 0;
+    [2]   betta*@R_bar-1 = 0;
+    [3]   betta*R_bar-1 = 0;
+
+    [1]   c_bar = 1.0;
+    [2]   k_bar = 1.0;
+    [3]   betta = 0.9;
+
+    %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    None
+
+
+    %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Sigma = [sigma_eps**2];
+
+
+    %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 
   So what does this file mean, and in particular, what is the meaning and purpose of the individual sections?
@@ -269,7 +273,7 @@ A Description of the model file's individual sections
 
    ::
 
-    [1] x(t):var_name{endo|con|exo}[log,hp|bk]
+      [1] x(t):var_name{endo|con|exo}[log,hp|bk]
 
   The first element is a descriptor of how the time-subscripted variable will appear in the system of nonlinear equations. The second
   descriptor is a more revealing but still short name, such as `capital` or `consumption`. It is preferable to write longer variable names
@@ -286,6 +290,7 @@ A Description of the model file's individual sections
   paradigm.
 
 *Variable Substitution Non-Linear System*
+
   This is perhaps one of the most useful and convenient sections of the model file. In the section right after this one users are asked to insert
   the DSGE model's firs-order conditions of optimality which can often be quite tedious and long algebraically. One way of giving users a more
   convenient and intuitive way of writing down the model's FOCs is to work with a subsitution system which can be declared in this section. So for
@@ -308,15 +313,15 @@ A Description of the model file's individual sections
 
    ::
 
-      DIFF{EXPRESSION,x(t)}  # is replaced by first derivate if expression w.r.t. x(t)
+      DIFF{EXPRESSION,x(t)}  # replaced by first derivate if expression w.r.t. x(t)
 
-      SS{EXPRESSION}         # the entire expression is converted to its steady state equivalent
+      SS{EXPRESSION}         # expression is converted to its steady state equivalent
 
-      FF_X{EXPRESSION}       # is replaced with expression forwarded in time by X periods.
-                             # The timing of the information set for expectations is unchanged!
+      FF_X{EXPRESSION}       # replaced with expression forwarded in time by X periods.
+                             # Timing of the information set for expectations is unchanged!
 
-      BB_X{EXPRESSION}       # is replaced with expression lagged in time by X periods.
-                             # The timing if the information set for expectations is unchanged!
+      BB_X{EXPRESSION}       # replaced with expression lagged in time by X periods.
+                             # Timing if the information set for expectations is unchanged!
 
   When declaring replacement items in this section make sure to adhere to the syntax of always naming them beginning with a @. Also, within this
   section substitutions within substitutions are permitted. Replacement items for steady-state calculations in the subsequent sections can also
@@ -326,13 +331,13 @@ A Description of the model file's individual sections
 
       [1]   @F_bar   = z_bar*k_bar**rho;
 
-  In PyMacLab steady state expressions of variables strictly have to adhere to the `x_bar` naming convention, i.e. be expressed by the stem variable
-  name abbreviation followed by and underscore and the word `bar`.
+  In PyMacLab steady state expressions of variables strictly have to adhere to the `x_bar` naming convention, i.e. be expressed by the stem
+  variable name abbreviation followed by and underscore and the word `bar`.
 
 *Non-Linear First-Order Conditions Section*
 
-  In this section users can supply the model's first order conditions of optimality which are passed to PyMacLab for differentiation and evaluation.
-  So to use the example from the RBC1 example file given above, filling in this section would look as follows:
+  In this section users can supply the model's first order conditions of optimality which are passed to PyMacLab for differentiation and
+  evaluation. So to use the example from the RBC1 example file given above, filling in this section would look as follows:
 
    ::
 
@@ -348,10 +353,11 @@ A Description of the model file's individual sections
 
       [4]   E(t)|z(t+1)/(z(t)**psi) = 0;
 
-  .. deprecated:: 0.85 In previous versions of PyMacLab it was possible to write down the law of motion of exogenous states without expectations, i.e.
-     `z(t)/(z(t-1)**psi) = 0;`. This behaviour is now deprecated and no longer supported.
+   .. deprecated:: 0.85 In previous versions of PyMacLab it was possible to write down the law of motion of exogenous states without expectations, i.e.
+      `z(t)/(z(t-1)**psi) = 0;`. This behaviour is now deprecated and no longer supported.
 
 *Steady States [Closed Form] Section*
+
   For relatively simple models, closed form solutions for the steady state may exist and can be entered here as follows:
 
    ::
@@ -418,14 +424,14 @@ A Description of the model file's individual sections
 
    ::
 
-           Sigma = [sigma_eps**2];
+      Sigma = [sigma_eps**2];
 
   or for more elaborate models like this:
 
    ::
 
-     Sigma = [sigma_eps**2   0;
-              0    sigma_xi**2];
+      Sigma = [sigma_eps**2   0;
+               0    sigma_xi**2];
 
 *All sections*
 
@@ -434,8 +440,8 @@ A Description of the model file's individual sections
 
    ::
 
-       %Log-Linearized Model Equations++++++++++++++++++++++++++++
-       None
+      %Log-Linearized Model Equations++++++++++++++++++++++++++++
+      None
 
   If alebraic expression become to long, one can also employ a line-breaking syntax using the elipsis, such as:
 
@@ -447,4 +453,11 @@ A Description of the model file's individual sections
 
   Finally, as is customary from other programming languages, comments can also be inserted into DSGE model files. However, in contrast to other
   languages conventions, such as Python itself, at the moment the library will only parse model files correctly if the comments are on a line of
-  their own, and not intermingled with model description items. As usual comments are identified by beginning with the hash symbol #.
+  their own, and not intermingled with model description items. As usual comments are identified by beginning a new line with the hash symbol #.
+
+  Finally, in all sections where it may be applicable, the operators `LOG(x)` and `EXP(x)` can be employed, where the former takes the natural
+  logarithm of expression x while the latter raises e to the power x. An example of this would be:
+
+   ::
+
+      [1]   @U(t)   = LOG(c(t));

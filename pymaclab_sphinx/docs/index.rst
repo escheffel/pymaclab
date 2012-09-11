@@ -23,16 +23,16 @@ Description
 
 Features at a Glance
 --------------------
-  * No log-linearization by hand required, done automatically py parsing a DSGE model file.
-  * All solutions based on analytical/symbolical computation of Jacobian and Hessian of models using `Sympy <http://www.sympy.org/>`_.
+  * No "paper-and-pencil" linearization required, done automatically py parsing a DSGE model file.
+  * Solutions based on analytical computation of Jacobian and Hessian of models using `Sympycore <http://www.sympy.org/>`_.
   * DSGE models are Python DSGE class instances, treat them as if they were data structures, pass them around, copy them, stack them into arrays,
     and work with many of them simultaneously!
   * Loop over a DSGE model instance thousands of times to alter the parameter space, each time re-computing the solution.
   * Choose from closed form or non-linear steady state solvers or a combination of both.
   * Choose from a number of tried and tested perturbation methods, such as Klein's 1st order accurate and Klein & Gomme's 2nd order accurate methods.
-  * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of Jacobian and Hessian employs parallelized multi-core CPU approach.
+  * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of analytical Jacobian and Hessian employs parallelized multi-core CPU approach.
   * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
-  * Benefit from a large and growing set of convience methods to simulate models and graph filtered simulated series as well as impulse-response functions.
+  * Benefit from a large and growing set of convience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
   * Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.
   * Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab.
   * PyMacLab is free as in freedom and distributed under a `Apache 2.0 license <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
@@ -107,23 +107,28 @@ Dependencies
 -------------
 
   Proper functioning of PyMacLab depends on a number of additional Python libraries already being installed on
-  your system, such as `Numpy <http://numpy.scipy.org/>`_, `Scipy <http://www.scipy.org/>`_,
-  `Sympy <http://www.sympy.org>`_, `Matplotlib <http://matplotlib.sourceforge.net/>`_ and
-  `scikits.timeseries <http://pytseries.sourceforge.net/>`_. All of these are great libraries by themselves and
-  should be checked out by any serious scientist interested in doing work in Python. However, the installation
-  of `Parallel Python <http://www.parallelpython.com/>`_ is also highly recommended, as this allows exploiting
-  multi-core CPUs in the computation of DSGE models' Jacobian and Hessian significantly speeding up execution speed.
+  your system, such as:
 
-  Also, if you want to enjoy a Matlab-style interactive environment in which to execute and inspect DSGE and other
-  data structures, you'd be hard-pressed to pass over the brilliant and now extra features-ladden
-  `IPython <http://ipython.org/>`_. When downloading and installing pymaclab using ``pip`` all of these dependencies
-  should be installed automatically for you, if they are not already present on your system.
+  * `Numpy <http://numpy.scipy.org/>`_
+  * `Scipy <http://www.scipy.org/>`_,
+  * `Sympycore <http://www.sympy.org>`_,
+  * `Parallel Python <http://www.parallelpython.com/>`_
+  * `Matplotlib <http://matplotlib.sourceforge.net/>`_
+  * `scikits.timeseries <http://pytseries.sourceforge.net/>`_
 
-  To use some convience plotting methods included in PyMacLab, you need to have Python's most advanced plotting
-  library installed, which is called `Matplotlib <http://matplotlib.sourceforge.net/>`_. Besides being indispensable
-  for any scientist working with Python for graphical analysis, it is also used to quickly produce plots of simulated
-  solved DSGE models as well as impulse response functions. Following right below is a list of options users have to
-  install PyMacLab on their Python-ready computers.
+  Sympycore and Parallel Python come distributed with PyMacLab and will be installed along with the main library; the other
+  required Python libraries need to be installed separately before and installation of PyMacLab is attempted. All of the
+  mentioned scientific packages are great libraries by themselves and should be checked out by any serious scientist interested
+  in doing work in Python.
+
+  If you want to enjoy a Matlab-style interactive environment in which to execute and inspect DSGE and other data structures,
+  you'd be hard-pressed to pass over the brilliant and now extra features-ladden `IPython <http://ipython.org/>`_. When downloading
+  and installing pymaclab using ``pip`` all of these dependencies should be installed automatically for you, if they are not already
+  present on your system. Following right below is a list of options users have to install PyMacLab on their Python-ready computers.
+
+  If you already have a working Python programming environment with some of the above libraries installed, you may want to consider
+  installing PyMacLab in its own isolated execution environment using `virtualenv <http://pypi.python.org/pypi/virtualenv>`_ which would
+  ensure that your existing system Python installation would remain untouched by PyMacLab's setup routine and its dependency resolution.
 
 Option 1
 ----------

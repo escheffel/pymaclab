@@ -1459,12 +1459,12 @@ class PyKlein2D:
         for i1 in range(sima.shape[0]):
             # Do lags
             for i2 in range(lags):
-                actm[i1,lags-i2-1] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_l[i1,i2:sima_l.shape[1]-lags+i2+1].A.flatten(1))[1,0],3)
+                actm[i1,i2] = np.round(np.corrcoef(sima[posa,:].A.flatten(1),sima_l[i1,i2:sima_l.shape[1]-lags+i2+1].A.flatten(1))[1,0],3)
             # Do current
-            actm[i1,lags] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima[i1,:].A.flatten(1))[1,0],3)
+            actm[i1,lags] = np.round(np.corrcoef(sima[posa,:].A.flatten(1),sima[i1,:].A.flatten(1))[1,0],3)
             # Do leads
             for i2 in range(leads):
-                actm[i1,lags+1+i2] = np.round(STA.corrcoef(sima[posa,:].A.flatten(1),sima_f[i1,i2:sima_f.shape[1]-leads+i2+1].A.flatten(1))[1,0],3)
+                actm[i1,lags+1+i2] = np.round(np.corrcoef(sima[posa,:].A.flatten(1),sima_f[i1,i2:sima_f.shape[1]-leads+i2+1].A.flatten(1))[1,0],3)
 
         self.actm = actm
         self.actname = vname
@@ -1477,8 +1477,14 @@ class PyKlein2D:
         nexo = self.nexo
         nendo = self.nendo
         ncon = self.ncon
-        naendo = self.naendo
-        nacon = self.nacon
+        if 'naendo' in dir(self):
+            naendo = self.naendo
+        else:
+            naendo = 0
+        if 'nacon' in dir(self):
+            nacon = self.nacon
+        else:
+            nacon = 0
         nother = len(self.vardic['other']['var'])
         respva = COP.deepcopy(self.actname)
         if 'actin' in dir(self):
@@ -2029,13 +2035,14 @@ class PyKlein2D:
         irf_x = MAT.hstack((MAT.zeros((irf_x.shape[0],20)),irf_x))
         irf_y = COP.deepcopy(inirf[1])
         irf_y = MAT.hstack((MAT.zeros((irf_y.shape[0],20)),irf_y))
-        irf_x = irf_x*100
-        irf_y = irf_y*100
+        irf_x = irf_x*100.0
+        irf_y = irf_y*100.0
         mname = self.modname
         vardic = self.vardic
         time_axis = np.arange(-20,tlen,1)
         if self.oswitch:
             irf_o = COP.deepcopy(inirf[2])
+            irf_o = MAT.hstack((MAT.zeros((irf_o.shape[0],20)),irf_o))
             nother = self.nother
             varother = self.vardic['other']['var']
             otherli = [x[1] for x in varother]
@@ -2392,7 +2399,7 @@ class ForKleinD(PyKlein2D):
             self.P = np.matrix(P)
             self.F = np.matrix(F)
 
-    def sim(self,tlen,sntup=None):
+    def sim(self,tlen,sntup=None,shockvec=None):
         # Add 1000 observations, as they will be thrown away
         # Add one more observation to start first-order vector
         exoli = [x[1] for x in self.vardic['exo']['var']]
@@ -2419,21 +2426,25 @@ class ForKleinD(PyKlein2D):
         pp = self.P
         ff = self.F
 
-        count = 0
-        for varia in MAT.diag(sigma):
-            if locals().has_key('ranvec'):
-                if count in indx:
-                    ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
+        if shockvec == None:
+            count = 0
+            for varia in MAT.diag(sigma):
+                if locals().has_key('ranvec'):
+                    if count in indx:
+                        ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
+                    else:
+                        ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))      
                 else:
-                    ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))      
-            else:
-                if count in indx:
-                    ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
-                else:
-                    ranvec = MAT.zeros((1,tlena))
-            count = count + 1
-
-        ranvec = MAT.vstack((ranvec,MAT.zeros((nendo,tlena))))
+                    if count in indx:
+                        ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
+                    else:
+                        ranvec = MAT.zeros((1,tlena))
+                count = count + 1
+            ranvec = MAT.vstack((ranvec,MAT.zeros((nendo,tlena))))
+            # Save the random shocks vector
+            self.shockvec = COP.deepcopy(ranvec)
+        else:
+            ranvec = COP.deepcopy(shockvec)
 
         x_one_m1 = ranvec[:,0]
         y_one_0 = ff*x_one_m1

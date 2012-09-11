@@ -502,19 +502,21 @@ class DSGEmodel(object):
         elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
            all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:           
             self.sssolvers.fsolve.solve()
-        if self.sssolvers.fsolve.ier == 1:
-            self.sstate = self.sssolvers.fsolve.fsout
-            self.numssdic = self.sssolvers.fsolve.fsout
-            # Attach solutions to intial variable dictionaries, for further analysis
-            self.ssidic_modfile = deepcopy(self.ssidic)
-            # Update old ssidic with found solutions
-            self.ssidic = deepcopy(self.sssolvers.fsolve.fsout)
-            self.sssolvers.fsolve.ssi = self.ssidic
-            self.switches['ss_suc'] = ['1','1']
-            if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
-        else:
-            self.switches['ss_suc'] = ['1','0']
-            if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
+
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]):
+            if self.sssolvers.fsolve.ier == 1:
+                self.sstate = self.sssolvers.fsolve.fsout
+                self.numssdic = self.sssolvers.fsolve.fsout
+                # Attach solutions to intial variable dictionaries, for further analysis
+                self.ssidic_modfile = deepcopy(self.ssidic)
+                # Update old ssidic with found solutions
+                self.ssidic = deepcopy(self.sssolvers.fsolve.fsout)
+                self.sssolvers.fsolve.ssi = self.ssidic
+                self.switches['ss_suc'] = ['1','1']
+                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
+            else:
+                self.switches['ss_suc'] = ['1','0']
+                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
 
         ########## Here we are trying to merge numerical SS solver's results with result closed-form calculations, if required
         if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
@@ -636,6 +638,11 @@ class DSGEmodel(object):
                 if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
                 self.mkjahe()
 
+            # Check if the obtained matrices A and B have correct dimensions
+            if self.jAA.shape[0] != self.jAA.shape[1]:
+                print "ERROR: Matrix A of derivatives does not have #vars=#equations"
+            if self.jBB.shape[0] != self.jBB.shape[1]:
+                print "ERROR: Matrix B of derivatives does not have #vars=#equations"
             # Open the MatWood object
             intup = (self.jAA,self.jBB,
                  self.nexo,self.ncon,
