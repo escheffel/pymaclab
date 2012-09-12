@@ -21,6 +21,16 @@ Description
   an advanced model file parser module, similar to the one available in `Dynare <http://www.dynare.org>`_, which automates cumbersome
   and error-prone (log-)linearization by hand. PyMacLab is also written entirely in Python, is free and incredibly flexible to use and extend.
 
+First things first
+------------------
+
+  * Documentation at `http://www.pymaclab.com <http://www.pymaclab.com>`_ or `http://packages.python.org/pymaclab/ <http://packages.python.org/pymaclab/>`_
+  * Latest development documentation at `http://www.development.pymaclab.com <http://www.development.pymaclab.com>`_
+  * Latest source tar ball at `http://pypi.python.org/pypi/pymaclab/ <http://pypi.python.org/pypi/pymaclab/>`_
+  * Latest bleeding-edge source via git at `http://github.com/escheffel/pymaclab <http://github.com/escheffel/pymaclab>`_
+  * Source code issues tracker at `http://github.com/escheffel/pymaclab/issues/ <http://github.com/escheffel/pymaclab/issues/>`_
+  * Download this online documentation as a PDF document :download:`here <PyMacLab.pdf>`.
+
 Features at a Glance
 --------------------
   * No "paper-and-pencil" linearization required, done automatically py parsing a DSGE model file.
@@ -44,6 +54,10 @@ Features at a Glance
     library's `Github <http://github.com/escheffel/pymaclab/>`_ repository to submit an Issue item. We are currently in the process of adding
     more example DSGE model files (and eliminating mistakes in already existing ones). If you have used PyMacLab yourself and want to contribute
     your own DSGE model files we are happy to include them!
+
+.. raw:: latex
+
+   \newpage
 
 Documentation
 =============
@@ -91,10 +105,14 @@ Reference
     Building a Linux scientific environment from scratch.
 
 :doc:`bibliography`
-    Reference list of academic articles related to the solution of DSGE models.
+    Reference list of academic articles and books related to the solution of DSGE models or Python programming.
 
 :doc:`history`
     History of current and past releases
+
+.. raw:: latex
+
+   \newpage
 
 Download & Installation
 =======================
@@ -162,6 +180,10 @@ Option 3
   This will create a new folder called pymaclab containing the latest version of the source code as well as the
   installation script ``setup.py`` which you can then use in the usual way to install the module on your system.
 
+.. raw:: latex
+
+   \newpage
+
 Credit & Thanks
 ================
 
@@ -191,4 +213,5 @@ Online Resources
     Github Homepage:       `<http://github.com/escheffel/pymaclab>`_
     Scipy Homepage:        `<http://www.scipy.org>`_
     Download & PyPI:       `<http://pypi.python.org/pypi/pymaclab>`_
+    Python Tutorial:       `<http://docs.python.org/tutorial/>`_
     ====================== ===================================================

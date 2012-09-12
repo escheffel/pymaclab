@@ -30,9 +30,17 @@ The pymaclab.dsge.macrolab module
    :inherited-members:
 
 .. rst-class:: html-toggle
-The pymaclab.dsge.tools module
+The pymaclab.dsge.updaters.tools module
 ---------------------------------
-.. automodule:: pymaclab.dsge.tools
+.. automodule:: pymaclab.dsge.updaters.tools
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+.. rst-class:: html-toggle
+The pymaclab.dsge.updaters_queued.tools module
+---------------------------------
+.. automodule:: pymaclab.dsge.updaters_queued.tools
    :members:
    :undoc-members:
    :inherited-members:

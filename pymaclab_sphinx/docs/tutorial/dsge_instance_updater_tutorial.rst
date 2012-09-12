@@ -1,13 +1,14 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. index:: tutorial; DSGE instance; dynamic updating
 
-========================
-PyMacLab Tutorial Series
-========================
+.. raw:: latex
 
-The Python DSGE instance updater methods
-========================================
+   \newpage
 
-*Introduction*
+Tutorial 3 - The Python DSGE instance updater methods
+=====================================================
+
+Introduction
+------------
 
   In the previous tutorial we described the general structure and some of the behaviour of PyMacLab's DSGE model's object-oriented design and
   what kind of advantages model builders can derive from this. In particular, at the end of the last tutorial, we saw how the decision to design
@@ -35,10 +36,9 @@ The Python DSGE instance updater methods
   solution outcomes quickly. There are two convenience methods or avenues open to the researcher to intelligently update DSGE model instances
   dynamically at runtime which we will describe in some detail next.
 
-The DSGE models one-off updater methods
-=======================================
 
-*Altering one specific model property*
+One-off alteration of one specific model property
+-------------------------------------------------
 
   Once a DSGE model is instantiated using a model template files as a point of departure and a specific source of information from which model
   properties get parsed and attached as data fields to the DSGE model instance, all we have done is to initialize or read into memory a specific
@@ -88,10 +88,9 @@ The DSGE models one-off updater methods
   model immediately upon assignment. This behaviour may not always be desirable whenever a series of changes need to be made before updating of
   the model can be considered. Whenever such situations occur an alternative route needs to be taken which we will explore next.
 
-The DSGE models queued updater methods
-======================================
 
-*Altering many model properties and queueing processing*
+Altering many model properties and queued processing
+------------------------------------------------------
 
   At times researchers may want to load or instantiate a particular DSGE model instance using a corresponding template file but then perhaps
   plan to radically modify the model dynamically at runtime, by combining such actions as introducing new time-subscripted variables, altering

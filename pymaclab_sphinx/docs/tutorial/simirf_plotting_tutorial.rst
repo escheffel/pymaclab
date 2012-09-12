@@ -1,13 +1,14 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. index:: tutorial; DSGE instance; simulation; impulse-response; plotting; filtering
 
-=======================
-PyMacLab Tutorial
-=======================
+.. raw:: latex
 
-Simulating DSGE models
-======================
+   \newpage
 
-*Introduction*
+Tutorial 6 - Simulating DSGE models
+===================================
+
+Introduction
+------------
 
   In the previous tutorial we discovered the general structure of the PyMacLab DSGE model instance and saw how this programming approach lent
   itself well to the idea of inspecting and exploring the instantiated models' current state, summarized by its data fields and supplied
@@ -26,7 +27,8 @@ Simulating DSGE models
     # Instantiate a new DSGE model instance like so
     In [4]: rbc1 = pm.newMOD(models.rbc1_res)
 
-*Simulating the model*
+Simulating the model
+--------------------
 
   Recall that instantiating a DSGE model without any additional parameters means that an automatic attempt of finding the steady state is being
   made and if successfully found the model is already solved dynamically using a preferred (1st-order approximate) method. This means that you 
@@ -86,17 +88,18 @@ Simulating DSGE models
     In [8]: plt.show()
 
   This produces the following nice graph. Notice that you must specify the variables to be graphed and all simulated data is filtered according
-  to the argument passed to each variable in the model file. So the key "hp" produces hp-filtered data while the key "bk" results in
-  Baxter-King-filtered data.
+  to the argument passed to each variable in the model file. So the key "hp" produces hp-filtered data, the key "bk" results in
+  Baxter-King-filtered data while the key "cf" leads to cycles extraced using the Christiano-Fitzgerald filter.
 
   .. plot:: ../../pymaclab/examples/test4.py
 
 
-*Cross-correlation tables*
+Cross-correlation tables
+------------------------
 
   Notice that filtered simulations are always stored in data fields which means that statistics such as correlations at leads and lags can
   easily be computed as well. Specifically, the simlulated data corresponding to the above graph can be retrieved from the object
-  ``rbc1.modsolver.forkleind.insim``. There already exist a number of simple convenience functions allowing users to generate cross-correlation
+  ``rbc1.modsolver.forkleind.insim`` [#f1]_. There already exist a number of simple convenience functions allowing users to generate cross-correlation
   tables for simulated data. The functions can be used as follows:
 
   .. sourcecode:: ipython
@@ -133,7 +136,8 @@ Simulating DSGE models
   cross-correlations at the leads and lags specified in the previous calling function generating that table data.
 
 
-*Simulating while keeping random shocks fixed*
+Simulating while keeping random shocks fixed
+--------------------------------------------
 
   Yet another useful feature to know about is that after each call to
   ``rbc1.modsolvers.forkleind.sim()`` the vector of randomly drawn iid shocks gets saved into object ``rbc1.modsolver.forkleind.shockvec``.
@@ -204,7 +208,7 @@ Simulating DSGE models
     # Now save the shocks, by saving a clone or copy, instead of a reference
     In [10]: shockv = deepcopy(rbc1.modsolvers.forkleind.shockvec)
 
-    # Change the filterin assumption of output and consumption using the queued updater branch
+    # Change the filtering assumption of output and consumption using the queued updater branch
     In [11]: rbc1.updaters_queued.vardic['con']['mod'][0][1] = 'hp'
     In [12]: rbc1.updaters_queued.vardic['con']['mod'][1][1] = 'hp'
     In [13]: rbc1.updaters_queued.process_queue()
@@ -217,13 +221,29 @@ Simulating DSGE models
     In [16]: rbc1.modsolvers.forkleind.show_sim(('output','consumption'))
     In [17]: plt.show()
 
+    # Change the filtering assumption of output and consumption using the queued updater branch
+    In [18]: rbc1.updaters_queued.vardic['con']['mod'][0][1] = 'cf'
+    In [19]: rbc1.updaters_queued.vardic['con']['mod'][1][1] = 'cf'
+    In [20]: rbc1.updaters_queued.process_queue()
+
+    # Now we could run the simulation again, this time passing the randomly drawn shocks
+    In [21]: rbc1.modsolvers.forkleind.solve()
+    In [22]: rbc1.modsolvers.forkleind.sim(200,shockvec=shockv)
+
+    # Plot the simulation and show it on screen
+    In [23]: rbc1.modsolvers.forkleind.show_sim(('output','consumption'))
+    In [24]: plt.show()
+
 
   .. plot:: ../../pymaclab/examples/test6.py
 
-Generating impulse-response functions
-=====================================
+  As is apparent from the three plots produced above, the simulated data is first filtered using the Baxter-King filter, then the more
+  commonly used Hodrick-Prescott filter and finally the Christian-Fitzgerald asymmetric filter. Notice that the BK filter by default
+  (or rather by specification) cuts off 6 time periods at the beginning and at the end of the simulated sample. The purpose for using any
+  of the three filters is of course to make the simulated data stationary and to extract the cycle only.
 
-*Introduction*
+Generating impulse-response functions
+-------------------------------------
 
   Dynamic solutions obtained to first-order approximated DSGE models using the method of perturbations have a great deal in common with standard
   Vector Autoregression (VAR) models commonly used in applied Macroeconometrics. This in turn implies that solved DSGE models can be described
@@ -253,3 +273,9 @@ Generating impulse-response functions
   This produces the following nice graph. Notice that here the shock to total productivity has been normalized to 100%.
 
   .. plot:: ../../pymaclab/examples/test5.py
+
+.. rubric:: Footnotes
+
+.. [#f1] The simulated time series data contained within ``rbc1.modsolvers.forkleind.insim`` is `NOT` filtered yet. In designing the library I
+         have decided to delay filtering to the stage where the user calls ``rbc1.modsolvers.forkleind.show_sim()`` or when similar functions are
+         called to for instance generate the cross-correlation table.

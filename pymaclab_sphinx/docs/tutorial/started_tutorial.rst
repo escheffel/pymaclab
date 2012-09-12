@@ -1,13 +1,12 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. raw:: latex
 
-========================
-PyMacLab Tutorial Series
-========================
+   \newpage
 
-Getting started - Basics
-========================
+Tutorial 1 - Getting started
+============================
 
-*Introduction*
+Introduction
+------------
 
   PyMacLab's strength or orginal design goal has been that of providing users with a rich and flexible DSGE data structure (also called
   class in object-oriented programming speak) which allows them to do lots of interesting things with DSGE models. Don't forget that another
@@ -151,7 +150,7 @@ Getting started - Basics
 
 
 The PyMacLab DSGE model file
-============================
+----------------------------
 
   In order to be able to load or instantiate your first DSGE model and work with it, you have to make sure to first fill in a so-called PyMacLab
   DSGE model file. The idea behing this is the same as the Dynare model file which typically ends in .mod. PyMacLab already comes provided with a
@@ -246,7 +245,7 @@ The PyMacLab DSGE model file
   conventions model builders have to adhere to in order to use PyMacLab correctly.
 
 A Description of the model file's individual sections
-=====================================================
+-----------------------------------------------------
 
 *Model Description Section*
 
@@ -273,7 +272,7 @@ A Description of the model file's individual sections
 
    ::
 
-      [1] x(t):var_name{endo|con|exo}[log,hp|bk]
+      [1] x(t):var_name{endo|con|exo}[log,hp|bk,cf]
 
   The first element is a descriptor of how the time-subscripted variable will appear in the system of nonlinear equations. The second
   descriptor is a more revealing but still short name, such as `capital` or `consumption`. It is preferable to write longer variable names
@@ -282,7 +281,8 @@ A Description of the model file's individual sections
   language. These are inserted in abbreviated style using either `con`, `endo` or `exo`. Finally, the last option given enclosed in squared
   brackets allows for two additional options to be specified. Supplying the keyword `log` means that the approximation of the model showed be
   formed about the log of the variable, while the last option allows to supply a filtering option which is applied to the computation of results
-  based on simulations of the solved model. Currently available choices are either `hp` for the HP-Filter or `bk` for the Baxter-King-Filter.
+  based on simulations of the solved model. Currently available choices are either `hp` for the HP-Filter, `bk` for the Baxter-King-Filter or
+  `cf` for the Christiano-Fitzgerald filter.
 
 *Boundary Conditions Section*
 

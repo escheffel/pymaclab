@@ -1,3 +1,3 @@
-.. index:: cloud; changelog
+.. index:: PyMacLab; changelog
 
 .. include:: ../CHANGES

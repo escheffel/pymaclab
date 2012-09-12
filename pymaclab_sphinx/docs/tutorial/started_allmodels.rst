@@ -1,11 +1,8 @@
 .. index:: cloud; sphinx theme, sphinx theme; cloud
 
-=======================
-PyMacLab Tutorial
-=======================
 
-Getting started - A description of all DSGE model templates
-===========================================================
+Tutorial Appendix - A description of all DSGE model templates
+=============================================================
 
 *Introduction*
 

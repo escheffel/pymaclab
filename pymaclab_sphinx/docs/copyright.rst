@@ -1,3 +1,3 @@
-.. index:: cloud; license
+.. index:: PyMacLab; License
 
 .. include:: ../LICENSE

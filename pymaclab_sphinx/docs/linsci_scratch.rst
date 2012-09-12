@@ -1,4 +1,4 @@
-.. index:: cloud; installation
+
 
 =======================================
 Building a Linux Scientific Environment

@@ -5,10 +5,13 @@ Table Of Contents
 .. toctree::
 
     Front Page <index>
-    install
+
+    pymaclab_intro
+    pymaclab_philo
+    pymaclab_python
+
+    tutorial/tutorial_series
 
     history
     copyright
 
-..
-    lib/cloud_sptheme.make_helper

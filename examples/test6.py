@@ -32,3 +32,16 @@ rbc1.modsolvers.forkleind.sim(200,shockvec=shockv)
 # Plot the simulation and show it on screen
 rbc1.modsolvers.forkleind.show_sim(('output','consumption'))
 plt.show()
+
+# Change the filterin assumption of output and consumption using the queued updater branch
+rbc1.updaters_queued.vardic['con']['mod'][0][1] = 'cf'
+rbc1.updaters_queued.vardic['con']['mod'][1][1] = 'cf'
+rbc1.updaters_queued.process_queue()
+
+# Now we could run the simulation again, this time passing the randomly drawn shocks
+rbc1.modsolvers.forkleind.solve()
+rbc1.modsolvers.forkleind.sim(200,shockvec=shockv)
+
+# Plot the simulation and show it on screen
+rbc1.modsolvers.forkleind.show_sim(('output','consumption'))
+plt.show()

@@ -1,13 +1,14 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. index:: tutorial; DSGE instance; OOP; class
 
-========================
-PyMacLab Tutorial Series
-========================
+.. raw:: latex
 
-The Python DSGE instance
-========================
+   \newpage
 
-*Introduction*
+Tutorial 2 - The Python DSGE instance
+=====================================
+
+Introduction
+------------
 
   As already stated in the introduction of the introductory basic tutorial, PyMacLab's strength or orginal design goal has been that of providing
   users with a rich and flexible DSGE data structure (also called `Class` in object-oriented programming speak) which allows them to do lots of
@@ -22,7 +23,8 @@ The Python DSGE instance
   `consistency`, `persistence` and enormous scope for `extensibility`. All example code fragments provided here assume that you are replicating
   them within an IPyton interactive session, but they could also be called from a Python program "batch" file.
 
-*Understanding the PyMacLab DSGE model class and its instances*
+Understanding the PyMacLab DSGE model class and its instances
+-------------------------------------------------------------
 
   PyMacLab has been written in the Python programming language which supports object-oriented programming. This means, that more than 80% of
   PyMacLab's code is devoted to the definition of `data fields` and `methods` of the `DSGE_model Class`, which forms the basis for all
@@ -91,10 +93,9 @@ The Python DSGE instance
   problem (i.e. looking for the steady state) and indeed choose to do so manually on the IPython interactive command shell, allowing them
   to immediately inspect any errors.
 
-Digging deeper into the DSGE model's instance's structure
-==========================================================
 
-*Instantiation options for DSGE model instances*
+Instantiation options for DSGE model instances
+----------------------------------------------
 
   There are a couple of instance invocation or instantiation arguments one should be aware of. At the time of writing these lines there are in
   total 5 other arguments (besides the DSGE model template file path) which can be passed to the pymaclab.newMOD function out of which 1 is
@@ -130,7 +131,8 @@ Digging deeper into the DSGE model's instance's structure
   the FOCs nonlinear equations are distributed to individual cores for analytical differentiation as opposed to doing this serially on one CPU
   core.
 
-*Working with DSGE model instances*
+Working with DSGE model instances
+---------------------------------
 
   The most useful feature is to call the model with the option `initlev=0`, because this will allow you more control over the steady-state
   computation of the model by permitting a closer interactive `inspection` of the DSGE model instance as created thus far. Let's demonstrate this
@@ -276,9 +278,7 @@ Digging deeper into the DSGE model's instance's structure
   branch, which we will explore more in the next section to this tutorial series. 
 
 DSGE modelling made intuitive
-=============================
-
-*Introduction*
+-----------------------------
 
   Before concluding this tutorial, we will demonstrate how PyMacLab's DSGE data structure (or instance) approach allows researchers to implement
   ideas very intuitively, such as for instance "looping" over a DSGE model instance in order to explore how incremental changes to the parameter

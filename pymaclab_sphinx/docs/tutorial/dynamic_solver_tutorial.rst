@@ -1,13 +1,14 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. index:: tutorial; DSGE instance; solution, dynamic solution; perturbation; Jacobian; Hessian
 
-========================
-PyMacLab Tutorial Series
-========================
+.. raw:: latex
 
-Dynamic Solution Methods - Building Blocks
-==========================================
+   \newpage
 
-*Introduction*
+Tutorial 5 - Dynamic Solution Methods
+=====================================
+
+Introduction
+------------
 
   In the previous tutorial we discovered the general structure of the PyMacLab DSGE model instance and saw how this programming approach lent
   itself well to the idea of inspecting and exploring the instantiated models' current state, summarized by its data fields and supplied
@@ -32,7 +33,8 @@ Dynamic Solution Methods - Building Blocks
   with this solution method will know that this method requires a partitioning of the model's evaluated Jacobian into two separate matrices, which
   for simplicity we denote `A` and `B`. They are computed by default and are for instance inspectable at ``rbc1.jAA`` and ``rbc1.jBB``.
 
-*The Jacobian and Hessian: A Detour*
+The Jacobian and Hessian: A Detour
+----------------------------------
 
   One of the great advantages of PyMacLab is that the Jacobian and Hessian are NOT computed or approximated numerically using the method of finite differences,
   but are calculated in exact fashion analytically using the special-purpose Python library Sympy, which is a CAS - or computer algebra system,
@@ -86,9 +88,7 @@ Dynamic Solution Methods - Building Blocks
   provides by default.
 
 Dynamic Solution Methods - Nth-order Perturbation
-==================================================
-
-*Introduction*
+-------------------------------------------------
 
   Solving nonlinear rational expectations DSGE models via the method of perturbation represents an approximate solution around the computed
   steady state of the model. Since this approach is not too dissimilar from a Taylor Series expansion of a function around some point students
@@ -101,7 +101,8 @@ Dynamic Solution Methods - Nth-order Perturbation
   around for a while and only requires knowledge of the models Jacobian, while his latest paper (co-authored with Paul Gomme) spelling out the
   solution of the 2nd-order accurate approximation, also requires knowledge of the Hessian.
 
-*Choosing the degree of approximation*
+Choosing the degree of approximation
+------------------------------------
 
   At the time of writing these words, PyMacLab includes full support for both of these two methods, where the first method has been made available
   by binding Klein's original Fortran code into PyMacLab and making it accessible via the node ``rbc1.modsolvers.forkleind`` which provides the

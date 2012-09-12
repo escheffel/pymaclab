@@ -12,6 +12,7 @@ from matplotlib import pyplot as PLT
 import copy as COP
 from pymaclab.filters._hpfilter import hpfilter
 from pymaclab.filters._bkfilter import bkfilter
+from pymaclab.filters.cffilter import cffilter
 from isolab import isolab
 try:
     import mlabraw
@@ -1546,6 +1547,8 @@ class PyKlein2D:
                             filli[i1] = 1
                         elif 'bk' in [z for z in vardic[y]['mod']][indx]:
                             filli[i1] = 2
+                        elif 'cf' in [z for z in vardic[y]['mod']][indx]:
+                            filli[i1] = 3
             filtup = tuple(filli)
 
 
@@ -1582,7 +1585,7 @@ class PyKlein2D:
                     woy = np.zeros((tlen,3))
                     lam = 1600
                     yyf = MAT.matrix(hpfilter(yy,woy,tlen,1600,0))
-                    sim_y[i1,:] = yyf[0]*100
+                    sim_y[i1,:] = yyf[0]*100.0
                 elif filtup[list(intup).index(conli[i1])] == 2:
                     conli[i1] = conli[i1]+'(bkf)'
                     yy = sim_y[i1,:].__array__().T
@@ -1591,7 +1594,16 @@ class PyKlein2D:
                     dn = 32
                     kkl = 12
                     yyf = MAT.matrix(bkfilter(yy,up,dn,kkl,tlen))
-                    sim_y[i1,:] = yyf[0]*100
+                    sim_y[i1,:] = yyf[0]*100.0
+                elif filtup[list(intup).index(conli[i1])] == 3:
+                    conli[i1] = conli[i1]+'(cff)'
+                    yy = sim_y[i1,:].__array__().T
+                    woy = np.zeros((tlen,1))
+                    low = 6
+                    high = 32
+                    drift = True
+                    yyf = MAT.matrix(cffilter(yy,low,high,drift))
+                    sim_y[i1,:] = yyf[0]*100.0
         # Now filter the state variables!
         for i1 in xrange(sim_x.shape[0]):
             if indx and (i1 in indx) and filtup[list(intup).index(stateli[i1])]:
@@ -1601,7 +1613,7 @@ class PyKlein2D:
                     wox = np.zeros((tlen,3))
                     lam = 1600
                     xxf = MAT.matrix(hpfilter(xx,wox,tlen,1600,0))
-                    sim_x[i1,:] = xxf[0]*100
+                    sim_x[i1,:] = xxf[0]*100.0
                 elif filtup[list(intup).index(stateli[i1])] == 2:
                     stateli[i1] = stateli[i1]+'(bkf)'
                     xx = sim_x[i1,:].__array__().T
@@ -1610,8 +1622,17 @@ class PyKlein2D:
                     dn = 32
                     kkl = 12
                     xxf = MAT.matrix(bkfilter(xx,up,dn,kkl,tlen))
-                    sim_x[i1,:] = xxf[0]*100                  
-            # Now hp filter the other variables!
+                    sim_x[i1,:] = xxf[0]*100.0
+                elif filtup[list(intup).index(stateli[i1])] == 3:
+                    stateli[i1] = stateli[i1]+'(cff)'
+                    xx = sim_x[i1,:].__array__().T
+                    wox = np.zeros((tlen,1))
+                    low = 6
+                    high = 32
+                    drift = True
+                    xxf = MAT.matrix(cffilter(xx,low,high,drift))
+                    sim_x[i1,:] = xxf[0]*100.0 
+        # Now hp filter the other variables!
         if self.oswitch:
             for i1 in xrange(sim_o.shape[0]):
                 if indo and (i1 in indo) and filtup[list(intup).index(otherli[i1])]:
@@ -1628,7 +1649,15 @@ class PyKlein2D:
                         up = 6
                         dn = 32
                         kkl = 12
-                        oof = MAT.matrix(bkfilter(oo,up,dn,kkl,tlen)) 
+                        oof = MAT.matrix(bkfilter(oo,up,dn,kkl,tlen))
+                    elif filtup[list(intup).index(otherli[i1])] == 3:
+                        otherli[i1] = otherli[i1]+'(cff)'
+                        oo = sim_o[i1,:].__array__().T
+                        woo = np.zeros((tlen,1))
+                        low = 6
+                        high = 32
+                        drift = True
+                        oof = MAT.matrix(cffilter(oo,low,high,drift)) 
 
         if indx and indy and indo:
             for x in indx:

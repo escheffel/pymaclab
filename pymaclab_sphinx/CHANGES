@@ -4,8 +4,16 @@
 Release History
 ===============
 
-**0.89.1** (2012-9-11)
+**0.90.1-dev** (2012-9-12)
 ==========================
+
+    * Implemented the Christiano-Fitzgerald asymmetric band-pass filter to extract stationary cycle from simulated data.
+
+    * Updated documentation substantially.
+
+
+**0.89.1** (2012-9-11)
+======================
 
     * Re-introduced sympycore as default CAS. It is MUCH faster than sympy. Now comes packaged with PyMacLab.
 

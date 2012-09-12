@@ -1,4 +1,4 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+
 
 ================================
 Macroeconomic Analysis in Python
@@ -46,8 +46,9 @@ Advantages of PyMacLab in Python
 
   This list barely touches the surface of what is currently out there available for free for Python prgrammers wanting to do scientific
   computing. Even if a specific library does not exist directly, it is usually easy to produce wrappers for traditional and mature libraries
-  originally written in C, C++ or Fortran. This last point brings me straight to the next advantage users can expect to benefit from when choosing
-  to use Python in their scientific work.
+  originally written in C, C++ or Fortran. A great and comprehensive reference text book introducing serious scientific computing using Python
+  is Langtangen's "Python Scripting for Computational Science" :cite:`Lan:2009`. This last point brings me straight to the next advantage users
+  can expect to benefit from when choosing to use Python in their scientific work.
 
 *Python glues well into traditional scientific languages*
 

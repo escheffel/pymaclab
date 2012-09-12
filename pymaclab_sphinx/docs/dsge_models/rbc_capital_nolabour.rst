@@ -1,4 +1,4 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+
 
 =======================
 A simple real business cycle model without a labour-leisure choice

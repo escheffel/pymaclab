@@ -1,13 +1,14 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+.. index:: tutorial; DSGE instance; steady state; solution
 
-========================
-PyMacLab Tutorial Series
-========================
+.. raw:: latex
 
-Steady State Solution Methods
-=============================
+   \newpage
 
-*Introduction*
+Tutorial 4 - Steady State Solution Methods
+==========================================
+
+Introduction
+------------
 
   In the previous tutorial we learnt how a PyMacLab DSGE model instance possesses the capability to intelligently upate its properties
   following the re-declaration at runtime of attached data fields such as the parameter space or the set of non-linear first-order conditions
@@ -17,7 +18,8 @@ Steady State Solution Methods
   the approximation method of perturbations is to first obtain the steady state solution around which the approximations are computed. In total
   we are going to explore 5 different variants suitable for seeking to compute the steady state. So let's get started.
 
-*Option 1: Using the model's declared FOCs and passing arguments at model instantiation*
+Option 1: Using the model's declared FOCs and passing arguments at model instantiation
+--------------------------------------------------------------------------------------
 
   Choosing option one allows users to leave the numerical as well as closed form steady state sections in the model template files entirely
   empty or unused indicated by the "None" keyword inserted into any line in these sections. In this case, the library has to rely on the time-
@@ -130,7 +132,8 @@ Steady State Solution Methods
   This method has the added advantage that steady state initial starting values can be determined intelligently at runtime external to the
   model file.
 
-*Option 2: Supplying the non-linear steady state system in the model file*
+Option 2: Supplying the non-linear steady state system in the model file
+------------------------------------------------------------------------
 
   Yet another way available for finding the model's steady state is similar to the one in option one in that it uses a system of non-linear
   equations specified in this case directly inside the model template file. The reason why one would want to prefer this option over option one
@@ -224,7 +227,8 @@ Steady State Solution Methods
   As one can see easily in this case, we are instructing the model to solve the 4 equation system in the four variables `c_bar`, `k_bar`,
   `y_bar` and `betta`. This is also a very common option to choose in order to obtain the model's steady state efficiently and conveniently.
 
-*Option 3: Use the numerical root finder to solve for some steady states and get remaining ones residually*
+Option 3: Use the numerical root finder to solve for some steady states and get remaining ones residually
+---------------------------------------------------------------------------------------------------------
 
   Option 3 perhaps one of the most useful ways one can employ in order to obtain a DSGE model's steady state solution as it focuses the numerical
   non-linear root-finding algorithm on a very small set of equations and unknown steady state variables, leaving the computation of the
@@ -325,7 +329,8 @@ Steady State Solution Methods
   when simple generic starting values are employed. The issue of starting values take us straight to the next available option available to
   PyMacLab users.
 
-*Option 4: Use the numerical root finder to solve for steady states with pre-computed starting values*
+Option 4: Use the numerical root finder to solve for steady states with pre-computed starting values
+----------------------------------------------------------------------------------------------------
 
   It is often useful and sometimes even outright necessary to supply the root-finding algorithm with pre-computed "intelligently" chosen
   initial starting values which are better than the generic choice of just passing a bunch of 1.0s to the system. To this end, whenever the
@@ -427,7 +432,8 @@ Steady State Solution Methods
   Whenever they are omitted, this specific case of computing the steady state is triggered whenever the number of suggested starting values in the
   `Closed Form` section is exactly equal to the number of non-linear equations in the `Manual` section.
 
-*Option 5: Finding the steady state by only supplying information in the Closed Form section*
+Option 5: Finding the steady state by only supplying information in the Closed Form section
+-------------------------------------------------------------------------------------------
 
   This is the most straightforward but at the same time possibly also least-used method for finding a steady state and will not be explained in
   greater depth here. In this variant, the `Manual` section is marked as unused employing the "None" keyword and only information in the
