@@ -1,4 +1,4 @@
-.. index:: cloud; sphinx theme, sphinx theme; cloud
+
 
 
 Tutorial Appendix - A description of all DSGE model templates

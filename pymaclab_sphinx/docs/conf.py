@@ -101,14 +101,13 @@ version = "0.90.1-dev"
 # directories to ignore when looking for source files.
 exclude_patterns = [
     # may revise this
-    "lib/cloud_sptheme.make_helper.rst",
 ]
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
-#add_function_parentheses = True
+add_function_parentheses = True
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
@@ -116,16 +115,16 @@ exclude_patterns = [
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
-#show_authors = False
+#show_authors = True
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-modindex_common_prefix = [ "cloud_sptheme." ]
+#modindex_common_prefix = [ "cloud_sptheme." ]
 
 todo_include_todos = True
-issue_tracker_url = "bb:ecollins/cloud_sptheme"
+issue_tracker_url = "git:escheffel/pymaclab"
 
 # -- Options for HTML output ---------------------------------------------------
 
@@ -241,7 +240,7 @@ latex_documents = [
 latex_preamble = '\setcounter{tocdepth}{10}'
 
 # Documents to append as an appendix to all manuals.
-latex_appendices = ['bibliography']
+latex_appendices = ['bibliography','api_doc']
 
 # If false, no module index is generated.
 #latex_domain_indices = True
@@ -256,7 +255,9 @@ man_pages = [
      [author], 1)
 ]
 
+'''
 def setup(app):
   #remove first line of module docstrings - it's module title
   from sphinx.ext.autodoc import cut_lines
   app.connect('autodoc-process-docstring', cut_lines(1, what=['module']))
+'''

@@ -1,3 +1,14 @@
+'''
+.. module:: helpers
+   :platform: Linux
+   :synopsis: A module containing just a small number of useful functions, such as getting the current data and some special
+              linear algebra routines compiled in externally.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
+
 import datetime
 import time
 import copy as COP

@@ -1,19 +1,21 @@
-"""Macroeconomics
+'''
+.. module:: pymaclab
+   :platform: Linux
+   :synopsis: The var module contains the VAR class for estimating and doing further work with Vector Autoregressions commonly
+              used in applied macroeconometrics. It supports advanced methods such as bootstrapping confidence intervals including
+              Killian's boostrap-after-bootstrap small-sample bias correction. Also CPU-intensive methods such as the bootstrap can
+              be computed using Parallel Python to exploit multi-core CPUs. Pretty plotting methods are also included which depend
+              on matplotlib.
 
-__author__ = "Eric Michael Scheffel"
-__version__ = '0.8'
-__revision__ = "$Revision: 1001 $"
-__date__ = '$Date: 2007-08-05$'
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
 
-"""
 
-__author__ = "Eric Michael Scheffel"
-__version__ = '0.88.1'
-__revision__ = "$Revision: 1001 $"
-__date__ = '$Date: 2012-08-21$'
+'''
 
 import os as OPS
 from dsge import macrolab
+from stats import var
+from stats import favar
 import linalg
 import sys
 
@@ -66,8 +68,11 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,
 def newDB():
 	return macrolab.TSDataBase()
 
-def newVAR(laglen=1,data='none',set_useconst='const'):
-	return macrolab.VAR(laglen,data,set_useconst)
+def newVAR(data=None,vnames=None,pnames=None,svnames=None,irfs=True,boot=True,plot=True,conf=None,mesg=False):
+	return var.VAR(data=data,vnames=vnames,pnames=pnames,svnames=svnames,irfs=irfs,boot=boot,plot=plot,conf=conf,mesg=mesg)
+
+def newFAVAR(dates=None,rdates=None,data=None,freq='M',vnames=None,pnames=None,svnames=None,irfs=True,rescale=False,boot=True,plot=True,sfacs='auto',init=None,conf=None):
+	return favar.FAVAR(dates=dates,rdates=rdates,data=data,freq=freq,vnames=vnames,pnames=pnames,svnames=svnames,irfs=irfs,rescale=rescale,boot=boot,plot=plot,sfacs=sfacs,init=init,conf=conf)
 
 def modinfo(model):
 	offset = 40
@@ -268,6 +273,6 @@ def explain(model):
 	model.pdf()
 
 
-# Import this late because cascading imports need newMOD() function'
+# Import this late because cascading imports need newMOD() function
 import modfiles
 from .modfiles.makemod import make_modfile

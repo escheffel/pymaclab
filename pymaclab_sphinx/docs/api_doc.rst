@@ -2,8 +2,8 @@
 PyMacLab - API Documentation
 ===============================================
 
-Modules and Classes
-===================
+Modules and Classes for DSGE modelling
+======================================
 
 .. rst-class:: html-toggle
 The pymaclab module
@@ -30,17 +30,17 @@ The pymaclab.dsge.macrolab module
    :inherited-members:
 
 .. rst-class:: html-toggle
-The pymaclab.dsge.updaters.tools module
+The pymaclab.dsge.updaters.one_off module
 ---------------------------------
-.. automodule:: pymaclab.dsge.updaters.tools
+.. automodule:: pymaclab.dsge.updaters.one_off
    :members:
    :undoc-members:
    :inherited-members:
 
 .. rst-class:: html-toggle
-The pymaclab.dsge.updaters_queued.tools module
+The pymaclab.dsge.updaters.queued module
 ---------------------------------
-.. automodule:: pymaclab.dsge.updaters_queued.tools
+.. automodule:: pymaclab.dsge.updaters.queued
    :members:
    :undoc-members:
    :inherited-members:
@@ -81,6 +81,33 @@ The pymaclab.filters module
 The pymaclab.linalg module
 ------------------------
 .. automodule:: pymaclab.linalg
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+.. raw:: latex
+
+   \newpage
+
+Modules and Classes for Macroeconometrics
+=========================================
+
+.. rst-class:: html-toggle
+The pymaclab.stats.var module
+-----------------------------
+.. automodule:: pymaclab.stats.var
+   :members:
+   :undoc-members:
+   :inherited-members:
+
+.. raw:: latex
+
+   \newpage
+
+.. rst-class:: html-toggle
+The pymaclab.stats.favar module
+-------------------------------
+.. automodule:: pymaclab.stats.favar
    :members:
    :undoc-members:
    :inherited-members:

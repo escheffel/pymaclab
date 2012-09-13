@@ -322,7 +322,7 @@ DSGE modelling made intuitive
   and re-computing the steady state of the model. This gives rise to the following nice plot exhibting the steady state relationship between the
   interest rate and the level of physical capital prevailing in steady state:
 
-  .. plot:: ../../pymaclab/examples/test2.py
+  .. plot:: ../../pymaclab/tests/pymaclab/test2.py
 
 
   That was nice and simple, wasn't it? So with the power and flexibility of PyMacLab DSGE model instances we can relatively painlessly explore

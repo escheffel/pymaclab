@@ -1,5 +1,19 @@
+'''
+.. module:: var
+   :platform: Linux
+   :synopsis: The var module contains the VAR class for estimating and doing further work with Vector Autoregressions commonly
+              used in applied macroeconometrics. It supports advanced methods such as bootstrapping confidence intervals including
+              Killian's boostrap-after-bootstrap small-sample bias correction. Also CPU-intensive methods such as the bootstrap can
+              be computed using Parallel Python to exploit multi-core CPUs. Pretty plotting methods are also included which depend
+              on matplotlib.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
 import numpy
 import scipy
+import scipy.stats
 from scikits import timeseries as ts
 import matplotlib as mpl
 from matplotlib import rc
@@ -10,19 +24,29 @@ rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
 from matplotlib import pyplot as plt
 from matplotlib import pylab as pyl
 import copy
-from ..filters import hpfilter as hpf
 import datetime
 import pickle
 import pp
 import time
+import os
+
+# Re-factored imports
+from ..dattrans.transmeth import stdX, transX
+from .common import genXX
+
+# Switch off runtime warnings here
+import warnings
+warnings.filterwarnings("ignore")
+
 
 class VAR:
 
-    def __init__(self,data=None,vnames=None,pnames=None,svnames=None,irfs=True,boot=True,plot=True,conf=None):
+    def __init__(self,data=None,vnames=None,pnames=None,svnames=None,irfs=True,boot=True,plot=True,conf=None,mesg=False):
         print '#####################################################'
         stepo=0
         stepo+=1
-        print str(stepo)+') Initialising VAR'
+        self._mesg = mesg
+        if self._mesg: print str(stepo)+') Initialising VAR'
         self.confdic = conf
         params = {'axes.labelsize':conf['graph_options']['labels']['label_fs'],
                   'text.fontsize': conf['graph_options']['labels']['text_fs'],
@@ -50,208 +74,80 @@ class VAR:
             for rname in vnames:
                 self.irf_graphs_dic[sname][rname] = None
         ############################################################
-        print "This VAR model's name is: "+self.confdic['modname']
-        print 'The dataset used is: '+self.confdic['datafile']
-        print 'The chosen autoregressive order is: '+str(self.nlags)
-        print 'The total number of variables in the system is: '+str(self.ncols)
-        print 'The total number of observations before estimation is: '+str(self.nrows)
-        if conf['const_term'] == None:
-            print 'The model was estimated using neither a constant nor a time-trend'
-        elif conf['const_term'] == 'cc':
-            print 'The model was estimated using only a constant'
-        elif conf['const_term'] == 'tt':
-            print 'The model was estimated using only a time-trend'
-        elif conf['const_term'] == 'ct':
-            print 'The model was estimated using both a constant and a time-trend'
-        elif conf['const_term'] == 'ctt':
-            print 'The model was estimated using both a constant, a linear, and a quadratic time trend'
-        if conf['translog']:
-            print "The model's impulse responses are in % changes for vars in logs"
-        elif not conf['translog']:
-            print "The model's impulse responses are in abs. log dev. for vars in logs"
-        if conf['use_svnames']:
-            print "The model's impulse responses are based on a customized shock matrix"
-        elif not conf['use_svnames']:
-            print "The model's impulse responses are based on the identity shock matrix"
-        print 'The frequency of the data is: '+str(self.freq)
-        print '#####################################################'
+        if self._mesg:
+            print "This VAR model's name is: "+self.confdic['modname']
+            print 'The dataset used is: '+self.confdic['datafile']
+            print 'The chosen autoregressive order is: '+str(self.nlags)
+            print 'The total number of variables in the system is: '+str(self.ncols)
+            print 'The total number of observations before estimation is: '+str(self.nrows)
+            if conf['const_term'] == None:
+                print 'The model was estimated using neither a constant nor a time-trend'
+            elif conf['const_term'] == 'cc':
+                print 'The model was estimated using only a constant'
+            elif conf['const_term'] == 'tt':
+                print 'The model was estimated using only a time-trend'
+            elif conf['const_term'] == 'ct':
+                print 'The model was estimated using both a constant and a time-trend'
+            elif conf['const_term'] == 'ctt':
+                print 'The model was estimated using both a constant, a linear, and a quadratic time trend'
+            if conf['translog']:
+                print "The model's impulse responses are in % changes for vars in logs"
+            elif not conf['translog']:
+                print "The model's impulse responses are in abs. log dev. for vars in logs"
+            if conf['use_svnames']:
+                print "The model's impulse responses are based on a customized shock matrix"
+            elif not conf['use_svnames']:
+                print "The model's impulse responses are based on the identity shock matrix"
+            print 'The frequency of the data is: '+str(self.freq)
+            print '#####################################################'
         stepo+=1
-        print str(stepo)+') Standardising data'
+        if self._mesg: print str(stepo)+') Standardising data'
         # Transform raw data according to Stock and Watson's trans code encoding system
-        print 'Now TRANSFORMING data according to Stock and Watson transformation encoding...'
-        self.transX()
+        if self._mesg: print 'Now TRANSFORMING data according to Stock and Watson transformation encoding...'
+        self = transX(self,data=self.data)
         if self.confdic['trans_data']:
             # Standardize the data if wanted, also store means and standard errors
-            print 'Now STANDARDIZING data ahead of estimation procedure...'
-            self.stdX(standard=True)
+            if self._mesg: print 'Now STANDARDIZING data ahead of estimation procedure...'
+            self = stdX(self,data=self.data,standard=True)
             self.data = copy.deepcopy(self.tdata)
         else:
-            self.stdX(standard=False)
-        print '#####################################################'
+            self = stdX(self,data=self.data,standard=False)
+        if self._mesg: print '#####################################################'
         stepo+=1
-        print str(stepo)+') Estimate coefficient matrix of the VAR'
-        self.genXX()
+        if self._mesg: print str(stepo)+') Estimate coefficient matrix of the VAR'
+        self = genXX(self)
         self.compbetta()
         if self.confdic['const_term'] != None:
             self.compbettax()
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo+=1
-        print str(stepo)+') Creating companion matrices'
+        if self._mesg: print str(stepo)+') Creating companion matrices'
         self.mkCompMat()
         self.mkfitres()
         self.mksigma()
-        if irfs: print 'Now generating impulse responses...'
-        if irfs: self.mkphis()       
+        if irfs:
+            if self._mesg: print 'Now generating impulse responses...'
+            self.mkphis()       
         if irfs and boot:
             addstr = ''
             if self.confdic['multicpu']: addstr = '(parallel execution)'
             else: addstr = '(serial execution)'
-            print 'Now generating bootstrap confidence intervals'+addstr+'...'
+            if self._mesg: print 'Now generating bootstrap confidence intervals'+addstr+'...'
             t0 = time.time()            
             if not self.confdic['multicpu']: self.mkboot()
             elif self.confdic['multicpu']: self.mkboot_pp()
-            print round(time.time() - t0,2), "secs used to execute..."
+            if self._mesg: print round(time.time() - t0,2), "secs used to execute..."
         if self.confdic['do_vdc']:
             vdcp = self.confdic['vdcp']
             self.genFEVD(self.data,self.bettasm,vdcp) 
-        if plot: print 'Now plotting and saving graphs of actual, fitted and residual data for all series...'
-        if plot: self.plot_vals()
-        if irfs: print 'Now plotting and saving graphs of impulse responses...'
-        if irfs: self.plot_irfs()
-        print '*All done !*'
-
-
-    # Function used to standardize the original data, i.e. de-mean and divide by SD, but save the info !  
-    def stdX(self,standard=False,only_demean=False,func=False):
-        data = copy.deepcopy(self.data)
-        vnames = self.vnames
-        trans_dic = {}
-        data_nonstd = copy.deepcopy(data)
-        for colo in range(0,data.shape[1],1):
-            trans_dic[vnames[colo]] = {}
-            mean_i = numpy.average(data[:,colo])
-            trans_dic[vnames[colo]]['mean'] = copy.deepcopy(mean_i)
-            if standard:
-                data[:,colo] = data[:,colo] - mean_i
-            std_i = numpy.std(data[:,colo])
-            trans_dic[vnames[colo]]['std'] = copy.deepcopy(std_i)
-            data_nonstd[:,colo] = copy.deepcopy(data[:,colo])
-            if standard:
-                if not only_demean: data[:,colo] = data[:,colo]/std_i
-        if not func:
-            self.tdata = copy.deepcopy(data)
-            self.nstddata = copy.deepcopy(data_nonstd)
-            self.trans_dic = copy.deepcopy(trans_dic)
-        elif func:
-            return data,trans_dic
-        
-
-    # Function to transform the raw data according to some classification
-    # 1 = levels
-    # 2 = first seasonal difference
-    # 3 = second seasonal difference
-    # 4 = log level
-    # 5 = log first seasonal difference
-    # 6 = log second seasonal difference
-    # 7 = detrend log using hp filter monthly data
-    # 8 = detrend log using hp filter quarterly data
-    # 16 = log second seasonal difference
-    # 17 = (1-L)(1-L^12)
-    # 18 = log of (1-L)*annualizing factor (i.e. x4 for quarterly and x12 for monthly
-    def transX(self,func=False):
-        data = copy.deepcopy(self.data)
-        vnames = self.vnames
-        freq = self.confdic['freq']
-        tcode = self.confdic['tcode']
-        shift = 0
-        freqshift = 1
-        if freq == 'M':
-            freqshift = 12
-        elif freq == 'Q':
-            freqshift = 4
-        else:
-            freqshift = 1
-        # for level do nothing
-        # first seasonal difference
-        for i1,vname in enumerate(vnames):
-            if tcode[vname] == 2:
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                if shift < 1: shift = 1*freqshift
-            elif tcode[vname] == 3:
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                data[2*freqshift:,i1] = data[2*freqshift:,i1]-data[:-2*freqshift,i1]
-                if shift < 2: shift = 2*freqshift
-            elif tcode[vname] == 4:
-                data[:,i1] = numpy.log(data[:,i1])
-            elif tcode[vname] == 5:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                if shift < 1: shift = 1*freqshift
-            elif tcode[vname] == 6:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                data[2*freqshift:,i1] = data[2*freqshift:,i1]-data[:-2*freqshift,i1]
-                if shift < 2: shift = 2*freqshift
-            elif tcode[vname] == 7:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data[:,i1],129600)[0]
-            elif tcode[vname] == 8:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data[:,i1],1600)[0]
-            elif tcode[vname] == 18:
-                data[:,i1] = numpy.log(data[:,i1])
-                if freq == 'Q':
-                    data[1:,i1] = (data[1:,i1]-data[:-1,i1])*4.0
-                elif freq == 'M':
-                    data[1:,i1] = (data[1:,i1]-data[:-1,i1])*12.0
-                if shift < 1: shift = 1
-        if shift > 0: data = data[shift:,:]
-        self.data = copy.deepcopy(data)
-
-
-
-    def genXX(self,matd=None,nlags=None,const='standard',func=False):
-        # Get all the needed variables from instance
-        if nlags == None: nlags = copy.deepcopy(self.nlags)
-        if matd == None: matd = copy.deepcopy(self.data)
-        if const == 'standard': const_term = copy.deepcopy(self.confdic['const_term'])
-        rows = matd.shape[0]
-        cols = matd.shape[1]
-        nmatd = numpy.zeros([rows-nlags,cols*nlags])
-        for lag in range(0,nlags,1):
-            for col in range(0,cols,1):
-                shift = lag*(cols-1)
-                if lag == 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(nlags-(lag)),col]
-                elif lag == nlags - 1:
-                    nmatd[:,col+shift+lag] = matd[lag:-1,col]
-                elif lag > 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(nlags-(lag)),col]
-        # Flip matrix left to right in order to have p(1) lags first, then re-order variables
-        nmatd = numpy.fliplr(nmatd)
-        for elem in range(0,nlags,1):
-            nmatd[:,elem*cols:(elem+1)*cols] = numpy.fliplr(nmatd[:,elem*cols:(elem+1)*cols])
-        # Add the colum for the constants
-        if const_term == 'tt':
-            constar = numpy.reshape(numpy.array([x for x in range(0,nmatd.shape[0],1)]),(nmatd.shape[0],1))
-            nmatd = numpy.hstack((constar,nmatd))
-        elif const_term == 'cc':
-            constar = numpy.reshape(numpy.array([1,]*nmatd.shape[0]),(nmatd.shape[0],1))
-            nmatd = numpy.hstack((constar,nmatd))
-        elif const_term == 'ct':
-            constar = numpy.reshape(numpy.array([1,]*nmatd.shape[0]),(nmatd.shape[0],1))
-            consttrend = numpy.reshape(numpy.array([x for x in range(0,nmatd.shape[0],1)]),(nmatd.shape[0],1))
-            nmatd = numpy.hstack((constar,consttrend,nmatd))
-        elif const_term == 'ctt':
-            constar = numpy.reshape(numpy.array([1,]*nmatd.shape[0]),(nmatd.shape[0],1))
-            consttrend = numpy.reshape(numpy.array([x for x in range(0,nmatd.shape[0],1)]),(nmatd.shape[0],1))
-            consttrend2 = consttrend**2
-            nmatd = numpy.hstack((constar,consttrend,consttrend2,nmatd))
-        if not func:
-            self.nmatd = nmatd
-        elif func:
-            return nmatd
-        
+        if plot:
+            if self._mesg: print 'Now plotting and saving graphs of actual, fitted and residual data for all series...'
+            self.plot_vals()
+        if irfs:
+            if self._mesg: print 'Now plotting and saving graphs of impulse responses...'
+            self.plot_irfs()
+        if self._mesg: print '*All done !*'
+   
         
     def compbetta(self,matd=None,nmatd=None,smbetta=True,const='standard',func=False):
         # Get all the needed variables from instance
@@ -607,7 +503,7 @@ class VAR:
                     for j in xrange(1,nlags+1):
                         matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,shifto+(j-1)*ncols:j*ncols+shifto].T)
                     matd_n[nlags+obso,:] += resmat_n[obso,:]
-                nmatd_n = self.genXX(matd=matd_n,func=True)
+                nmatd_n = genXX(self,matd=matd_n,func=True)
                 betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
                 kill_array.append(betta_n)
             kill_array = numpy.array(kill_array)
@@ -643,6 +539,7 @@ class VAR:
             self.phisc_uncorr = copy.deepcopy(self.phisc)
             phis_kcorr,phisc_kcorr = self.mkphis(betta=self.betta_kcorr,compmatr=compmatr,func=True)
             self.phisc_kcorr = copy.deepcopy(phisc_kcorr)
+            self.phis_kcorr = copy.deepcopy(phis_kcorr)
             self.phisc_uncorr = copy.deepcopy(self.phisc)
             self.phisc = copy.deepcopy(self.phisc_kcorr)     
             print 'Calculation of bias correction done...'
@@ -658,7 +555,7 @@ class VAR:
                 matd_n[nlags+obso,:] += resmat_n[obso,:]
             self.boot_matd = copy.deepcopy(matd_n)
             rows_n,cols_n = matd_n.shape
-            nmatd_n = self.genXX(matd=matd_n,func=True)
+            nmatd_n = genXX(self,matd=matd_n,func=True)
             betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             betta_one_n = self.compbettax(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             compmatr_n = self.mkCompMat(betta=betta_n,betta_one=betta_one_n,func=True)
@@ -719,7 +616,7 @@ class VAR:
                 elif const == 'ct':
                     matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T                    
             matd_n[nlags+obso,:] += resmat_n[obso,:]
-        nmatd_n = self.genXX(matd=matd_n,func=True)
+        nmatd_n = pymaclab.stats.common.genXX(self,matd=matd_n,func=True)
         betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         compbetta_n = self.mkCompMat(betta=betta_n,func=True)
         eigs = numpy.linalg.eigvals(compbetta_n)
@@ -754,7 +651,7 @@ class VAR:
                 elif const == 'ct':
                     matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T                    
             matd_n[nlags+obso,:] += resmat_n[obso,:]
-        nmatd_n = self.genXX(matd=matd_n,func=True)
+        nmatd_n = pymaclab.stats.common.genXX(self,matd=matd_n,func=True)
         betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         betta_one_n = self.compbettax(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         compmatr_n = self.mkCompMat(betta=betta_n,betta_one=betta_one_n,func=True)
@@ -796,7 +693,7 @@ class VAR:
             barray_biasred = []
             # Note: Only pass the betta coefficients of the dynamic responses, not constant or time-trend
             inputs_biasred = ((resmat,yfmat,matd,nlags,maxphi,betta),)*bdraw
-            barray_biasred_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy")) for input in inputs_biasred]
+            barray_biasred_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy","pymaclab.stats.common",)) for input in inputs_biasred]
             barray_biasred = [x() for x in barray_biasred_jobs]
             barray_biasred = numpy.array(barray_biasred)
             biasred_term = numpy.mean(barray_biasred-self.betta,axis=0)
@@ -842,7 +739,7 @@ class VAR:
         print 'Now computing bootstraps'
         # Note: Again, pass only the betta coefficients for dynamic responses, no constant or time-trend
         inputs = ((resmat,yfmat,matd,nlags,maxphi,betta),)*bdraw
-        barray_jobs = [job_server.submit(self.refac_pp,(input,),modules=("copy","numpy","scipy")) for input in inputs]
+        barray_jobs = [job_server.submit(self.refac_pp,(input,),modules=("copy","numpy","scipy","pymaclab.stats.common")) for input in inputs]
         barray = [x() for x in barray_jobs]
         print 'Calculation of bootstraps done...'
         barray = numpy.array(barray)
@@ -935,6 +832,8 @@ class VAR:
         matd = self.data
         nlags = self.nlags
         modname = self.confdic['modname']
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
         yfmat = self.yfmat
         resmat = self.resmat
         tcode_dic = self.confdic['tcode']
@@ -961,10 +860,13 @@ class VAR:
             else:
                 ax3.plot(resmat[:,col],color='black')
             ax3.set_title('Residuals for '+name)
-            fig1.savefig('../graphs/'+modname+'/'+name+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['eps']:
+                fig1.savefig('../graphs/'+modname+'/'+name+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['pdf']:
+                fig1.savefig('../graphs/'+modname+'/'+name+'.pdf',bbox_inches='tight')
         plt.close('all')
 
-    def plot_irfs(self):
+    def plot_irfs(self):        
         # Graph some IRFs (Cholesky)
         irf_options = self.confdic['graph_options']['irfs']
         outer_colour = irf_options['outer_colour']
@@ -992,6 +894,11 @@ class VAR:
         graph_biased = self.confdic['graph_options']['irfs']['biased_line']
         graph_biased_type = self.confdic['graph_options']['irfs']['biased_line_type']
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'shock_irfs' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/shock_irfs') 
         signif = self.confdic['signif']
         for shockv,sname in enumerate(vnames):
             fig1 = plt.figure()
@@ -1040,14 +947,20 @@ class VAR:
                         ax.fill_between([xx for xx in range(0,irfp+1,1)],confint[2,:,respv,shockv].flatten()*percen,confint[3,:,respv,shockv].flatten()*percen, facecolor=inner_colour, edgecolor=inner_colour)
                 if glopt['title']: ax2.set_title('Response of '+pnames[rname]+' to shock on '+pnames[sname],fontsize=glopt['title_fs'])        
                 if glopt['title']: ax.set_title('Response of '+pnames[rname]+' to shock on '+pnames[sname],fontsize=glopt['title_fs'])
-                fig2.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.eps',bbox_inches='tight')
+                if self.confdic['graph_options']['save']['format']['eps']:
+                    fig2.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.eps',bbox_inches='tight')
+                if self.confdic['graph_options']['save']['format']['pdf']:
+                    fig2.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.pdf',bbox_inches='tight')
                 plt.close()
-            fig1.savefig('../graphs/'+modname+'/'+'irf_'+sname+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['eps']:
+                fig1.savefig('../graphs/'+modname+'/'+'irf_'+sname+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['pdf']:
+                fig1.savefig('../graphs/'+modname+'/'+'irf_'+sname+'.pdf',bbox_inches='tight')
             plt.close()
         plt.close('all')
 
 
-    def plot_one_irf(self,sname=None,rname=None,save_hd=True):
+    def plot_one_irf(self,sname=None,rname=None,save_hd=True):       
         irf_options = self.confdic['graph_options']['irfs']
         outer_colour = irf_options['outer_colour']
         inner_colour = irf_options['inner_colour']
@@ -1069,6 +982,11 @@ class VAR:
         hzline = self.confdic['hzline']
         bootstrap = self.confdic['bootstrap']
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'shock_irfs' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/shock_irfs') 
         signif = self.confdic['signif']
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
@@ -1099,7 +1017,10 @@ class VAR:
                 ax.fill_between([xx for xx in range(0,irfp+1,1)],confint[2,:,respv,shockv].flatten()*percen,confint[3,:,respv,shockv].flatten()*percen, facecolor=inner_colour, edgecolor=inner_colour)
         ax.set_title(r'$\textrm{Response of '+pnames[rname]+' to shock on '+pnames[sname]+'}$')        
         if save_hd:
-            fig.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['eps']:
+                fig.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.eps',bbox_inches='tight')
+            if self.confdic['graph_options']['save']['format']['pdf']:
+                fig.savefig('../graphs/'+modname+'/'+'shock_irfs/irf_'+sname+'_'+rname+'.pdf',bbox_inches='tight')
         else:
             self.irf_graphs_dic[sname][rname] = fig     
         plt.close('all')

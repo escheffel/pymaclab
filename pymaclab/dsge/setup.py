@@ -6,7 +6,6 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('solvers')
     config.add_subpackage('parsers')
     config.add_subpackage('updaters')
-    config.add_subpackage('updaters_queued')
     return config
 
 if __name__ == '__main__':

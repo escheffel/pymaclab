@@ -1,6 +1,13 @@
-"""
-COLLECTION OF SUPPORTING FUNCTIONS AND CLASSES
-"""
+'''
+.. module:: one_off
+   :platform: Linux
+   :synopsis: A collection of tools required for doing intelligent and dynamic DSGE model instance updating at runtime. The version in
+              this module is for the one-off updater behaviour.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
 from copy import deepcopy
 from ..solvers.steadystate import ManualSteadyState
 

@@ -1,4 +1,12 @@
- 
+'''
+.. module:: cffilter
+   :platform: Linux
+   :synopsis: This module contains the Christiano-Fitzgeraldn asymmetric bandpass filter for extracting business cycle trends.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+''' 
 import numpy as np
 
 # the data is sampled quarterly, so cut-off frequency of 18

@@ -1,6 +1,15 @@
-"""
-THE MODSOLVER CLASS AND ITS SUBCLASSES
-"""
+'''
+.. module:: modsolvers
+   :platform: Linux
+   :synopsis: The modsolvers module is an integral part of PyMacLab and is called extensively from the DSGEmodel class in module
+              macrolab. It contains all of the dynamic solver methods most of which make use of the DSGE models' derivatives, i.e.
+              the computed (numerical) Jacobian and Hessian.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
+
 from numpy import matlib as MAT
 from numpy import linalg as LIN
 from numpy.linalg import matrix_rank

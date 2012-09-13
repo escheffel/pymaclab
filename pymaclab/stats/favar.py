@@ -1,3 +1,17 @@
+'''
+.. module:: favar
+   :platform: Linux
+   :synopsis: The favar module contains the FAVAR class for estimating and doing further work with Factor-augmented Vector
+              Autoregressions commonly used in applied macroeconometrics. It supports advanced methods such as bootstrapping
+              confidence intervals including Killian's boostrap-after-bootstrap small-sample bias correction. Also CPU-intensive
+              methods such as the bootstrap can be computed using Parallel Python to exploit multi-core CPUs. Pretty plotting methods
+              are also included which depend on matplotlib.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
+
 from __future__ import division
 import numpy
 import scipy
@@ -16,7 +30,7 @@ import copy
 from ..filters import hpfilter as hpf
 import datetime
 import pickle
-import pca_module
+from ..linalg import pca_module
 import os
 import glob
 import sys

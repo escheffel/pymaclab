@@ -1,6 +1,14 @@
-"""
-THE STEADY STATE SOLVER CLASS AND ITS SUBCLASSES
-"""
+'''
+.. module:: steadystate
+   :platform: Linux
+   :synopsis: The steadystate module currently contains a shell class for sub-branching as well as two classes for calculating the
+              steady state of DSGE models. One of them computes steady states using closed form information, while the other one makes
+              use of a nonlinear root-finding algorithm supplied by the scipy optimize package.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
 import re
 import numpy as np
 import copy

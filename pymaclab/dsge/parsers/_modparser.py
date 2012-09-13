@@ -1,6 +1,13 @@
-"""
-GENERAL TEXTPARSER FOR MODFILES
-"""
+'''
+.. module:: _modparser
+   :platform: Linux
+   :synopsis: This is the (private) module responsible for collecting raw information from the DSGE model templated files. In here
+              we don't make much use of Regex patterns as we are only extracting raw lines from the mod files.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
 import os
 import re
 

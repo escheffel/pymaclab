@@ -1,6 +1,13 @@
-"""
-Functions to parse the MODparser and attach results to the DSGE Model.
-"""
+'''
+.. module:: _dsgeparser
+   :platform: Linux
+   :synopsis: This is the (private) module responsible for carefully extracting meaningful information from the DSGE model templated
+              files. In here we make much use of Regex patterns as we are extracting information from the mod file lines.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
 import re
 from copy import deepcopy
 import numpy.matlib as mat

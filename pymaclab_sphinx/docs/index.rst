@@ -9,12 +9,13 @@ Description
 -----------
   PyMacLab is the Python Macroeconomics Laboratory which currently primarily serves the purpose
   of providing a convenience framework written in form of a `Python <http://www.python.org/>`_ library with the ability to solve
-  non-linear DSGE models. At the time of writing these words, the library supports solving DSGE models
-  using 1st and 2nd order perturbation methods which are computed around the steady state. If you want to learn about PyMacLab
-  as quickly as possible, skip reading this and instead start reading through the tutorial series available in the Documentation
-  section to this site.
+  non-linear DSGE models using a DSGE model class from which to instantiate instances. At the time of writing these words, the library supports solving DSGE models
+  using 1st and 2nd order perturbation methods which are computed around the steady state. Apart from that, the library also contains two
+  advanced macroeconometric classes, the VAR class and the FAVAR class which can be employed for empirical work or in combination with DSGE models
+  in order to estimate instead of calibrate deep parameters. If you want to learn about PyMacLab as quickly as possible, skip reading this and
+  instead start reading through the tutorial series available in the Documentation section to this site.
 
-  The library provides wrapper functions for `Paul Klein's <http://paulklein.ca/newsite/start/start.php>`_ 1st-order
+  The DSGE model class provides wrapper functions for `Paul Klein's <http://paulklein.ca/newsite/start/start.php>`_ 1st-order
   accurate method based on the Schur Decomposition :cite:`Kle:2000` as well a more recently published method by the same author
   (co-authored with Paul Gomme) which computes 2nd-order accurate solutions without using Tensor Algebra :cite:`GomKle:2012`
   (using the Magnus & Neudecker 1999 definition of the Hessian matrix). PyMacLab possesses the added advantage of being equipped with
@@ -43,6 +44,7 @@ Features at a Glance
   * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of analytical Jacobian and Hessian employs parallelized multi-core CPU approach.
   * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
   * Benefit from a large and growing set of convience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
+  * Carry out advanced empirical macroeconometric analyses using the VAR and FAVAR classes which come provided.
   * Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.
   * Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab.
   * PyMacLab is free as in freedom and distributed under a `Apache 2.0 license <http://www.apache.org/licenses/LICENSE-2.0.html>`_.
@@ -53,7 +55,8 @@ Features at a Glance
     If you have used PyMacLab already and spotted some bugs or felt that some other important features are missing, you can head over to the
     library's `Github <http://github.com/escheffel/pymaclab/>`_ repository to submit an Issue item. We are currently in the process of adding
     more example DSGE model files (and eliminating mistakes in already existing ones). If you have used PyMacLab yourself and want to contribute
-    your own DSGE model files we are happy to include them!
+    your own DSGE model files we are happy to include them! Finally, to better understand PyMacLab's inner workings, take a look at the API
+    documentation.
 
 .. raw:: latex
 
@@ -200,7 +203,7 @@ Credit & Thanks
 
   Last but most certainly not least, my expression of thanks go to my former PhD supervisor `Max Gillman <http://www.maxgillman.com>`_
   who has introduced me to the world of general equilibrium macroeconomics and to monetary macroeconomics more deeply.
-  Similary, many of the lectures once delivered by `Martin Ellison <http://www.economics.ox.ac.uk/members/martin.ellison/>`_
+  Also, many of the lectures once delivered by `Martin Ellison <http://www.economics.ox.ac.uk/members/martin.ellison/>`_
   formerly at the Economics Department at Warwick now at Oxford made a lasting impression on me.
 
 Online Resources

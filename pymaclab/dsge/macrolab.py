@@ -1,3 +1,16 @@
+'''
+.. module:: macrolab
+   :platform: Linux
+   :synopsis: The macrolab module contains the the most important classes for doing work with DSGE models. In particular it supplies
+              the DSGEmodel class containing most of the functionality of DSGE model instances. The module also contains the TSDataBase
+              class which was supposed to be an advanced data carrier class to be passed to the DSGE model instance for estimation
+              purposes, but this is deprecated and will probably be replaced with a pandas data frame in the near future.
+
+.. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
+
+
+'''
+
 #from __future__ import division
 from scikits import timeseries as ts
 import copy
@@ -26,8 +39,8 @@ from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
      populate_model_stage_one_b,populate_model_stage_one_bb,populate_model_stage_two
-from updaters.tools import Updaters, dicwrap, dicwrap_deep, listwrap, matwrap
-from updaters_queued.tools import Updaters_Queued, dicwrap_queued, dicwrap_deep_queued, listwrap_queued,\
+from updaters.one_off import Updaters, dicwrap, dicwrap_deep, listwrap, matwrap
+from updaters.queued import Updaters_Queued, dicwrap_queued, dicwrap_deep_queued, listwrap_queued,\
      matwrap_queued, Process_Queue, queue
 
 #Define a list of the Greek Alphabet for Latex
@@ -269,30 +282,41 @@ class TSDataBase:
 ##################THE DSGE MODEL CLASS (WORKS)#####################
 class DSGEmodel(object):
     '''
-    This is the macrolab DSGEmodel class. It is the main class
-    of the packages and creates DSGE model instances which have
-    lots of interesting solution and other features.
-    '''
+    This is the macrolab DSGEmodel class. It is the main class of the packages and instantiates
+    DSGE model instances which possess many features such as model file parsers, solvers, etc. The __init__
+    function first called mostly attaches the passed arguments to the DSGE model instance in form of private _X
+    data fields.
+    
+    .. note::
+    
+       Notice that the various init method, i.e. init1, init1a, etc. are not called here, but they are called externally in the
+       pymaclab package when instantiating a new DSGE model using pymaclab.newMOD().
+    
+    :param ffile:             The absolute path to the PyMacLab DSGE model file to be parsed on instantiation
+    :type ffile:              str
+    :param dbase:             A database with time series data for estimation purposes. Not implemented at the moment
+    :type standard:           unknown
+    :param initlev:           Takes values 0,1,2. Determines how deep the instantiation cascades through all methods.
+                              If 0 then the file is parsed and the instance is only *prepared* for steady state solving.
+                              If 1 then the file is parsed, the SS is automatically computed and instance is *prepared*
+                              for dynamic solving. If 2 then the instance is solved all the way.
+    :type initlev:            int
+    :param mesg:              If True then lots of diagnostics are printed to the screen during instantiation.
+    :type mesg:               bool
+    :param ncpus:             The number of CPU core to be employed, defaults to 1. But 'auto' can also be used for detection
+    :type ncpus:              int|str
+    :param mk_hessian:        Whether the Hessian should be computed as this is expensive.
+    :type mk_hessian:         bool
+    :param use_focs:          Should the FOCs be used directly to look for the steady state? Must use list|tuple to pick equations.
+    :type use_focs:           tuple
+    :param ssidic:            A Python ssidic with the initial starting values for solving for the SS numerically
+    :type ssidic:             dic
+        
+    :return self:             *(dsge_inst)* - A populated DSGE model instance with fields and methods
+
+    '''    
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,use_focs=False,ssidic=None):
-        """
-        DSGE Model Class
-
-        Parameters
-        ----------
-        ffile : str
-            The modfile
-        dbase : DataBase object
-            Not sure what this is for yet
-        initlev : int
-            0 just parse the modfile and prepare for manual steady state calculation
-            1 parse modfile and solve steady state
-            2 Jacobian (and Hessian)
-            
-        Returns
-        -------
-        A DSGE model instance
-        """
         self._initlev = initlev #TODO: remove this as an option
         self._mesg = mesg
         self._ncpus = ncpus
@@ -314,6 +338,29 @@ class DSGEmodel(object):
 
     # Initializes all of the rest, errors can occur here ! (steady state, jacobian, hessian)
     def init1(self):
+        '''
+        The init1 method. Model population proceeds from the __init__function here. In particular the data gets read in
+        (not implemented at the moment) and the model parsing begins.
+        
+        .. note::
+           The self.vardic gets created and the manual as well as
+           the numerical steady state sections gets parsed and attached to the DSGE model instance. So the most import fields created
+           here using function populate_model_stage_one() are:
+           
+             * self.vardic - variable names dictionary with transform and filtering info
+             * self.mod_name - short name of the DSGE model from mod file
+             * self.mod_desc - longer model description from mod file
+             * self.paramdic - dic of defined parameters with their numerical values
+             * self.manss_sys - list of equations from the closed form steady state section
+             * self.ssys_list - list of equations from the numerical steady state section
+           
+           Also the updaters and updaters_queued branches are opened here and the self.vardic gets wrapped for dynamic updating
+           behaviour.
+        
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+        
+        '''
         initlev = self._initlev
         ncpus = self._ncpus
         mk_hessian = self._mk_hessian
@@ -348,6 +395,20 @@ class DSGEmodel(object):
         self.updaters_queued.vardic = dicwrap_deep_queued(self,'self.vardic',initlev)
         
     def init1a(self):
+        '''
+        The init1a method. Model population proceeds from the init1 method here. The only field which get created here is the raw
+        (i.e. unsubstituted) substitution dictionary.
+        
+        .. note::
+            Field which are created here using the function populate_model_stage_one_a() which in turn calls mk_subs_dic():
+           
+             * self.nlsubs_raw1 - a list of the @items and their replacements
+             * self.nlsubsdic - the above just expressed as a keyed list
+        
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
+        '''
         mesg = self._mesg
         secs = self.txtpars.secs
         # This is an additional populator which creates subsitution dictionary
@@ -357,6 +418,22 @@ class DSGEmodel(object):
         self = populate_model_stage_one_a(self,secs)
         
     def init1b(self):
+        '''
+        The init1b method. Model population proceeds from the init1a method here.
+
+        .. note::
+        
+           The only thing which gets done here purposefully *after* calling init1a() is to wrap these fields:
+           
+             * self.nlsubsdic - the above just expressed as a keyed list
+             * self.paramdic - dic of defined parameters with their numerical values
+             
+           in order to give them dynamic updating behaviour. No more is done in this init method call.
+        
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
+        '''        
         initlev = self._initlev
         secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
@@ -374,8 +451,24 @@ class DSGEmodel(object):
         
     def init1c(self):
         '''
-        Separate sub-initializor useful when we want to re-define subsituted variables at runtime
-        and intelligently update the model.
+        The init1c method. Model population proceeds from the init1b method here. We call populate_model_stage_one_bb() which does quite
+        a bit of substitution/replacement of the @-prefixed variables. It does this in the numerical and closed form steady state
+        calculation sections, as well as in the actual FOCs themselves.
+
+        .. note::
+        
+           *After* that we can wrap various fields for updating which are:
+           
+             * self.foceqs - list of firs-order conditions with @ replacements done
+             * self.manss_sys - the list of equations from closed form SS section
+             * self.syss_list - the list of equations from numerical SS section
+        
+           Notice also that here we replace or generate fields in case the FOCs are supposed to be used
+           directly in SS calculation because the "use_focs" parameter was not passed empty.
+        
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
         '''
         initlev = self._initlev
         secs = self.txtpars.secs
@@ -407,13 +500,20 @@ class DSGEmodel(object):
 
 
     def init2(self):
+        '''
+        The init2 method. Model population proceeds from the init1c method here. In this initialisation method
+        the only thing which is being done is to open up the sssolvers branch and pass down required objects to
+        the manuals closed from solver and the numerical root-finding solver depending on whether information for
+        this has been included in the DSGE model file. *No* attempt is made at solving for the steady state, the
+        respective solvers are only being *prepared*.
+        
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+        
+        '''
         mesg = self._mesg
         secs = self.txtpars.secs
         initlev = self._initlev
-        '''
-        Sub-initializor which prepares the DSGE model instance for SS calculation, BUT
-        it does not do the calculation itself yet.
-        '''
         if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."
 
         # Attach the steady state class branch, and add Fsolve if required but do no more !
@@ -433,7 +533,25 @@ class DSGEmodel(object):
 
     def init3(self):
         '''
-        This sub-initializor calls all the methods which are required to compute the steady state.
+        Initialisation method init3 is quite complex and goes through a number of logical tests in order to determine
+        how to solve for the steady state of the model.
+        
+        .. note::
+        
+           There are 5 different ways a DSGE model can obtain its steady state solution depending on what information has
+           been provided:
+           
+             1) Information has been provided using the "use_focs" parameter to use FOCs directly
+             2) Information has only been provided in the numerical SS section
+             3) Information has only been provided in the closed form SS section
+             4) Both CF-SS and NUM-SS info are present and they overlap
+             5) Both CF-SS and NUM-SS info are present and CF is residual
+             
+           These options are better explained in the documentation to PyMacLab in the steady state solver section.
+           
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+        
         '''
         txtpars = self.txtpars
         secs = txtpars.secs
@@ -445,8 +563,14 @@ class DSGEmodel(object):
         if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
            not all([False if 'None' in x else True for x in secs['manualss'][0]]) and self._use_focs and self._ssidic != None:
             self.sssolvers.fsolve.solve()
+            
+        ##### OPTION 2: There is only information provided in the numerical section NOT in closed-form
+        if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['manualss'][0]]) and not self._use_focs and self._ssidic == None:
+            if self._mesg: print "SS: ONLY numerical steady state information supplied...attempting to solve SS..."
+            self.sssolvers.fsolve.solve()
 
-        ##### OPTION 1: There is only information on closed-form steady state, BUT NO info on numerical steady state
+        ##### OPTION 3: There is only information on closed-form steady state, BUT NO info on numerical steady state
         # Solve using purely closed form solution if no other info on model is available
         if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
            not all([False if 'None' in x else True for x in secs['manualss'][0]]):
@@ -458,7 +582,7 @@ class DSGEmodel(object):
             self.sssolvers.manss.solve()
             self.sstate = {}
             self.sstate.update(self.sssolvers.manss.sstate)
-        ##### OPTION 2: There is information on closed-form AND on numerical steady state
+        ##### OPTION 4: There is information on closed-form AND on numerical steady state
         # Check if the numerical and closed form sections have entries
         if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
            all([False if 'None' in x else True for x in secs['closedformss'][0]]):
@@ -471,7 +595,7 @@ class DSGEmodel(object):
                 numss_set = set()
                 for keyo in self.ssidic.keys():
                     numss_set.add(keyo)
-                ##### OPTION 1a: If there is an ssidic and its keys are identical to manss_set, the use as suggestion for new ssi_dic
+                ##### OPTION 4a: If there is an ssidic and its keys are identical to manss_set, the use as suggestion for new ssi_dic
                 if manss_set == numss_set:
                     if self._mesg: print "SS: CF-SS and NUM-SS (overlapping) information information supplied...attempting to solve SS..."
                     alldic = {}
@@ -480,7 +604,7 @@ class DSGEmodel(object):
                     self.sssolvers.manss = ManualSteadyState(intup)
                     self.sssolvers.manss.solve()
                     self.ssidic.update(self.sssolvers.manss.sstate)
-            ##### OPTION 1b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
+            ##### OPTION 4b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
             # If it is empty, then just compute the closed form SS and pass to ssidic as starting value
             elif self.ssidic == {}:
                 if self._mesg: print "SS: CF-SS and NUM-SS (empty ssdic) information information supplied...attempting to solve SS..."
@@ -528,6 +652,7 @@ class DSGEmodel(object):
                 print "ERROR: You probably want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
                 print "However, the numerical steady state solver FAILED to find a root, so I am stopping model instantiation here."
                 sys.exit()
+            ##### OPTION 5: We have both numerical and (residual) closed form information
             # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
             elif self.switches['ss_suc'] == ['1','1'] and manss_set != numss_set:
                 if self._mesg: print "SS: CF-SS (residual) and NUM-SS information information supplied...attempting to solve SS..."
@@ -551,7 +676,22 @@ class DSGEmodel(object):
     def init4(self):
         '''
         This model instance sub-initializor only calls the section which use the computed steady state
-        in order to compute derivatives and open dynamic solver branches on the instance.
+        in order to compute derivatives and open dynamic solver branches on the instance. But Jacobian and Hessian
+        are *not* computed here, this is postponed to the next init level.
+        
+        .. note::
+        
+           The following last field is wrapped for dynamic execution:
+           
+             * self.sigma - the variance-covariance matrix of the iid shocks
+             
+           Notice that after wrapping this last field the process_queue class is instantiated at last,
+           because it needs to have access to *all* of the wrapped fields. Also in this method, the function
+           populate_model_stage_two() is called which prepares the nonlinear FOCs for derivative-taking.
+           
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
         '''
         txtpars = self.txtpars
         secs = txtpars.secs
@@ -573,6 +713,15 @@ class DSGEmodel(object):
         self.updaters_queued.process_queue = Process_Queue(other=self)
 
     def init5(self):
+        '''
+        This model instance initialisation step is the last substantial one in which the dynamic solution of the DSGE
+        model instance is finally computed using a choice of methods which can be called at runtime.
+        
+         
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
+        '''
         txtpars = self.txtpars
         secs = txtpars.secs
         initlev = self._initlev
@@ -696,6 +845,10 @@ class DSGEmodel(object):
     def init_out(self):
         '''
         The final intializor section does some extra stuff after all has been done.
+           
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
         '''
         initlev = self._initlev
         # Compute the Eigenvalues of the AA matrix for inspection
@@ -1163,18 +1316,15 @@ class DSGEmodel(object):
         An unparallelized method using native Python and Sympycore in oder
         to calculate the numerical and analytical Jacobian and Hessian of the model.
         
-        Parameters
-        ----------
-        self: object instance
+        :param self: object instance
+        :type self: dsge_inst
         
-        Returns
-        -------
-        self.numj: attaches numerical model Jacobian to instance
-        self.jdic: attaches the analytical model Jacobian to instance
-        self.numh: attaches numerical model Hessian to instance
-        self.hdic: attaches the analytical 3D Hessian to instance
-        self.jAA: attaches numerical AA matrix used in Forkleind solution method
-        self.jBB: attaches numerical BB matrix used in Forkleind solution method
+        :return self.numj: *(arr2d)* - attaches numerical model Jacobian to instance
+        :return self.jdic: *(dic)* - attaches the analytical model Jacobian to instance
+        :return self.numh: *(arr2d)* - attaches numerical model Hessian to instance
+        :return self.hdic: *(dic)* - attaches the analytical 3D Hessian to instance
+        :return self.jAA:  *(arr2d)* - attaches numerical AA matrix used in Forkleind solution method
+        :return self.jBB:  *(arr2d)* - attaches numerical BB matrix used in Forkleind solution method
         '''
         mk_hessian = self._mk_hessian
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
@@ -2398,20 +2548,4 @@ class DSGEmodel(object):
         except:
             pass
 
-###########THE MODEL EVALUATION CLASS AND IT'S SUBLCASSES (INCOMPLETE)#######
-class MODeval:
 
-    def __init__(self):
-        self.test = 'tester'
-#----------------------------------------------------------------------------------------------------------------------
-class Minford:
-
-    def __init__(self):
-        self.test = 'tester'
-"""***********************************************************"""
-######################ERROR (EXCEPTION) CLASSES####################
-#class MyErr(mlabraw.error):
-#   pass
-class MyErr(ValueError):
-    pass
-"""***********************************************************"""
