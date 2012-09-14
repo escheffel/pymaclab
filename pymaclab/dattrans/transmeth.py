@@ -93,10 +93,10 @@ def transX(self,data=None,func=False):
             if shift < 2: shift = 2*freqshift
         elif tcode[vname] == 7:
             data[:,i1] = numpy.log(data[:,i1])
-            data[:,i1] = hpf(data[:,i1],129600)[0]
+            data[:,i1] = hpfilter(data=data[:,i1],lam=129600)[0]
         elif tcode[vname] == 8:
             data[:,i1] = numpy.log(data[:,i1])
-            data[:,i1] = hpf(data[:,i1],1600)[0]
+            data[:,i1] = hpfilter(data=data[:,i1],lam=1600)[0]
         elif tcode[vname] == 18:
             data[:,i1] = numpy.log(data[:,i1])
             if freq == 'Q':

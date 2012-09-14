@@ -19,9 +19,9 @@ import numpy as np
 import pylab as P
 from matplotlib import pyplot as PLT
 import copy as COP
-from pymaclab.filters._hpfilter import hpfilter
-from pymaclab.filters._bkfilter import bkfilter
-from pymaclab.filters.cffilter import cffilter
+from pymaclab.filters import hpfilter
+from pymaclab.filters import bkfilter
+from pymaclab.filters import cffilter
 from isolab import isolab
 try:
     import mlabraw
@@ -1352,14 +1352,14 @@ class PyKlein2D:
             yy = osim_y[i1,:].__array__().T
             woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
-            yyf = MAT.matrix(hpfilter(yy,woy,osim_y.shape[1],1600,0))
+            yyf = MAT.matrix(hpfilter(data=yy,lam=1600))
             osim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
             wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
-            xxf = MAT.matrix(hpfilter(xx,wox,osim_x.shape[1],1600,0))
+            xxf = MAT.matrix(hpfilter(data=xx,lam=1600))
             osim_x[i1,:] = xxf[0]
 
         if self.oswitch:
@@ -1369,7 +1369,7 @@ class PyKlein2D:
                 oo = osim_o[i1,:].__array__().T
                 woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
-                oof = MAT.matrix(hpfilter(oo,woo,osim_o.shape[1],1600,0))
+                oof = MAT.matrix(hpfilter(data=oo,lam=1600))
                 osim_o[i1,:] = oof[0]
 
         # Stack all matrices into one
@@ -1426,14 +1426,14 @@ class PyKlein2D:
             yy = osim_y[i1,:].__array__().T
             woy = np.zeros((osim_y.shape[1],3))
             lam = 1600
-            yyf = MAT.matrix(hpfilter(yy,woy,osim_y.shape[1],1600,0))
+            yyf = MAT.matrix(hpfilter(data=yy,lam=1600))
             osim_y[i1,:] = yyf[0]
         # Now filter the state variables!
         for i1 in xrange(osim_x.shape[0]):
             xx = osim_x[i1,:].__array__().T
             wox = np.zeros((osim_x.shape[1],3))
             lam = 1600
-            xxf = MAT.matrix(hpfilter(xx,wox,osim_x.shape[1],1600,0))
+            xxf = MAT.matrix(hpfilter(data=xx,lam=1600))
             osim_x[i1,:] = xxf[0]
 
         sim_x = osim_x[:,lags:-leads]
@@ -1450,7 +1450,7 @@ class PyKlein2D:
                 oo = osim_o[i1,:].__array__().T
                 woo = np.zeros((osim_o.shape[1],3))
                 lam = 1600
-                oof = MAT.matrix(hpfilter(oo,woo,osim_o.shape[1],1600,0))
+                oof = MAT.matrix(hpfilter(data=oo,lam=1600))
                 osim_o[i1,:] = oof[0]
             sim_o = osim_o[:,lags:-leads]
             sim_of = osim_o[:,leads+1:]
@@ -1593,7 +1593,7 @@ class PyKlein2D:
                     yy = sim_y[i1,:].__array__().T
                     woy = np.zeros((tlen,3))
                     lam = 1600
-                    yyf = MAT.matrix(hpfilter(yy,woy,tlen,1600,0))
+                    yyf = MAT.matrix(hpfilter(data=yy,lam=1600))
                     sim_y[i1,:] = yyf[0]*100.0
                 elif filtup[list(intup).index(conli[i1])] == 2:
                     conli[i1] = conli[i1]+'(bkf)'
@@ -1611,7 +1611,7 @@ class PyKlein2D:
                     low = 6
                     high = 32
                     drift = True
-                    yyf = MAT.matrix(cffilter(yy,low,high,drift))
+                    yyf = MAT.matrix(cffilter(data=yy,low=low,high=high,drift=drift))
                     sim_y[i1,:] = yyf[0]*100.0
         # Now filter the state variables!
         for i1 in xrange(sim_x.shape[0]):
@@ -1621,7 +1621,7 @@ class PyKlein2D:
                     xx = sim_x[i1,:].__array__().T
                     wox = np.zeros((tlen,3))
                     lam = 1600
-                    xxf = MAT.matrix(hpfilter(xx,wox,tlen,1600,0))
+                    xxf = MAT.matrix(hpfilter(data=xx,lam=1600))
                     sim_x[i1,:] = xxf[0]*100.0
                 elif filtup[list(intup).index(stateli[i1])] == 2:
                     stateli[i1] = stateli[i1]+'(bkf)'
@@ -1639,7 +1639,7 @@ class PyKlein2D:
                     low = 6
                     high = 32
                     drift = True
-                    xxf = MAT.matrix(cffilter(xx,low,high,drift))
+                    xxf = MAT.matrix(cffilter(data=xx,low=low,high=high,drift=drift))
                     sim_x[i1,:] = xxf[0]*100.0 
         # Now hp filter the other variables!
         if self.oswitch:
@@ -1650,7 +1650,7 @@ class PyKlein2D:
                         oo = sim_o[i1,:].__array__().T
                         woo = np.zeros((tlen,3))
                         lam = 1600
-                        oof = MAT.matrix(hpfilter(oo,woo,tlen,1600,0))
+                        oof = MAT.matrix(hpfilter(data=oo,lam=1600))
                     elif filtup[list(intup).index(otherli[i1])] == 2:
                         otherli[i1] = otherli[i1]+'(bkf)'
                         oo = sim_o[i1,:].__array__().T
@@ -1666,7 +1666,7 @@ class PyKlein2D:
                         low = 6
                         high = 32
                         drift = True
-                        oof = MAT.matrix(cffilter(oo,low,high,drift)) 
+                        oof = MAT.matrix(cffilter(data=oo,low=low,high=high,drift=drift)) 
 
         if indx and indy and indo:
             for x in indx:
@@ -1826,7 +1826,7 @@ class PyKlein2D:
                     yy = sim_y[i1,:].__array__().T
                     woy = np.zeros((tlen,3))
                     lam = 1600
-                    yyf = MAT.matrix(hpfilter(yy,woy,tlen,1600,0))
+                    yyf = MAT.matrix(hpfilter(data=yy,lam=1600))
                     sim_y[i1,:] = yyf[0]*100
                 elif filtup[list(intup).index(conli[i1])] == 2:
                     conli[i1] = conli[i1]+'(bkf)'
@@ -1845,7 +1845,7 @@ class PyKlein2D:
                     xx = sim_x[i1,:].__array__().T
                     wox = np.zeros((tlen,3))
                     lam = 1600
-                    xxf = MAT.matrix(hpfilter(xx,wox,tlen,1600,0))
+                    xxf = MAT.matrix(hpfilter(data=xx,lam=1600))
                     sim_x[i1,:] = xxf[0]*100
                 elif filtup[list(intup).index(stateli[i1])] == 2:
                     stateli[i1] = stateli[i1]+'(bkf)'
@@ -1865,7 +1865,7 @@ class PyKlein2D:
                         oo = sim_o[i1,:].__array__().T
                         woo = np.zeros((tlen,3))
                         lam = 1600
-                        oof = MAT.matrix(hpfilter(oo,woo,tlen,1600,0))
+                        oof = MAT.matrix(hpfilter(data=oo,lam=1600))
                     elif filtup[list(intup).index(otherli[i1])] == 2:
                         otherli[i1] = otherli[i1]+'(bkf)'
                         oo = sim_o[i1,:].__array__().T

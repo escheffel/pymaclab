@@ -27,7 +27,7 @@ from matplotlib import pylab as pyl
 import matplotlib.dates as mdates
 import datetime
 import copy
-from ..filters import hpfilter as hpf
+from pymaclab.filters import hpfilter as hpf
 import datetime
 import pickle
 from ..linalg import pca_module
@@ -40,8 +40,9 @@ import time
 class FAVAR:
 ############################################### MAIN INIT METHOD ############################################################
 #############################################################################################################################
-    def __init__(self,dates=None,rdates=None,data=None,freq='M',vnames=None,pnames=None,svnames=None,irfs=True,rescale=False,boot=True,plot=True,sfacs='auto',init=None,conf=None):
+    def __init__(self,dates=None,rdates=None,data=None,freq='M',vnames=None,pnames=None,svnames=None,irfs=True,rescale=False,boot=True,plot=True,sfacs='auto',init=None,conf=None,mesg=False):
         self.confdic = conf
+        self._mesg = mesg
         params = {'axes.labelsize':conf['graph_options']['labels']['label_fs'],
                   'text.fontsize': conf['graph_options']['labels']['text_fs'],
                   'legend.fontsize': conf['graph_options']['labels']['legend_fs'],
@@ -59,43 +60,44 @@ class FAVAR:
         self.tcode_dic = copy.deepcopy(self.confdic['tcode'])
         self.modname = self.confdic['modname']
         if conf['predel']: self.clean_dirs()
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo=0
         stepo+=1
-        print str(stepo)+') Initialising FAVAR'
+        if self._mesg: print str(stepo)+') Initialising FAVAR'
         # Populate the model with all of the information required
         self.populate(data=data,freq=freq,vnames=vnames,pnames=pnames,svnames=svnames,conf=conf)
         # Post-population diagnostics output printed to screen
         self.populate_diagnostics()
         if init == 1: return
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo+=1
-        print str(stepo)+') Standardising data'
+        if self._mesg: print str(stepo)+') Standardising data'
         # Standardizing and transforming data as needed
         self.transdata()
         if init == 2: return
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo+=1
         print str(stepo)+') Estimate number of static and dynamic factors'
         self.firstpass_estimation(sfacs=sfacs)
         if init == 3: return
         # Plot actual and fitted values
-        if plot: print 'Now plotting and saving graphs of actual, fitted and residual data for all series...'
+        if plot and self._mesg: print 'Now plotting and saving graphs of actual, fitted and residual data for all series...'
         self.plot_all(plot=plot)      
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo+=1
-        print str(stepo)+') Estimating coefficients of Factor VAR'
+        if self._mesg: print str(stepo)+') Estimating coefficients of Factor VAR'
         self.estimate_fac_var()
         if init == 4: return
-        print '#####################################################'
+        if self._mesg: print '#####################################################'
         stepo+=1
-        print str(stepo)+') Creating companion matrices'
-        print 'Outputing some estimated coefficient matrices to a folder...'
+        if self._mesg: print str(stepo)+') Creating companion matrices'
+        if self._mesg: print 'Outputing some estimated coefficient matrices to a folder...'
         self.outmatrices()
         self.mkcompmatrices()
-        # Check if ff_betta_comp is stable
-        if self.is_stable(compmat=self.ff_betta_comp): print 'The estimated factor VAR is stable and invertible !'
-        else: print 'WARNING: The estimated factor VAR is not stable and not invertible !'
+        if self._mesg:
+            # Check if ff_betta_comp is stable
+            if self.is_stable(compmat=self.ff_betta_comp): print 'The estimated factor VAR is stable and invertible !'
+            else: print 'WARNING: The estimated factor VAR is not stable and not invertible !'
         if init == 5: return
         self.identification()
         if init == 6: return
@@ -113,7 +115,7 @@ class FAVAR:
             vdcp = self.confdic['vdcp']
             self.genFEVD(self.bbe_resdic['fdata'],self.bbe_resdic['ffbettasm'],vdcp)
         self.writeFData()
-        print '*All done !*'
+        if self._mesg: print '*All done !*'
 
 ############################################## INIT/STEP PROCESS METHODS/CALLERS #############################################
 ##############################################################################################################################
@@ -141,27 +143,28 @@ class FAVAR:
         finit_pickled = pickle
         
     def populate_diagnostics(self):
-        print "This FAVAR model's name is: "+self.confdic['modname']
-        print 'The dataset used is: '+self.confdic['datafile']
-        print 'The chosen autoregressive order is: '+str(self.nlags)
-        print 'The chosen factor autoregressive order is: '+str(self.flags)
-        print 'The total number of variables in the system is: '+str(self.ncols)
-        print 'The total number of observations before estimation is: '+str(self.nrows)
-        print 'The frequency of the data is: '+str(self.freq)
-        if self.confdic['use_bbe_ident']:
-            print 'The model identifies structural shocks using: BBE'
-        elif self.confdic['use_chol_ident']:
-            print 'The model identifies structural shocks using: Simple Cholesky'
-        else:
-            print 'This model does not use any identification scheme for structural shocks'
+        if self._mesg:
+            print "This FAVAR model's name is: "+self.confdic['modname']
+            print 'The dataset used is: '+self.confdic['datafile']
+            print 'The chosen autoregressive order is: '+str(self.nlags)
+            print 'The chosen factor autoregressive order is: '+str(self.flags)
+            print 'The total number of variables in the system is: '+str(self.ncols)
+            print 'The total number of observations before estimation is: '+str(self.nrows)
+            print 'The frequency of the data is: '+str(self.freq)
+            if self.confdic['use_bbe_ident']:
+                print 'The model identifies structural shocks using: BBE'
+            elif self.confdic['use_chol_ident']:
+                print 'The model identifies structural shocks using: Simple Cholesky'
+            else:
+                print 'This model does not use any identification scheme for structural shocks'
      
     # This is the part of the FAVAR class which standardizes and transforms the data as needed    
     def transdata(self):
         # Transform raw data according to Stock and Watson's trans code encoding system
-        print 'Now TRANSFORMING data according to Stock and Watson transformation encoding...'
+        if self._mesg: print 'Now TRANSFORMING data according to Stock and Watson transformation encoding...'
         self.transX()
         # Standardize the data ahead of using PC analysis, also store means and standard errors
-        print 'Now STANDARDIZING data ahead of principal component analysis...'
+        if self._mesg: print 'Now STANDARDIZING data ahead of principal component analysis...'
         self.stdX(standard=True)
         # The standardized data adjusted for lost observations due to lags in regression(s)
         self.regtdata = self.tdata[self.nlags:,:]
@@ -174,10 +177,10 @@ class FAVAR:
     def firstpass_estimation(self,stepo=None,sfacs=None):
         if self.confdic['xdata_filter']:
             if sfacs == 'auto':
-                print 'Using Bai-Ng IPc2 criterion to determine number of static factors...'
+                if self._mesg: print 'Using Bai-Ng IPc2 criterion to determine number of static factors...'
                 self.findStatFacs()
             elif sfacs != 'auto':
-                print 'The number of static factors has been set EXOGENOUSLY to: sfacs='+str(sfacs)+'...'
+                if self._mesg: print 'The number of static factors has been set EXOGENOUSLY to: sfacs='+str(sfacs)+'...'
                 self.sfacs = copy.deepcopy(sfacs)
                 self.BNcrit_res = copy.deepcopy(sfacs)
                 self.estFBetta()
@@ -395,7 +398,7 @@ class FAVAR:
     def do_irfs(self,irfs=None):
         if self.confdic['do_irfs']:
             # Create impulse responses using the BBE identification scheme
-            print 'Now generating IRs'
+            if self._mesg: print 'Now generating IRs'
             if self.confdic['rescale']: self.mkphis(rescale=True)
             else: self.mkphis()
             #self.writeArray(self.phis[0],'phis_0')
@@ -424,23 +427,25 @@ class FAVAR:
 #################################################### DATA PREPARATION/TRANSFORMATION METHODS #################################
 ##############################################################################################################################
 
-    # Function to transform the raw data according to some classification
-    # 1 = levels
-    # 2 = first seasonal difference
-    # 3 = second seasonal difference
-    # 4 = log level
-    # 5 = log first seasonal difference
-    # 6 = log second seasonal difference
-    # 7 = detrend log using hp filter monthly data
-    # 8 = detrend log using hp filter quarterly data
-    # 16 = log second seasonal difference
-    # 17 = (1-L)(1-L^12)
-    # 18 = log of (1-L)*annualizing factor (i.e. x4 for quarterly and x12 for monthly
-    # 19 = linear detrend of level (raw) data
-    # 20 = linear detrend of log data
-    # 21 = quadratic detrend of level (raw) data
-    # 22 = quadratic detrend of log data
     def transX(self,data=None,func=False):
+        '''
+        Function to transform the raw data according to some classification
+        1 = levels
+        2 = first seasonal difference
+        3 = second seasonal difference
+        4 = log level
+        5 = log first seasonal difference
+        6 = log second seasonal difference
+        7 = detrend log using hp filter monthly data
+        8 = detrend log using hp filter quarterly data
+        16 = log second seasonal difference
+        17 = (1-L)(1-L^12)
+        18 = log of (1-L)*annualizing factor (i.e. x4 for quarterly and x12 for monthly
+        19 = linear detrend of level (raw) data
+        20 = linear detrend of log data
+        21 = quadratic detrend of level (raw) data
+        22 = quadratic detrend of log data
+        '''
         if data == None: data = copy.deepcopy(self.data)
         vnames = self.vnames
         freq = self.confdic['freq']
@@ -476,10 +481,10 @@ class FAVAR:
                 if shift < 2: shift = 2*freqshift
             elif tcode[vname] == 7:
                 data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data[:,i1],129600)[0]
+                data[:,i1] = hpf(data=data[:,i1],lam=129600)[0]
             elif tcode[vname] == 8:
                 data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data[:,i1],1600)[0]
+                data[:,i1] = hpf(data=data[:,i1],lam=1600)[0]
             elif tcode[vname] == 18:
                 data[:,i1] = numpy.log(data[:,i1])
                 if freq == 'Q':
@@ -2097,6 +2102,11 @@ class FAVAR:
         months   = mdates.MonthLocator()  # every month
         yearsFmt = mdates.DateFormatter('%Y')        
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'factors' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/factors')
         dato = copy.deepcopy(self.dates)
         plotrec = self.confdic['plot_rec']
         glopt = self.confdic['graph_options']['labels']
@@ -2121,6 +2131,13 @@ class FAVAR:
             if glopt['title']: ax1.set_title('Estimated Values for FACTOR '+str(fac_num+1),fontsize=glopt['title_fs'])
             fig1.savefig('../graphs/'+modname+'/factors/'+'FACTOR_'+str(fac_num+1)+'.eps',bbox_inches='tight')
         # Also plot unadjusted factors before BBE identification
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'factors' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/factors')
+        if 'unadj' not in os.listdir('../graphs/'+modname+'/factors/'):
+            os.mkdir('../graphs/'+modname+'/factors/unadj') 
         for fac_num,faco in enumerate(self.fdata.T):
             fig1 = plt.figure()
             ax1 = fig1.add_subplot(1,1,1)
@@ -2169,6 +2186,11 @@ class FAVAR:
             
     def plotFactorResids(self,fresids=None):
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'factors' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/factors')
         dato = copy.deepcopy(self.dates)
         glopt = self.confdic['graph_options']['labels']
         gridopt = self.confdic['graph_options']['grid']
@@ -2193,6 +2215,11 @@ class FAVAR:
         gridopt = self.confdic['graph_options']['grid']        
         expvar = self.exp_var
         modname = self.modname
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'factors' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/factors')
         fig1 = plt.figure()
         ax1 = fig1.add_subplot(1,1,1)
         if gridopt: ax1.grid()
@@ -2241,6 +2268,11 @@ class FAVAR:
         gridopt = self.confdic['graph_options']['grid']          
         matd = self.orig_tdata
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'series_fitted' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/series_fitted')
         yfmat = self.dynresdic['yfmat']
         resmat = self.dynresdic['ee_mat']
         for col,name in enumerate(vnames):
@@ -2277,6 +2309,11 @@ class FAVAR:
         data = copy.deepcopy(self.orig_data[self.max_shift:,:])
         matd = copy.deepcopy(self.orig_tdata)
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'series' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/series')
         for col,name in enumerate(vnames):
             fig1 = plt.figure()
             ax1 = fig1.add_subplot(211)
@@ -2329,6 +2366,11 @@ class FAVAR:
         graph_biased_type = self.confdic['graph_options']['irfs']['biased_line_type']
         param_bootstrap = self.confdic['param_bootstrap']
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'shock_irfs' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/shock_irfs')
         signif = self.confdic['signif']
         for shockv,sname in enumerate(range(dfacs)):
             #fig1 = plt.figure()
@@ -2421,6 +2463,11 @@ class FAVAR:
         bootstrap = self.confdic['bootstrap']
         param_bootstrap = self.confdic['param_bootstrap']
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'factor_irfs' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/factor_irfs')
         signif = self.confdic['signif']
         for shockv,sname in enumerate(range(dfacs)):
             for respv,rname in enumerate(range(dfacs)):
@@ -2476,6 +2523,11 @@ class FAVAR:
         bootstrap = self.confdic['bootstrap']
         param_bootstrap = self.confdic['param_bootstrap']
         modname = self.confdic['modname']
+        # Check if folder(s) needs to be created
+        if modname not in os.listdir('../graphs/'):
+            os.mkdir('../graphs/'+modname)
+        if 'xdata_irfs' not in os.listdir('../graphs/'+modname+'/'):
+            os.mkdir('../graphs/'+modname+'/xdata_irfs')
         signif = self.confdic['signif']
         for i1,vnamo in enumerate(vnames):
             fig2 = plt.figure()
@@ -2611,6 +2663,9 @@ class FAVAR:
     # This is a function which will write the computed companion matrix into a csv file
     def writeArray(self,inarray=None,fname=None):
         modname = self.confdic['modname']
+        # Check if folder exists
+        if 'matrices' not in os.listdir('../graphs/'+modname):
+            os.mkdir('../graphs/'+modname+'/matrices')
         if inarray == None: varcomp = self.varcomp
         else: varcomp = inarray
         rows = []
@@ -2636,6 +2691,9 @@ class FAVAR:
      # This is a function which will write the found factors and the original data into a csv file
     def writeFData(self):
         modname = self.confdic['modname']
+        # Check if folder exists
+        if 'matrices' not in os.listdir('../graphs/'+modname):
+            os.mkdir('../graphs/'+modname+'/matrices')        
         fdata = self.fdata_adj
         vnames = self.vnames
         fnames = []
@@ -2687,26 +2745,33 @@ class FAVAR:
     def clean_dirs(self,modpath=None):
         if modpath == None: base_path = '../graphs/'+self.modname
         else: base_path = modpath
-        seriesxx = glob.glob(base_path+'/xdata_irfs/*')
-        for f in seriesxx:
-            os.remove(f)
-        seriesff = glob.glob(base_path+'/factor_irfs/*')
-        for f in seriesff:
-            os.remove(f)
-        seriesf = glob.glob(base_path+'/shock_irfs/*')
-        for f in seriesf:
-            os.remove(f)
-        seriess = glob.glob(base_path+'/series/*')
-        for f in seriess:
-            os.remove(f)
-        seriesfit = glob.glob(base_path+'/series_fitted/*')
-        for f in seriesfit:
-            os.remove(f)
-        seriesfac = glob.glob(base_path+'/factors/*')
-        # Remove the subfolder as we don't want to delete this
-        seriesfac.remove('../graphs/'+self.modname+'/factors/unadj')
-        for f in seriesfac:
-            os.remove(f)
-        seriesmat = glob.glob(base_path+'/matrices/*')
-        for f in seriesmat:
-            os.remove(f)
+        if 'xdata_irfs' in os.listdir(base_path):
+            seriesxx = glob.glob(base_path+'/xdata_irfs/*')
+            for f in seriesxx:
+                os.remove(f)
+        if 'factor_irfs' in os.listdir(base_path):
+            seriesff = glob.glob(base_path+'/factor_irfs/*')
+            for f in seriesff:
+                os.remove(f)
+        if 'shock_irfs' in os.listdir(base_path):
+            seriesf = glob.glob(base_path+'/shock_irfs/*')
+            for f in seriesf:
+                os.remove(f)
+        if 'series' in os.listdir(base_path):
+            seriess = glob.glob(base_path+'/series/*')
+            for f in seriess:
+                os.remove(f)
+        if 'series_fitted' in os.listdir(base_path):
+            seriesfit = glob.glob(base_path+'/series_fitted/*')
+            for f in seriesfit:
+                os.remove(f)
+        if 'factors' in os.listdir(base_path):
+            seriesfac = glob.glob(base_path+'/factors/*')
+            # Remove the subfolder from glob list as we don't want to delete this
+            seriesfac.remove('../graphs/'+self.modname+'/factors/unadj')
+            for f in seriesfac:
+                os.remove(f)
+        if 'matrices' in os.listdir(base_path):
+            seriesmat = glob.glob(base_path+'/matrices/*')
+            for f in seriesmat:
+                os.remove(f)

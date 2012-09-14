@@ -71,8 +71,8 @@ def newDB():
 def newVAR(data=None,vnames=None,pnames=None,svnames=None,irfs=True,boot=True,plot=True,conf=None,mesg=False):
 	return var.VAR(data=data,vnames=vnames,pnames=pnames,svnames=svnames,irfs=irfs,boot=boot,plot=plot,conf=conf,mesg=mesg)
 
-def newFAVAR(dates=None,rdates=None,data=None,freq='M',vnames=None,pnames=None,svnames=None,irfs=True,rescale=False,boot=True,plot=True,sfacs='auto',init=None,conf=None):
-	return favar.FAVAR(dates=dates,rdates=rdates,data=data,freq=freq,vnames=vnames,pnames=pnames,svnames=svnames,irfs=irfs,rescale=rescale,boot=boot,plot=plot,sfacs=sfacs,init=init,conf=conf)
+def newFAVAR(dates=None,rdates=None,data=None,freq='M',vnames=None,pnames=None,svnames=None,irfs=True,rescale=False,boot=True,plot=True,sfacs='auto',init=None,conf=None,mesg=False):
+	return favar.FAVAR(dates=dates,rdates=rdates,data=data,freq=freq,vnames=vnames,pnames=pnames,svnames=svnames,irfs=irfs,rescale=rescale,boot=boot,plot=plot,sfacs=sfacs,init=init,conf=conf,mesg=mesg)
 
 def modinfo(model):
 	offset = 40

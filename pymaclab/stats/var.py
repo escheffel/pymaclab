@@ -483,6 +483,7 @@ class VAR:
         elif const == 'ctt':
             shifto = 3
         betta = copy.deepcopy(self.betta)
+
         # Produce bootstrap confidence intervals
         barray = []
         betarray = []
@@ -501,7 +502,16 @@ class VAR:
                 numpy.random.shuffle(resmat_n)
                 for obso in xrange(0,(nrows-nlags),1):
                     for j in xrange(1,nlags+1):
-                        matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,shifto+(j-1)*ncols:j*ncols+shifto].T)
+                        # Producing the fitted values period-by-period
+                        if const == None:
+                            matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,(j-1)*ncols:j*ncols].T)
+                        elif const == 'cc':
+                            matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,1+(j-1)*ncols:1+j*ncols].T)
+                        elif const == 'tt':
+                            matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,1+(j-1)*ncols:1+j*ncols].T)+betta[:,0].T
+                        elif const == 'ct':
+                            matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T                    
+                    # Then finally adding the reshuffled residuals period-by-period
                     matd_n[nlags+obso,:] += resmat_n[obso,:]
                 nmatd_n = genXX(self,matd=matd_n,func=True)
                 betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
@@ -551,16 +561,25 @@ class VAR:
             matd_n[:nlags,:] = copy.deepcopy(init_vals)
             for obso in xrange(0,(nrows-nlags),1):
                 for j in xrange(1,nlags+1):
-                    matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,shifto+(j-1)*ncols:j*ncols+shifto].T)
+                    if const == None:
+                        matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,(j-1)*ncols:j*ncols].T)
+                    elif const == 'cc':
+                        matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,1+(j-1)*ncols:1+j*ncols].T)
+                    elif const == 'tt':
+                        matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,1+(j-1)*ncols:1+j*ncols].T)+betta[:,0].T
+                    elif const == 'ct':
+                        matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T
                 matd_n[nlags+obso,:] += resmat_n[obso,:]
-            self.boot_matd = copy.deepcopy(matd_n)
             rows_n,cols_n = matd_n.shape
             nmatd_n = genXX(self,matd=matd_n,func=True)
             betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             betta_one_n = self.compbettax(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             compmatr_n = self.mkCompMat(betta=betta_n,betta_one=betta_one_n,func=True)
-            yfmat_n,resmat_n,covmat_n = self.mkfitres(matd=matd_n,nmatd=nmatd_n,betta=betta_n,func=True)
-            vcmat_n,cholmat_n,eyem_n = self.mksigma(resmat=resmat_n,func=True)
+            # Use different names here as we don't want to overwrite the original resmat_n
+            yfmat_nn,resmat_nn,covmat_nn = self.mkfitres(matd=matd_n,nmatd=nmatd_n,betta=betta_n,func=True)
+            vcmat_nn,cholmat_nn,eyem_nn = self.mksigma(resmat=resmat_nn,func=True)
+            # Use the original cholmat
+            cholmat_n = copy.deepcopy(self.cholmat)
             phis_n,phisc_n = self.mkphis(compmatr=compmatr_n,betta=betta_n,maxphi=maxphi,cholmat=cholmat_n,func=True)
             barray.append(phisc_n)
         print 'Calculation of bootstraps done...'
@@ -786,7 +805,8 @@ class VAR:
             
         self.forcs = copy.deepcopy(forcs)
 
-        ma_coefs = copy.deepcopy(self.phis_kcorr[:steps])
+        if 'phis_kcorr' in dir(self): ma_coefs = copy.deepcopy(self.phis_kcorr[:steps])
+        else: ma_coefs = copy.deepcopy(self.phis[:steps])
         sigma_u = copy.deepcopy(self.covmat)
         k = len(sigma_u)
         forc_covs = numpy.zeros((steps, k, k))
@@ -804,7 +824,8 @@ class VAR:
         neqs = self.data.shape[1]
         vnames = self.vnames
         
-        orthirfs = copy.deepcopy(self.phisc_kcorr)
+        if 'phisc_kcorr' in dir(self): orthirfs = copy.deepcopy(self.phisc_kcorr)
+        else: orthirfs = copy.deepcopy(self.phisc)
 
         # cumulative impulse responses
         irfs = (orthirfs[:periods] ** 2).cumsum(axis=0)
