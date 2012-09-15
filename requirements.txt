@@ -1,8 +1,7 @@
-matplotlib==1.0.1
-cloud_sptheme==1.4
-pymaclab
-scikits.timeseries
-sympycore
-pp
 numpy
 scipy
+matplotlib==1.0.1
+pandas
+scikits.timeseries
+pp
+cloud_sptheme==1.4
