@@ -1602,7 +1602,7 @@ class PyKlein2D:
                     up = 6
                     dn = 32
                     kkl = 12
-                    yyf = MAT.matrix(bkfilter(yy,up,dn,kkl,tlen))
+                    yyf = MAT.matrix(bkfilter(data=yy,up=up,dn=dn,kkl=kkl))
                     sim_y[i1,:] = yyf[0]*100.0
                 elif filtup[list(intup).index(conli[i1])] == 3:
                     conli[i1] = conli[i1]+'(cff)'
@@ -1630,7 +1630,7 @@ class PyKlein2D:
                     up = 6
                     dn = 32
                     kkl = 12
-                    xxf = MAT.matrix(bkfilter(xx,up,dn,kkl,tlen))
+                    xxf = MAT.matrix(bkfilter(data=xx,up=up,dn=dn,kkl=kkl))
                     sim_x[i1,:] = xxf[0]*100.0
                 elif filtup[list(intup).index(stateli[i1])] == 3:
                     stateli[i1] = stateli[i1]+'(cff)'
@@ -1658,7 +1658,7 @@ class PyKlein2D:
                         up = 6
                         dn = 32
                         kkl = 12
-                        oof = MAT.matrix(bkfilter(oo,up,dn,kkl,tlen))
+                        oof = MAT.matrix(bkfilter(data=oo,up=up,dn=dn,kkl=kkl))
                     elif filtup[list(intup).index(otherli[i1])] == 3:
                         otherli[i1] = otherli[i1]+'(cff)'
                         oo = sim_o[i1,:].__array__().T
