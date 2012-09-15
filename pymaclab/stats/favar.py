@@ -37,6 +37,10 @@ import sys
 import pp
 import time
 
+# imports from refactor
+from ..dattrans.transmeth import stdX, transX
+from common import is_stable, genPCs, check_matrix, genEE, genLX, compbetta
+
 class FAVAR:
 ############################################### MAIN INIT METHOD ############################################################
 #############################################################################################################################
@@ -96,7 +100,7 @@ class FAVAR:
         self.mkcompmatrices()
         if self._mesg:
             # Check if ff_betta_comp is stable
-            if self.is_stable(compmat=self.ff_betta_comp): print 'The estimated factor VAR is stable and invertible !'
+            if is_stable(compmat=self.ff_betta_comp): print 'The estimated factor VAR is stable and invertible !'
             else: print 'WARNING: The estimated factor VAR is not stable and not invertible !'
         if init == 5: return
         self.identification()
@@ -162,10 +166,10 @@ class FAVAR:
     def transdata(self):
         # Transform raw data according to Stock and Watson's trans code encoding system
         if self._mesg: print 'Now TRANSFORMING data according to Stock and Watson transformation encoding...'
-        self.transX()
+        self = transX(self)
         # Standardize the data ahead of using PC analysis, also store means and standard errors
         if self._mesg: print 'Now STANDARDIZING data ahead of principal component analysis...'
-        self.stdX(standard=True)
+        self = stdX(self,standard=True)
         # The standardized data adjusted for lost observations due to lags in regression(s)
         self.regtdata = self.tdata[self.nlags:,:]
         self.orig_tdata = copy.deepcopy(self.tdata)
@@ -185,11 +189,11 @@ class FAVAR:
                 self.BNcrit_res = copy.deepcopy(sfacs)
                 self.estFBetta()
                 self.ee_mat_l = copy.deepcopy(self.estresdic['ee_mat_l'])
-                self.genLX()
+                self = genLX(self)
                 self.genLXF(fdata=self.fdata)
                 self.BNcrit_pcmat_resdic = {}
                 self.BNcrit_pcmat_resdic['auto_betta'] = copy.deepcopy(self.auto_betta)
-                self.check_matrix(arraym=self.auto_betta,arrname='auto_betta',expdim=(self.ncols,self.nlags+self.sfacs))
+                check_matrix(arraym=self.auto_betta,arrname='auto_betta',expdim=(self.ncols,self.nlags+self.sfacs))
                 self.BNcrit_pcmat_resdic['pcmat'] = copy.deepcopy(self.fdata)
                 self.BNcrit_pcmat_resdic['exp_var'] = copy.deepcopy(self.exp_var)
                 self.exp_var = copy.deepcopy()
@@ -211,11 +215,12 @@ class FAVAR:
     def estimate_fac_var(self,fdata=None,func=False):
         if fdata == None: fdata = copy.deepcopy(self.dynresdic['fdata'])
         self.genLFF(fdata=fdata)
-        self.compbetta(ymat=fdata,xmat=self.lffmat)
+        self.fbetta = compbetta(self,matd=fdata,nmatd=self.lffmat,smbetta=False,const=None,func=True)
+        self.fbettasm = compbetta(self,matd=fdata,nmatd=self.lffmat,smbetta=True,const=None,func=True)
         self.mkfitres_ffvar(ymat=fdata,xmat=self.lffmat,betta=self.fbetta,flags=self.flags)
         self.idioresmat = copy.deepcopy(self.resmat_ff)
         if self.confdic['xdata_filter']:
-            self.genLX(vnames=self.vnames,ydata=self.tdata,nlags=self.nlags)
+            self = genLX(self,vnames=self.vnames,ydata=self.tdata,nlags=self.nlags)
             self.genLXF(vnames=self.vnames,xdic=self.lxmatdic,fdata=self.dynresdic['fdata'])
             self.mkfitres_auto(ymat=self.tdata,xdic=self.lxfmatdic,bettadic=self.auto_betta)
 
@@ -234,27 +239,6 @@ class FAVAR:
             self.mkCompAll()
             self.writeArray(inarray=self.varcomp)
             
-    def is_stable(self,compmat=None,verbose=False):
-        """
-    Determine stability of VAR(p) system by examining the eigenvalues of the
-    VAR(1) representation
-    
-    Parameters
-    ----------
-    compmat : ndarray (p x k,p x k)
-    
-    Returns
-    -------
-    is_stable : bool
-    """
-        eigs = numpy.linalg.eigvals(compmat)
-    
-        if verbose:
-            print 'Eigenvalues of VAR(1) rep'
-            for val in numpy.abs(eigs):
-                print val
-    
-        return (numpy.abs(eigs) <= 1).all()
     
     def plot_factors_all(self,plot=None):
         if plot:
@@ -281,9 +265,9 @@ class FAVAR:
                 self.slow_q = copy.deepcopy(self.confdic['slow_facs'])
             # Given the above finding, now extract the factor space spanning the slow-moving variables and save it
             if self.confdic['xdata_filter']:
-                self.pc_slow_res = self.genPCs(data=self.tdata_filtered_slow,sfacs=self.slow_q,func=True)[0]
+                self.pc_slow_res = genPCs(self,data=self.tdata_filtered_slow,sfacs=self.slow_q,func=True)[0]
             elif not self.confdic['xdata_filter']:
-                self.pc_slow_res = self.genPCs(data=self.slow_tdata,sfacs=self.slow_q,func=True)[0]
+                self.pc_slow_res = genPCs(self,data=self.slow_tdata,sfacs=self.slow_q,func=True)[0]
             self.genBBEH2()
             #self.genBBEH()
         elif self.confdic['use_chol_ident']:
@@ -293,8 +277,8 @@ class FAVAR:
             
     def estimate_bbe_fac_var(self):
         nmatd = self.genLFF(fdata=self.fdata_adj,flags=self.flags,func=True)
-        ffbetta = self.compbetta(ymat=self.fdata_adj,xmat=nmatd,smbetta=False,func=True)
-        ffbettasm = self.compbetta(ymat=self.fdata_adj,xmat=nmatd,smbetta=True,func=True)
+        ffbetta = compbetta(self,matd=self.fdata_adj,nmatd=nmatd,smbetta=False,const=None,func=True)
+        ffbettasm = compbetta(self,matd=self.fdata_adj,nmatd=nmatd,smbetta=True,const=None,func=True)
 
         yfmat,resmat,covmat = self.mkfitres_ffvar(ymat=self.fdata_adj,xmat=nmatd,
                                                   betta=ffbetta,flags=self.flags,func=True)
@@ -324,16 +308,16 @@ class FAVAR:
         self.vnames_adj = copy.deepcopy(self.vnames)
         #self.vnames = copy.deepcopy(self.vnames_adj)
         if self.confdic['xdata_filter']:
-            xdic = self.genLX(vnames=vnames,ydata=self.tdata_adj,nlags=self.nlags,mlags=None,func=True)
+            xdic = genLX(self,vnames=vnames,ydata=self.tdata_adj,nlags=self.nlags,mlags=None,func=True)
             lxfmatdic = self.genLXF(vnames=vnames,xdic=xdic,fdata=self.fdata_adj,func=True)
-            auto_betta,auto_ee_dic,ee_mat = self.genEE(vnames=vnames,ydata=self.tdata_adj,xdata=lxfmatdic,betta=None,hweightm=None,mlags=None,func=True)
+            auto_betta,auto_ee_dic,ee_mat = genEE(self,vnames=vnames,ydata=self.tdata_adj,xdata=lxfmatdic,betta=None,hweightm=None,mlags=None,func=True)
             # Create the initial diagonal weighting matrix to control for heteroscedasticity ONLY
             diago = numpy.diag(numpy.cov(ee_mat))
             hweightm = numpy.zeros((len(diago),len(diago)))
             for diagi in range(0,len(diago),1):
                 hweightm[diagi,diagi] = diago[diagi]
             hweightm = numpy.linalg.inv(hweightm)
-            auto_betta,auto_ee_dic,ee_mat = self.genEE(vnames=vnames,ydata=self.tdata_adj,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=None,func=True)
+            auto_betta,auto_ee_dic,ee_mat = genEE(self,vnames=vnames,ydata=self.tdata_adj,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=None,func=True)
             # Produce matrix from auto_betta
             auto_betta_mat = auto_betta[vnames[0]]
             for varo in range(1,len(vnames),1):
@@ -427,106 +411,6 @@ class FAVAR:
 #################################################### DATA PREPARATION/TRANSFORMATION METHODS #################################
 ##############################################################################################################################
 
-    def transX(self,data=None,func=False):
-        '''
-        Function to transform the raw data according to some classification
-        1 = levels
-        2 = first seasonal difference
-        3 = second seasonal difference
-        4 = log level
-        5 = log first seasonal difference
-        6 = log second seasonal difference
-        7 = detrend log using hp filter monthly data
-        8 = detrend log using hp filter quarterly data
-        16 = log second seasonal difference
-        17 = (1-L)(1-L^12)
-        18 = log of (1-L)*annualizing factor (i.e. x4 for quarterly and x12 for monthly
-        19 = linear detrend of level (raw) data
-        20 = linear detrend of log data
-        21 = quadratic detrend of level (raw) data
-        22 = quadratic detrend of log data
-        '''
-        if data == None: data = copy.deepcopy(self.data)
-        vnames = self.vnames
-        freq = self.confdic['freq']
-        tcode = self.confdic['tcode']
-        shift = 0
-        freqshift = 1
-        if freq == 'M':
-            freqshift = 12
-        elif freq == 'Q':
-            freqshift = 4
-        else:
-            freqshift = 1
-        # for level do nothing
-        # first seasonal difference
-        for i1,vname in enumerate(vnames):
-            if tcode[vname] == 2:
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                if shift < 1: shift = 1*freqshift
-            elif tcode[vname] == 3:
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                data[2*freqshift:,i1] = data[2*freqshift:,i1]-data[:-2*freqshift,i1]
-                if shift < 2: shift = 2*freqshift
-            elif tcode[vname] == 4:
-                data[:,i1] = numpy.log(data[:,i1])
-            elif tcode[vname] == 5:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                if shift < 1: shift = 1*freqshift
-            elif tcode[vname] == 6:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[1*freqshift:,i1] = data[1*freqshift:,i1]-data[:-1*freqshift,i1]
-                data[2*freqshift:,i1] = data[2*freqshift:,i1]-data[:-2*freqshift,i1]
-                if shift < 2: shift = 2*freqshift
-            elif tcode[vname] == 7:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data=data[:,i1],lam=129600)[0]
-            elif tcode[vname] == 8:
-                data[:,i1] = numpy.log(data[:,i1])
-                data[:,i1] = hpf(data=data[:,i1],lam=1600)[0]
-            elif tcode[vname] == 18:
-                data[:,i1] = numpy.log(data[:,i1])
-                if freq == 'Q':
-                    data[1:,i1] = (data[1:,i1]-data[:-1,i1])*4.0
-                elif freq == 'M':
-                    data[1:,i1] = (data[1:,i1]-data[:-1,i1])*12.0
-                if shift < 1: shift = 1
-            elif tcode[vname] == 19:
-                data[:,i1] = scipy.signal.filter(data[:,i1], type='linear')
-            elif tcode[vname] == 20:
-                data[:,i1] = scipy.signal.filter(numpy.log(data[:,i1]), type='linear')
-            elif tcode[vname] == 21:
-                data[:,i1] = scipy.signal.bsplines.quadratic(data[:,i1])
-            elif tcode[vname] == 22:
-                data[:,i1] = scipy.signal.bsplines.quadratic(numpy.log(data[:,i1]))
-        if shift > 0: data = data[shift:,:]
-        self.max_shift = shift
-        self.data = copy.deepcopy(data)
-
-    # Function used to standardize the original data, i.e. de-mean and divide by SD, but save the info !  
-    def stdX(self,standard=False,func=False):
-        data = copy.deepcopy(self.data)
-        vnames = self.vnames
-        trans_dic = {}
-        data_nonstd = copy.deepcopy(data)
-        for colo in range(0,data.shape[1],1):
-            trans_dic[vnames[colo]] = {}
-            mean_i = numpy.average(data[:,colo])
-            trans_dic[vnames[colo]]['mean'] = copy.deepcopy(mean_i)
-            if standard:
-                data[:,colo] = data[:,colo] - mean_i
-            std_i = numpy.std(data[:,colo])
-            trans_dic[vnames[colo]]['std'] = copy.deepcopy(std_i)
-            data_nonstd[:,colo] = copy.deepcopy(data[:,colo])
-            if standard:
-                data[:,colo] = data[:,colo]/std_i
-        if not func:
-            self.tdata = copy.deepcopy(data)
-            self.nstddata = copy.deepcopy(data_nonstd)
-            self.trans_dic = copy.deepcopy(trans_dic)
-        elif func:
-            return data,trans_dic
         
     # Function to split the data into slow, separate and fast data blocks, for BBE identification    
     def prepSSF(self,tdata=None,func=False):
@@ -564,7 +448,7 @@ class FAVAR:
         if bettax == None: bettax = copy.deepcopy(self.bettax_mat)
         if nlags == None: nlags = copy.deepcopy(self.nlags)
         vnames = copy.deepcopy(self.vnames)
-        xmatdic = self.genLX(vnames=vnames,ydata=data,nlags=nlags,mlags=None,func=True)
+        xmatdic = genLX(self,vnames=vnames,ydata=data,nlags=nlags,mlags=None,func=True)
         # Now generate the corresponding regressor array
         filt_data = numpy.zeros((data.shape[0]-nlags,data.shape[1]))
         for i1,namo in enumerate(vnames):
@@ -701,77 +585,12 @@ class FAVAR:
    
 ########################################### PRINCIPAL COMPONENTS ANALYSIS METHODS ###########################################
 #############################################################################################################################       
-    # Using PCA to extract the factors from some array of data
-    # This utility function uses non-stacked vectors or data, s stands for simple
-    def genPCs(self,data=None,sfacs=None,func=False):
-        if sfacs == None: npc = copy.deepcopy(self.sfacs)
-        else: npc = sfacs
-        cols = self.ncols
-        nlags = self.nlags
-        pcm = pca_module.PCA_svd(data,standardize=False)[0][:,:npc]
-        exp_var = pca_module.PCA_svd(data,standardize=False)[2][:npc]
-        pcmm = numpy.zeros((len(pcm),len(pcm[0])))
-        for factor in range(0,len(pcm),1):
-            pcmm[factor,:] = pcm[factor]
-        if not func:
-            self.fdata = copy.deepcopy(pcmm)
-            self.exp_var = copy.deepcopy(exp_var)
-        elif func:
-            return pcmm,exp_var
-        
 
-    # Using PCA to extract the factors from some array of data
-    # This utility function uses the stacked data instead
-    def genPC(self,data=None,func=False):
-        npc = copy.deepcopy(self.sfacs)
-        cols = self.ncols
-        flags = self.flags
-        nlags = self.nlags
-        stackX = copy.deepcopy(data)
-        pcm = numpy.zeros((stackX.shape[0],npc*flags))
-        for lago in range(0,flags,1):
-            pcm[:,lago*npc:(lago+1)*npc] = pca_module.PCA_svd(stackX[:,lago*cols:(lago+1)*cols],standardize=False)[0][:,:npc]
-        if not func:
-            self.fdata = copy.deepcopy(pcm)
-        elif func:
-            return pcm
+
         
 ################################################# VARIOUS REGRESSOR-MATRIX GENERATOR METHODS #################################
 ##############################################################################################################################
-    # Function to create a dictionary of the auto-regressors for each variable to eliminate serial corr
-    # so be careful, this will only create the regressor matrices involving OWN lags
-    def genLX(self,vnames=None,ydata=None,nlags=None,mlags=None,func=False):
-        # Get all the needed variables from instance
-        if nlags == None:
-            nlags = copy.deepcopy(self.nlags)
-        if mlags == None:
-            mlags = nlags
-        flags = copy.deepcopy(self.flags)
-        if ydata == None:
-            matd = copy.deepcopy(self.tdata)
-        else:
-            matd = ydata
-        rows = matd.shape[0]
-        cols = matd.shape[1]
-        if vnames == None:
-            vnames = copy.deepcopy(self.vnames)
-        lxmatdic = {}
-        for col in range(0,cols,1):
-            nmatd = numpy.zeros([rows-(mlags),nlags])
-            for lag in range(0,nlags,1):
-                if lag == 0:
-                    nmatd[:,lag] = matd[lag:-((mlags)-lag),col]
-                elif lag == nlags - 1:
-                    nmatd[:,lag] = matd[(mlags-1):-1,col]
-                elif lag > 0:
-                    nmatd[:,lag] = matd[lag:-((mlags)-lag),col]
-                # Flip matrix left to right in order to have p(1) lags first
-            nmatd = numpy.fliplr(nmatd)
-            lxmatdic[vnames[col]] = copy.deepcopy(nmatd)
-        if not func:
-            self.lxmatdic = copy.deepcopy(lxmatdic)
-        elif func:
-            return lxmatdic
+
         
     # Function to create regressor matrix containing ONLY OWN lags AND static factors,
     # where factor coefficients are ORDERED FIRST
@@ -854,39 +673,6 @@ class FAVAR:
             return nmatd 
 
 
-    # Function to compute the betta coefficients on the factor VAR
-    def compbetta(self,ymat=None,xmat=None,smbetta=True,func=False):
-        sfacs = ymat.shape[1]
-        flags = int(xmat.shape[1]/sfacs)
-        fmatd = xmat
-        XX = numpy.dot(fmatd.T,fmatd)
-        XXi = numpy.linalg.inv(XX)
-        betta = numpy.zeros((sfacs,flags*sfacs))
-        minindo = min(ymat.shape[0],xmat.shape[0])
-        for vari in range(0,sfacs,1):
-            ymatt=ymat[ymat.shape[0]-minindo:,vari]
-            Xy = numpy.dot(fmatd.T,ymatt)
-            betta[vari,:] = numpy.dot(XXi,Xy)
-        if smbetta:
-            # Produce the betta format from statsmodels library so we can use some of their code
-            # Exclude the trend or constant from bettasm, as opposed to in betta
-            bettasm = numpy.zeros((flags,sfacs,sfacs))
-            for lago in range(0,flags,1):
-                for varos in range(0,sfacs,1):
-                    bettasm[lago][varos,:] = betta[varos][sfacs*lago:sfacs*(lago+1)]
-        if not func:
-            if smbetta:
-                self.fbettasm = bettasm
-                self.fbetta = betta
-            elif not smbetta:
-                self.fbetta = betta
-        elif func:
-            if smbetta:
-                return bettasm
-            elif not smbetta:
-                return betta
-
-
     # Function for creating residuals, covmatrix and fitted values, given betta and xmat for auto_reg
     def mkfitres_auto(self,ymat=None,xdic=None,bettadic=None,mlags=None,func=False):
         # Create fitted values and residuals
@@ -922,58 +708,7 @@ class FAVAR:
         elif func:
             return yfmat,resmat,covmat
 
-          
-    # Function to generate equations residuals after controlling for own lags, used to extract factors
-    # Can also be used to estimate bettas, also optionally uses weighting matrix hweightm
-    def genEE(self,vnames=None,ydata=None,xdata=None,betta=None,hweightm=None,mlags=None,func=False):
-        data = ydata
-        cols = data.shape[1]
-        nlags = self.nlags
-        flags = self.flags
-        npc = self.sfacs
-        sfacs = npc
-        if vnames == None:
-            vnames = self.vnames
-        auto_betta = {}
-        auto_ee_dic = {}
-        lxmatdic = xdata
-        for varo in range(0,cols,1):
-            Xmat = lxmatdic[vnames[varo]]
-            Ymat = data[:,varo]
-            row_min = min(Xmat.shape[0],Ymat.shape[0])
-            Xmat_indi = Xmat.shape[0] - row_min
-            Ymat_indi = Ymat.shape[0] - row_min
-            Ymat = Ymat[Ymat_indi:]
-            Xmat = Xmat[Xmat_indi:,:]
-            if betta == None:
-                if hweightm == None:
-                    XX = numpy.dot(Xmat.T,Xmat)
-                else:
-                    XTW = numpy.dot(Xmat.T,hweightm)
-                    XX = numpy.dot(XTW,Xmat)
-                XXi = numpy.linalg.inv(XX)
-                if hweightm == None:
-                    Xy = numpy.dot(Xmat.T,Ymat)
-                else:
-                    XTW = numpy.dot(Xmat.T,hweightm)
-                    Xy = numpy.dot(XTW,Ymat)
-                auto_betta[vnames[varo]] = numpy.dot(XXi,Xy)
-            if betta == None:
-                auto_ee_dic[vnames[varo]] = Ymat - numpy.dot(Xmat,auto_betta[vnames[varo]])
-            else:
-                auto_ee_dic[vnames[varo]] = Ymat - numpy.dot(Xmat,betta[vnames[varo]])
-                auto_betta = copy.deepcopy(betta)
 
-        ee_mat = auto_ee_dic[vnames[0]]
-        for varo in range(1,cols,1):
-            ee_mat = numpy.vstack((ee_mat,auto_ee_dic[vnames[varo]]))
-        ee_mat = ee_mat.T     
-        if not func:
-            self.auto_betta = copy.deepcopy(auto_betta)
-            self.auto_ee_dic = copy.deepcopy(auto_ee_dic)
-            self.ee_mat = copy.deepcopy(ee_mat)
-        elif func:
-            return auto_betta,auto_ee_dic,ee_mat
 
 ################################################## FAVAR ESTIMATION-RELATED METHODS #########################################
 #############################################################################################################################
@@ -995,21 +730,21 @@ class FAVAR:
             data = copy.deepcopy(self.tdata)
         # THIS FIRST SET OF COMMANDS CREATES THE FIRST SET OF RESULTS BEFORE ENTERING THE LOOP #
         # Create the first estimate of the bettas and also the residuals without the factors
-        lxmatdic = self.genLX(vnames=vnames,ydata=data,mlags=max(nlags,flags),func=True)
-        auto_betta,auto_ee_dic,ee_mat_l = self.genEE(vnames=vnames,ydata=data,xdata=lxmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
+        lxmatdic = genLX(self,vnames=vnames,ydata=data,mlags=max(nlags,flags),func=True)
+        auto_betta,auto_ee_dic,ee_mat_l = genEE(self,vnames=vnames,ydata=data,xdata=lxmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
         # Extract the factors from the first set of residuals
-        pca_result = self.genPCs(data=ee_mat_l,func=True)
+        pca_result = genPCs(self,data=ee_mat_l,func=True)
         pcmat = pca_result[0]
         exp_var = pca_result[1]
         lxfmatdic = self.genLXF(vnames=vnames,xdic=lxmatdic,fdata=pcmat,func=True)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
         # Create the initial diagonal weighting matrix to control for heteroscedasticity ONLY
         diago = numpy.diag(numpy.cov(ee_mat_s))
         hweightm = numpy.zeros((len(diago),len(diago)))
         for diagi in range(0,len(diago),1):
             hweightm[diagi,diagi] = diago[diagi]
         hweightm = numpy.linalg.inv(hweightm)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=nlags,func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=nlags,func=True)
         # Save the initial average variance of residuals for calculation of convergence criterion value
         suma_start = copy.deepcopy(numpy.average(numpy.var(ee_mat_s,axis=0)))
         # Also copy the current sum of residuals into a variable called suma
@@ -1027,22 +762,22 @@ class FAVAR:
                 bettax[vname] = auto_betta[vname][sfcas:]
                 bettaf[vname] = auto_betta[vname][:sfcas]  
             # Get the new residuals but this time with updated regression coefficients on the lagged Xs
-            lxmatdic = self.genLX(vnames=vnames,ydata=data,mlags=nlags,func=True)
-            auto_betta,auto_ee_dic,ee_mat_l = self.genEE(vnames=vnames,ydata=data,xdata=lxmatdic,betta=bettax,hweightm=None,mlags=nlags,func=True)
+            lxmatdic = genLX(self,vnames=vnames,ydata=data,mlags=nlags,func=True)
+            auto_betta,auto_ee_dic,ee_mat_l = genEE(self,vnames=vnames,ydata=data,xdata=lxmatdic,betta=bettax,hweightm=None,mlags=nlags,func=True)
             # Extract the factors from the current residuals
-            pca_result = self.genPCs(data=ee_mat_l,func=True)
+            pca_result = genPCs(self,data=ee_mat_l,func=True)
             pcmat = pca_result[0]
             exp_var = pca_result[1]
             # Build the new set of regressors with the factors, run regression and save residuals
             lxfmatdic = self.genLXF(vnames=vnames,xdic=lxmatdic,fdata=pcmat,func=True)
-            auto_betta,auto_ee_dic,ee_mat_s = self.genEE(vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
+            auto_betta,auto_ee_dic,ee_mat_s = genEE(self,vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=nlags,func=True)
             # Create the updated diagonal weighting matrix to control for heteroscedasticity ONLY
             diago = numpy.diag(numpy.cov(ee_mat_s))
             hweightm = numpy.zeros((len(diago),len(diago)))
             for diagi in range(0,len(diago),1):
                 hweightm[diagi,diagi] = diago[diagi]
             hweightm = numpy.linalg.inv(hweightm)
-            auto_betta,auto_ee_dic,ee_mat_s = self.genEE(vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=nlags,func=True)
+            auto_betta,auto_ee_dic,ee_mat_s = genEE(self,vnames=vnames,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=nlags,func=True)
             # Save the sum of residuals to compare with the next round
             sume = numpy.average(numpy.var(ee_mat_s,axis=0))
             ee_now=((suma-sume)/suma_start)*100.0
@@ -1093,7 +828,7 @@ class FAVAR:
         if data == None:
             data = copy.deepcopy(self.tdata)
         # Extract the factors from the first set of residuals
-        pca_result = self.genPCs(data=data,func=True)
+        pca_result = genPCs(self,data=data,func=True)
         pcmat = pca_result[0]
         exp_var = pca_result[1]
         self.exp_var = copy.deepcopy(exp_var)
@@ -1219,20 +954,20 @@ class FAVAR:
                     end_lagos = min_lagos+1
                     for elem in range(0,rest_lagos,1):
                         larr[elem,-1] = 1.0
-                lxmatdic = self.genLX(ydata=data,nlags=nlags,mlags=nlags,func=True)
+                lxmatdic = genLX(self,ydata=data,nlags=nlags,mlags=nlags,func=True)
                 if dyno == stato+1:
                     fdata = self.genLFS(data=pcmat,wcurr=True,larr=larr,func=True)
                 else:
                     fdata = self.genLFS(data=pcmat[:,:dyno],wcurr=True,larr=larr,func=True)
                 lxfmatdic = self.genLXF(xdic=lxmatdic,fdata=fdata,func=True)
-                auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
+                auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
                 # Create the updated diagonal weighting matrix to control for heteroscedasticity ONLY
                 diago = numpy.diag(numpy.cov(ee_mat_s))
                 hweightm = numpy.zeros((len(diago),len(diago)))
                 for diagi in range(0,len(diago),1):
                     hweightm[diagi,diagi] = diago[diagi]
                 hweightm = numpy.linalg.inv(hweightm)
-                auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
+                auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
                 yfmat,resmat,covmat = self.mkfitres_auto(ymat=data,xdic=lxfmatdic,bettadic=auto_betta,mlags=max(nlags,end_lagos),func=True)
                 critmat[dyno-1,stato-1] = self.compBNcrit(resmat=ee_mat_s,nobs=self.ncols,tnobs=self.nrows,nfacs=statfacs,func=True)
                 ssemat[dyno-1,stato-1] = numpy.average(numpy.std(ee_mat_s,axis=0))
@@ -1265,7 +1000,7 @@ class FAVAR:
             end_lagos = min_lagos+1
             for elem in range(0,rest_lagos,1):
                 larr[elem,-1] = 1.0
-        lxmatdic = self.genLX(ydata=data,nlags=nlags,mlags=nlags,func=True)
+        lxmatdic = genLX(self,ydata=data,nlags=nlags,mlags=nlags,func=True)
         self.dynresdic['lxmatdic'] = copy.deepcopy(lxmatdic)
         self.dynresdic['exp_var'] = copy.deepcopy(exp_var)
         if dyno == stato+1:
@@ -1275,14 +1010,14 @@ class FAVAR:
         self.dynresdic['fdata'] = copy.deepcopy(fdata)
         lxfmatdic = self.genLXF(xdic=lxmatdic,fdata=fdata,func=True)
         self.dynresdic['lxfmatdic'] = copy.deepcopy(lxfmatdic)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
         # Create the updated diagonal weighting matrix to control for heteroscedasticity ONLY
         diago = numpy.diag(numpy.cov(ee_mat_s))
         hweightm = numpy.zeros((len(diago),len(diago)))
         for diagi in range(0,len(diago),1):
             hweightm[diagi,diagi] = diago[diagi]
         hweightm = numpy.linalg.inv(hweightm)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
         self.dynresdic['auto_betta'] = copy.deepcopy(auto_betta)
         self.dynresdic['ee_mat'] = copy.deepcopy(ee_mat_s)
         self.dynresdic['ee_mat_l'] = copy.deepcopy(ee_ma)
@@ -1306,20 +1041,20 @@ class FAVAR:
             end_lagos = min_lagos+1
             for elem in range(0,rest_lagos,1):
                 larr[elem,-1] = 1.0
-        lxmatdic = self.genLX(ydata=data,nlags=nlags,mlags=nlags,func=True)
+        lxmatdic = genLX(self,ydata=data,nlags=nlags,mlags=nlags,func=True)
         if dyno == stato+1:
             fdata = self.genLFS(data=pcmat,wcurr=True,larr=larr,func=True)
         else:
             fdata = self.genLFS(data=pcmat[:,:dyno],wcurr=True,larr=larr,func=True)
         lxfmatdic = self.genLXF(xdic=lxmatdic,fdata=fdata,func=True)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
         # Create the updated diagonal weighting matrix to control for heteroscedasticity ONLY
         diago = numpy.diag(numpy.cov(ee_mat_s))
         hweightm = numpy.zeros((len(diago),len(diago)))
         for diagi in range(0,len(diago),1):
             hweightm[diagi,diagi] = diago[diagi]
         hweightm = numpy.linalg.inv(hweightm)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
         yfmat,resmat,covmat = self.mkfitres_auto(ymat=data,xdic=lxfmatdic,bettadic=auto_betta,mlags=max(nlags,end_lagos),func=True)
         critval = self.compBNcrit(resmat=ee_mat_s,nobs=self.ncols,tnobs=self.nrows,nfacs=statfacs,func=True)
         return critval
@@ -1385,7 +1120,7 @@ class FAVAR:
             end_lagos = min_lagos+1
             for elem in range(0,rest_lagos,1):
                 larr[elem,-1] = 1.0
-        lxmatdic = self.genLX(ydata=data,nlags=nlags,mlags=nlags,func=True)
+        lxmatdic = genLX(self,ydata=data,nlags=nlags,mlags=nlags,func=True)
         self.dynresdic['lxmatdic'] = copy.deepcopy(lxmatdic)
         if dyno == stato+1:
             fdata = self.genLFS(data=pcmat,wcurr=True,larr=larr,func=True)
@@ -1395,14 +1130,14 @@ class FAVAR:
         lxfmatdic = self.genLXF(xdic=lxmatdic,fdata=fdata,func=True)
         self.dynresdic['lxfmatdic'] = copy.deepcopy(lxfmatdic)
         self.dynresdic['exp_var'] = copy.deepcopy(exp_var)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=None,mlags=max(nlags,end_lagos+rest_lagos),func=True)
         # Create the updated diagonal weighting matrix to control for heteroscedasticity ONLY
         diago = numpy.diag(numpy.cov(ee_mat_s))
         hweightm = numpy.zeros((len(diago),len(diago)))
         for diagi in range(0,len(diago),1):
             hweightm[diagi,diagi] = diago[diagi]
         hweightm = numpy.linalg.inv(hweightm)
-        auto_betta,auto_ee_dic,ee_mat_s = self.genEE(ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
+        auto_betta,auto_ee_dic,ee_mat_s = genEE(self,ydata=data,xdata=lxfmatdic,betta=None,hweightm=hweightm,mlags=max(nlags,end_lagos),func=True)
         self.dynresdic['auto_betta'] = copy.deepcopy(auto_betta)
         self.dynresdic['ee_mat'] = copy.deepcopy(ee_mat_s)
         yfmat,resmat,covmat = self.mkfitres_auto(ymat=data,xdic=lxfmatdic,bettadic=auto_betta,mlags=max(nlags,end_lagos),func=True)
@@ -1645,7 +1380,7 @@ class FAVAR:
             rows_n,cols_n = matd_n.shape
             nmatd_n = copy.deepcopy(self.dynresdic['lxfmatdic'])
             nmatarray.append(nmatd_n)
-            betta_n = self.genEE(ydata=matd_n,xdata=nmatd_n,func=True)[0]
+            betta_n = genEE(self,ydata=matd_n,xdata=nmatd_n,func=True)[0]
             # Produce matrix from auto_betta
             auto_betta_mat = betta_n[vnames[0]]
             for varo in range(1,cols,1):
@@ -1724,7 +1459,7 @@ class FAVAR:
         else: fdata = copy.deepcopy(self.fdata)
         # Also create data series of fdata with appropriate number of lags
         fdata_lagged = self.genLFF(fdata=fdata,flags=flags,func=True)
-        if self.confdic['xdata_filter']: xdic = self.genLX(vnames=vnames,ydata=matd,nlags=nlags,mlags=None,func=True)
+        if self.confdic['xdata_filter']: xdic = genLX(self,vnames=vnames,ydata=matd,nlags=nlags,mlags=None,func=True)
         resmat_n = copy.deepcopy(resmat)
         cols = yfmat.shape[1]
         fcols = fdata.shape[1]
@@ -1741,7 +1476,7 @@ class FAVAR:
             for j in xrange(1,flags+1):
                 fdata_n[flags+obso,:] += numpy.dot(fdata_n[flags+obso-j,:],ffbetta[:,(j-1)*fcols:j*fcols].T)
             fdata_n[flags+obso,:] += resmat_facs_n[obso,:]
-        ffbetta_n = self.compbetta(ymat=fdata_n,xmat=fdata_lagged,smbetta=False,func=True)
+        ffbetta_n = pymaclab.stats.common.compbetta(self,matd=fdata_n,nmatd=fdata_lagged,smbetta=False,const=None,func=True)
         # This creates the updated composite matrix in the x-data equations conditional on the lagged factors
         # should be (k*df)*(df,df*flags)=(k,df*flags)
         phimat_n = numpy.dot(bettaf_mat,ffbetta_n)
@@ -1761,7 +1496,7 @@ class FAVAR:
             self.boot_matd = copy.deepcopy(matd_n)
             rows_n,cols_n = matd_n.shape
             nmatd_n = copy.deepcopy(self.dynresdic['lxfmatdic'])
-            betta_n = self.genEE(ydata=matd_n,xdata=nmatd_n,func=True)[0]
+            betta_n = genEE(self,ydata=matd_n,xdata=nmatd_n,func=True)[0]
             # Produce matrix from auto_betta
             auto_betta_mat = betta_n[vnames[0]]
             for varo in range(1,cols,1):
@@ -1781,7 +1516,7 @@ class FAVAR:
             compmats = [auto_betta_comp,bettaf_mat,ff_betta_comp,bettax_mat]
         else:
             nmatdf_n = self.genLFF(fdata=fdata_n,func=True)
-            bettaf_n = self.compbetta(ymat=fdata_n,xmat=nmatdf_n,smbetta=False,func=True)
+            bettaf_n = pymaclab.stats.common.compbetta(self,matd=fdata_n,nmatd=nmatdf_n,smbetta=False,const=None,func=True)
             ff_betta_comp = self.mkCompFF(bettafm=bettaf_n,func=True)
             ffmat,fresmat,fcovmat = self.mkfitres_ffvar(ymat=fdata_n,xmat=nmatdf_n,betta=bettaf_n,flags=self.flags,func=True)
             idioresmat_n = copy.deepcopy(fresmat)
@@ -1819,7 +1554,7 @@ class FAVAR:
         else: fdata = copy.deepcopy(self.fdata)
         # Also create data series of fdata with appropriate number of lags
         fdata_lagged = self.genLFF(fdata=fdata,flags=flags,func=True)
-        if self.confdic['xdata_filter']: xdic = self.genLX(vnames=vnames,ydata=matd,nlags=nlags,mlags=None,func=True)
+        if self.confdic['xdata_filter']: xdic = genLX(self,vnames=vnames,ydata=matd,nlags=nlags,mlags=None,func=True)
         resmat_n = copy.deepcopy(resmat)
         cols = yfmat.shape[1]
         fcols = fdata.shape[1]
@@ -1836,7 +1571,7 @@ class FAVAR:
             for j in xrange(1,flags+1):
                 fdata_n[flags+obso,:] += numpy.dot(fdata_n[flags+obso-j,:],ffbetta[:,(j-1)*fcols:j*fcols].T)
             fdata_n[flags+obso,:] += resmat_facs_n[obso,:]
-        ffbetta_n = self.compbetta(ymat=fdata_n,xmat=fdata_lagged,smbetta=False,func=True)
+        ffbetta_n = pymaclab.stats.common.compbetta(self,matd=fdata_n,nmatd=fdata_lagged,smbetta=False,const=None,func=True)
         # This creates the updated composite matrix in the x-data equations conditional on the lagged factors
         # should be (k*df)*(df,df*flags)=(k,df*flags)
         phimat_n = numpy.dot(bettaf_mat,ffbetta_n)
@@ -1856,7 +1591,7 @@ class FAVAR:
             self.boot_matd = copy.deepcopy(matd_n)
             rows_n,cols_n = matd_n.shape
             nmatd_n = copy.deepcopy(self.dynresdic['lxfmatdic'])
-            betta_n = self.genEE(ydata=matd_n,xdata=nmatd_n,func=True)[0]
+            betta_n = genEE(self,ydata=matd_n,xdata=nmatd_n,func=True)[0]
             # Produce matrix from auto_betta
             auto_betta_mat = betta_n[vnames[0]]
             for varo in range(1,cols,1):
@@ -1876,7 +1611,7 @@ class FAVAR:
             compmats = [auto_betta_comp,bettaf_mat,ff_betta_comp,bettax_mat]
         else:
             nmatdf_n = self.genLFF(fdata=fdata_n,func=True)
-            bettaf_n = self.compbetta(ymat=fdata_n,xmat=nmatdf_n,smbetta=False,func=True)
+            bettaf_n = pymaclab.stats.common.compbetta(self,matd=fdata_n,nmatd=nmatdf_n,smbetta=False,const=None,func=True)
             ff_betta_comp = self.mkCompFF(bettafm=bettaf_n,func=True)
             ffmat,fresmat,fcovmat = self.mkfitres_ffvar(ymat=fdata_n,xmat=nmatdf_n,betta=bettaf_n,flags=self.flags,func=True)
             idioresmat_n = copy.deepcopy(fresmat)
@@ -1924,11 +1659,11 @@ class FAVAR:
             inputs_biasred = ((resmat,yfmat,matd,nlags,maxphi,fbetta),)*bdraw_chunk
             for elem in xrange(0,split_bdraw):
                 inputs = ((resmat,yfmat,matd,nlags,maxphi,breplace,rescale,dfacs,fbetta),)*bdraw_chunk
-                barray_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy")) for input in inputs]
+                barray_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy","pymaclab.stats.common")) for input in inputs]
                 barray_biasred = barray_biasred + [x() for x in barray_jobs]
             if split_mod != 0:
                 inputs = ((resmat,yfmat,matd,nlags,maxphi,breplace,rescale,dfacs,fbetta),)*split_mod
-                barray_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy")) for input in inputs]
+                barray_jobs = [job_server.submit(self.refac_killian_pp,(input,),modules=("copy","numpy","scipy","pymaclab.stats.common")) for input in inputs]
                 barray_biasred = barray_biasred + [x() for x in barray_jobs]
             barray_biasred = numpy.array([x[0] for x in barray_biasred])
             self.barray_biasred = copy.deepcopy(barray_biasred)
@@ -1980,7 +1715,7 @@ class FAVAR:
         barrayf = []
         for elem in xrange(0,split_bdraw):
             inputs = ((resmat,yfmat,matd,nlags,maxphi,breplace,rescale,dfacs,fbetta),)*bdraw_chunk
-            barray_jobs = [job_server.submit(self.refac_pp,(input,),modules=("copy","numpy","scipy")) for input in inputs]
+            barray_jobs = [job_server.submit(self.refac_pp,(input,),modules=("copy","numpy","scipy","pymaclab.stats.common")) for input in inputs]
             barray = barray + [x()[0] for x in barray_jobs]
             barrayf = barrayf + [x()[1] for x in barray_jobs]
         if split_mod != 0:
@@ -2572,93 +2307,7 @@ class FAVAR:
 
 ################################################# HELPER METHODS (TOOLS) ##################################################
 ###########################################################################################################################
-    # Utility function used to take data X (which may be n-dimensional on horizontal axis)
-    # and then to create a stacked vector based on flags   
-    def genStackX(self,data=None,flags=None,func=False):
-        # Get all the needed variables from instance
-        if flags == None:
-            flags = copy.deepcopy(self.flags)
-        matd = copy.deepcopy(data)
-        rows = matd.shape[0]
-        cols = matd.shape[1]
-        vnames = copy.deepcopy(self.vnames)
-        nmatd = numpy.zeros([rows-flags,cols*flags])
-        for lag in range(0,flags,1):
-            for col in range(0,cols,1):
-                shift = lag*(cols-1)
-                if lag == 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(flags-lag),col]
-                elif lag == flags - 1:
-                    nmatd[:,col+shift+lag] = matd[lag:-1,col]
-                elif lag > 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(flags-lag),col]
-        # Flip matrix left to right in order to have p(1) lags first, then re-order variables
-        nmatd = numpy.fliplr(nmatd)
-        for elem in range(0,flags,1):
-            nmatd[:,elem*cols:(elem+1)*cols] = numpy.fliplr(nmatd[:,elem*cols:(elem+1)*cols])
-        # Add original data back to lags in first columns to get stacked X with current and lagged
-        nmatd = numpy.hstack((matd[flags:,:],nmatd))
-        if not func:
-            self.stackmat = copy.deepcopy(nmatd)
-        elif func:
-            return nmatd 
-        
-    # Utility function used to take data X (which may be n-dimensional on horizontal axis)
-    # and then to create a stacked vector based on flags WORK IN PROGRESS   
-    def genStackX2(self,data=None,flags=None,fleads=None,func=False):
-        # Get all the needed variables from instance
-        if flags == None:
-            flags = copy.deepcopy(self.flags)
-        if fleads == None:
-            fleads = 0
-        matd = copy.deepcopy(data)
-        rows = matd.shape[0]
-        cols = matd.shape[1]
-        vnames = copy.deepcopy(self.vnames)
-        nmatd = numpy.zeros([rows-(flags+fleads),cols*flags])
-        # Do this only if leads are also required !
-        if fleads != None:
-            nmatdf = numpy.zeros([rows-(flags+fleads),cols*fleads])
-            for lead in range(0,fleads,1):
-                for col in range(0,cols,1):
-                    shift = lead*(cols-1)
-                    if lead == 0:
-                        nmatdf[:,col+shift+lead] = matd[flags+lead:-fleads,col]
-                    elif lead == fleads - 1:
-                        nmatdf[:,col+shift+lead] = matd[flags+lead:-1,col]
-                    elif lead > 0:
-                        nmatdf[:,col+shift+lead] = matd[flags+lead:-(fleads-lead),col]
-        for lag in range(0,flags,1):
-            for col in range(0,cols,1):
-                shift = lag*(cols-1)
-                if lag == 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(fleads+flags-lag),col]
-                elif lag == flags - 1:
-                    nmatd[:,col+shift+lag] = matd[lag:-(1+fleads),col]
-                elif lag > 0:
-                    nmatd[:,col+shift+lag] = matd[lag:-(fleads+flags-lag),col]
-        # Flip matrix left to right in order to have p(1) lags first, then re-order variables
-        nmatd = numpy.fliplr(nmatd)
-        for elem in range(0,flags,1):
-            nmatd[:,elem*cols:(elem+1)*cols] = numpy.fliplr(nmatd[:,elem*cols:(elem+1)*cols])
-        # Add original data back to lags in first columns to get stacked X with current and lagged
-        nmatd = numpy.hstack((matd[flags:-fleads,:],nmatd))
-        # Stack also the leading terms if wanted !
-        if fleads != None:
-            nmatd = numpy.hstack((nmatd,nmatdf))
-        # Also make a dictionary for each variable
-        stackdic = {}
-        for namo in vnames:
-            tmpmat = numpy.zeros((rows-flags-fleads,flags+1+fleads))
-            # Save the current-period value
-            tmpmat[:,flags+1] = data[flags:fleads,vnames.index(namo)]
-            for i1,lago in enumerate(xrange(flags,0,1)):
-                tmpmat[:,i1] = nmatd[:,:]
-                
-        if not func:
-            self.stackmat = copy.deepcopy(nmatd)
-        elif func:
-            return nmatd 
+ 
 
     # This is a function which will write the computed companion matrix into a csv file
     def writeArray(self,inarray=None,fname=None):
@@ -2727,19 +2376,6 @@ class FAVAR:
             csvfile.write('\n')
         csvfile.close()
         
-    def check_matrix(self,arraym=None,arrname=None,expdim=None):
-        if type(arraym) == type(numpy.array([[1,2,3],[1,2,3]])):
-            rows = arraym.shape[0]
-            cols = arraym.shape[1]
-        elif type(arraym) == type({}):
-            cols = len(arraym[arraym.keys()[0]])
-            rows = len(arraym.keys())
-        print '%%%%%%%%%%%%%%% MATRIX DIM CHECK %%%%%%%%%%%%%%%%%%'
-        print 'Matrix ##'+arrname+'## has dim ('+str(rows)+','+str(cols)+')'
-        if expdim != None:
-            print 'The expected dimension was: ('+str(expdim[0])+','+str(expdim[1])+')'
-            if (rows,cols) == expdim: print 'Matrix dim check PASSED !'
-        print '%%%%%%%%%%%%%%% DIM CHECK END %%%%%%%%%%%%%%%%%%%%%%'
 
     # Method used to clean all directories of their contents    
     def clean_dirs(self,modpath=None):

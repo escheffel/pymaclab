@@ -13,7 +13,6 @@ from copy import deepcopy
 import numpy.matlib as mat
 import sys
 import os
-from ..updaters.tools import dicwrap
 # This used to import sympycore, but should now also work with sympy
 import sympycore as SP
 

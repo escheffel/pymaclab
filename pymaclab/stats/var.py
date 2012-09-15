@@ -32,7 +32,7 @@ import os
 
 # Re-factored imports
 from ..dattrans.transmeth import stdX, transX
-from .common import genXX
+from .common import genXX, compbetta
 
 # Switch off runtime warnings here
 import warnings
@@ -116,7 +116,7 @@ class VAR:
         stepo+=1
         if self._mesg: print str(stepo)+') Estimate coefficient matrix of the VAR'
         self = genXX(self)
-        self.compbetta()
+        compbetta(self)
         if self.confdic['const_term'] != None:
             self.compbettax()
         if self._mesg: print '#####################################################'
@@ -148,63 +148,6 @@ class VAR:
             self.plot_irfs()
         if self._mesg: print '*All done !*'
    
-        
-    def compbetta(self,matd=None,nmatd=None,smbetta=True,const='standard',func=False):
-        # Get all the needed variables from instance
-        if matd == None: matd = self.data
-        if nmatd == None: nmatd = self.nmatd
-        cols = matd.shape[1]
-        if const == 'standard': const_term = self.confdic['const_term']
-        if const_term == None:
-            nlags = int(nmatd.shape[1]/cols)
-        elif const_term == 'cc':
-            nlags = int((nmatd.shape[1]-1)/cols)
-        elif const_term == 'tt':
-            nlags = int((nmatd.shape[1]-1)/cols)
-        elif const_term == 'ct':
-            nlags = int((nmatd.shape[1]-2)/cols)
-        elif const_term == 'ctt':
-            nlags = int((nmatd.shape[1]-3)/cols)
-        fmatd = nmatd
-        XX = numpy.dot(fmatd.T,fmatd)
-        XXi = numpy.linalg.inv(XX)
-        if const_term == None:
-            betta = numpy.zeros((cols,nlags*cols))
-        elif const_term == 'tt' or const_term == 'cc':
-            betta = numpy.zeros((cols,1+nlags*cols))
-        elif const_term == 'ct':
-            betta = numpy.zeros((cols,2+nlags*cols))
-        elif const_term == 'ctt':
-            betta = numpy.zeros((cols,3+nlags*cols))
-        for vari in range(0,cols,1):
-            ymat=matd[nlags:,vari]
-            Xy = numpy.dot(fmatd.T,ymat)
-            betta[vari,:] = numpy.dot(XXi,Xy)
-        if smbetta:
-            # Produce the betta format from statsmodels library so we can use some of their code
-            # Exclude the trend or constant from bettasm, as opposed to in betta
-            bettasm = numpy.zeros((nlags,cols,cols))
-            for lago in range(0,nlags,1):
-                for varos in range(0,cols,1):
-                    if const_term == 'tt' or const_term == 'cc':
-                        bettasm[lago][varos,:] = betta[:,1:][varos][cols*lago:cols*(lago+1)]
-                    elif const_term == None:
-                        bettasm[lago][varos,:] = betta[varos][cols*lago:cols*(lago+1)]
-                    elif const_term == 'ct':
-                        bettasm[lago][varos,:] = betta[:,2:][varos][cols*lago:cols*(lago+1)]
-                    elif const_term == 'ctt':
-                        bettasm[lago][varos,:] = betta[:,3:][varos][cols*lago:cols*(lago+1)]
-        if not func:
-            if smbetta:
-                self.bettasm = bettasm
-                self.betta = betta
-            elif not smbetta:
-                self.betta = betta
-        elif func:
-            if smbetta:
-                return bettasm
-            elif not smbetta:
-                return betta
 
     # Computes coefficient matrix but with a column of ones in the Y matrix.
     # This is useful for when there is a constant in the coefficient matrix
@@ -514,7 +457,7 @@ class VAR:
                     # Then finally adding the reshuffled residuals period-by-period
                     matd_n[nlags+obso,:] += resmat_n[obso,:]
                 nmatd_n = genXX(self,matd=matd_n,func=True)
-                betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
+                betta_n = compbetta(self,matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
                 kill_array.append(betta_n)
             kill_array = numpy.array(kill_array)
             biasred_betta = numpy.mean(kill_array,axis=0)
@@ -572,7 +515,7 @@ class VAR:
                 matd_n[nlags+obso,:] += resmat_n[obso,:]
             rows_n,cols_n = matd_n.shape
             nmatd_n = genXX(self,matd=matd_n,func=True)
-            betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
+            betta_n = compbetta(self,matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             betta_one_n = self.compbettax(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
             compmatr_n = self.mkCompMat(betta=betta_n,betta_one=betta_one_n,func=True)
             # Use different names here as we don't want to overwrite the original resmat_n
@@ -636,7 +579,7 @@ class VAR:
                     matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T                    
             matd_n[nlags+obso,:] += resmat_n[obso,:]
         nmatd_n = pymaclab.stats.common.genXX(self,matd=matd_n,func=True)
-        betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
+        betta_n = pymaclab.stats.common.compbetta(self,matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         compbetta_n = self.mkCompMat(betta=betta_n,func=True)
         eigs = numpy.linalg.eigvals(compbetta_n)
         sbool = (numpy.abs(eigs) <= 1).all()
@@ -671,7 +614,7 @@ class VAR:
                     matd_n[nlags+obso,:] += numpy.dot(matd_n[nlags+obso-j,:],betta[:,2+(j-1)*ncols:2+j*ncols].T)+betta[:,1].T                    
             matd_n[nlags+obso,:] += resmat_n[obso,:]
         nmatd_n = pymaclab.stats.common.genXX(self,matd=matd_n,func=True)
-        betta_n = self.compbetta(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
+        betta_n = pymaclab.stats.common.compbetta(self,matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         betta_one_n = self.compbettax(matd=matd_n,nmatd=nmatd_n,smbetta=False,func=True)
         compmatr_n = self.mkCompMat(betta=betta_n,betta_one=betta_one_n,func=True)
         # Lets try here to actually keep the Cholesky shock matrix fixed at the original one...

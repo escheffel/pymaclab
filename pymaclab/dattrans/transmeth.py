@@ -21,7 +21,10 @@ def stdX(self,data=None,standard=False,only_demean=False,func=False):
     :return self.nstdata:    *(arr2d)* - The nonstandardized or raw data which was passed to the method
     :return self.trans_dic:  *(dic)* - A dictionary containing the mean and std of the data. Uses vnames.
     '''
-    data = copy.deepcopy(data)
+    if data != None:
+        data = copy.deepcopy(data)
+    else:
+        data = copy.deepcopy(self.data)
     vnames = self.vnames
     trans_dic = {}
     data_nonstd = copy.deepcopy(data)
@@ -57,8 +60,15 @@ def transX(self,data=None,func=False):
     16 = log second seasonal difference
     17 = (1-L)(1-L^12)
     18 = log of (1-L)*annualizing factor (i.e. x4 for quarterly and x12 for monthly
+    19 = linear detrend of level (raw) data
+    20 = linear detrend of log data
+    21 = quadratic detrend of level (raw) data
+    22 = quadratic detrend of log data
     '''
-    data = copy.deepcopy(data)
+    if data != None:
+        data = copy.deepcopy(data)
+    elif data == None:
+        data = copy.deepcopy(self.data)
     vnames = self.vnames
     freq = self.confdic['freq']
     tcode = self.confdic['tcode']
@@ -104,8 +114,17 @@ def transX(self,data=None,func=False):
             elif freq == 'M':
                 data[1:,i1] = (data[1:,i1]-data[:-1,i1])*12.0
             if shift < 1: shift = 1
+        elif tcode[vname] == 19:
+            data[:,i1] = scipy.signal.filter(data[:,i1], type='linear')
+        elif tcode[vname] == 20:
+            data[:,i1] = scipy.signal.filter(numpy.log(data[:,i1]), type='linear')
+        elif tcode[vname] == 21:
+            data[:,i1] = scipy.signal.bsplines.quadratic(data[:,i1])
+        elif tcode[vname] == 22:
+            data[:,i1] = scipy.signal.bsplines.quadratic(numpy.log(data[:,i1]))
     if shift > 0: data = data[shift:,:]
     if not func:
+        self.max_shift = shift
         self.data = copy.deepcopy(data)
         return self
     else:
