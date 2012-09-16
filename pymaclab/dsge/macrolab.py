@@ -544,7 +544,7 @@ class DSGEmodel(object):
              1) Information has been provided using the "use_focs" parameter to use FOCs directly
              2) Information has only been provided in the numerical SS section
              3) Information has only been provided in the closed form SS section
-             4) Both CF-SS and NUM-SS info are present and they overlap
+             4) Both CF-SS and NUM-SS info are present and NUM-SS is subset if CF-SS
              5) Both CF-SS and NUM-SS info are present and CF is residual
              
            These options are better explained in the documentation to PyMacLab in the steady state solver section.
@@ -1789,7 +1789,8 @@ class DSGEmodel(object):
         inputs = [x for x in xrange(len(self.func2))]
         # Support auto-detection of CPU cores
         if ncpus != 'auto':
-            job_server = pp.Server(ncpus,ppservers=ppservers)
+            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
+            if self._mesg: "INIT: Parallel execution started with "+job_server.get_ncpus()+ "cores..."
         else:
             job_server = pp.Server(ppservers=ppservers)
         imports = ('numpy','numpy.matlib',)
@@ -2351,7 +2352,11 @@ class DSGEmodel(object):
         # Start parallel Python job server
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
-        job_server = pp.Server(ncpus,ppservers=ppservers)
+        if self._ncpus == 'auto':
+            job_server = pp.Server(ppservers=ppservers)
+            if self._mesg: "INIT: Parallel execution started with "+job_server.get_ncpus()+ "cores..."
+        else:
+            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
         imports = ('numpy','copy','numpy.matlib',)
         jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for input in inputs]
         if mk_hessian:

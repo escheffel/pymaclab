@@ -333,10 +333,10 @@ Option 4: Use the numerical root finder to solve for steady states with pre-comp
 ----------------------------------------------------------------------------------------------------
 
   It is often useful and sometimes even outright necessary to supply the root-finding algorithm with pre-computed "intelligently" chosen
-  initial starting values which are better than the generic choice of just passing a bunch of 1.0s to the system. To this end, whenever the
-  model encounters exactly the same variable declarations in the closed form section as those in the list of generic starting values given in
-  the `Manual` section passed to the root-finder, these starting values automatically get replaced by the computed suggestions found in the
-  `Closed Form` section. So an example of this would be:
+  initial starting values which are better than the generic choice of just passing a bunch of 1.0s to the system. To this end, whenever
+  the list of generic starting values given in the numerical `Manual` section is *a subset* of the list of variable declarations in the closed
+  form section, then the generic starting values automatically get replaced by the computed suggestions found in the `Closed Form` section.
+  So an example of this would be:
 
   ::
 
@@ -425,12 +425,13 @@ Option 4: Use the numerical root finder to solve for steady states with pre-comp
     %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   As is apparent, in this case the suggested values for the steady states given in the closed form section exactly mirror or overlap with the steady
-  variables to be searched for using the non-linear root finder specified in the `Manual` section in the model file. Whenever this overlap is
-  perfect, the values in the `Closed Form` section will always be interpreted as suggested starting values passed on to the non-linear root
-  finder. Notice that in this case it is also possible to omit the additional specification of the generic starting values in the `Manual` section
-  alltogether. However it is advisable to leave them there to give the program a better way of checking the overlap of the two sets of variables.
-  Whenever they are omitted, this specific case of computing the steady state is triggered whenever the number of suggested starting values in the
-  `Closed Form` section is exactly equal to the number of non-linear equations in the `Manual` section.
+  variables to be searched for using the non-linear root finder specified in the `Manual` section in the model file (which means that the latter
+  is a subset of the former). Whenever this overlap is of the described subset-type, the values in the `Closed Form` section will always be
+  interpreted as suggested starting values passed on to the non-linear root finder. Notice that in this case it is also possible to omit the
+  additional specification of the generic starting values in the `Manual` section alltogether. However it is advisable to leave them there to
+  give the program a better way of checking the overlap of the two sets of variables. Whenever they are omitted, this specific case of computing
+  the steady state is triggered whenever the number of suggested starting values in the `Closed Form` section is exactly equal to the number of
+  non-linear equations in the `Manual` section.
 
 Option 5: Finding the steady state by only supplying information in the Closed Form section
 -------------------------------------------------------------------------------------------

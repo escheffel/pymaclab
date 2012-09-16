@@ -55,6 +55,7 @@ None
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# This has to be equal to or at least superset of initial values given in Manual section
 [1]   k_bar = ((1/rho)*(R_bar-1+delta))**(1/(rho-1));
 [2]   y_bar = z_bar*k_bar**rho;
 [3]   c_bar = y_bar-delta*k_bar;
