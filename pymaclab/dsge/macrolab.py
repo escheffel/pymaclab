@@ -1790,10 +1790,10 @@ class DSGEmodel(object):
         # Support auto-detection of CPU cores
         if ncpus == 'auto':
             job_server = pp.Server(ppservers=ppservers)
-            if mesg: "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
+            if mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
         else:
             job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
-            if mesg: "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
+            if mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
 
         imports = ('numpy','numpy.matlib',)
         
@@ -2356,9 +2356,10 @@ class DSGEmodel(object):
         inputs = [x for x in xrange(len(self.func2))]
         if self._ncpus == 'auto':
             job_server = pp.Server(ppservers=ppservers)
-            if self._mesg: "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
+            if self._mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
         else:
             job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
+            if self._mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ "cores..."
         imports = ('numpy','copy','numpy.matlib',)
         jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for input in inputs]
         if mk_hessian:
