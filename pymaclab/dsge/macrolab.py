@@ -1788,11 +1788,12 @@ class DSGEmodel(object):
         ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
         # Support auto-detection of CPU cores
-        if ncpus != 'auto':
-            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
+        if ncpus == 'auto':
+            job_server = pp.Server(ppservers=ppservers)
             if self._mesg: "INIT: Parallel execution started with "+job_server.get_ncpus()+ "cores..."
         else:
-            job_server = pp.Server(ppservers=ppservers)
+            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
+
         imports = ('numpy','numpy.matlib',)
         
         #job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None)
