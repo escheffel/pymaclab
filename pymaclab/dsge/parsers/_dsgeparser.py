@@ -1235,10 +1235,11 @@ def differ_out(self):
                 tmp_dic[elem] = SP.Symbol(elem)
             locals().update(tmp_dic)
             # Also expose any variables from the ssidic, just in case
-            tmp_dic = {}
-            for elem in self.ssidic.keys():
-                tmp_dic[elem] = SP.Symbol(elem)
-            locals().update(tmp_dic)
+            if 'ssidic' in dir(self):
+                tmp_dic = {}
+                for elem in self.ssidic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
             try:
                 expr = eval(evalstr)
             except:

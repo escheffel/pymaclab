@@ -3,7 +3,7 @@ This is just a standard RBC model, as you can see.
 
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Name = Standard RBC Model;
+Name = Standard RBC Model, EXT-SS;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

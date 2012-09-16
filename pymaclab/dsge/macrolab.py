@@ -574,7 +574,7 @@ class DSGEmodel(object):
         # Solve using purely closed form solution if no other info on model is available
         if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
            not all([False if 'None' in x else True for x in secs['manualss'][0]]):
-            if self._mesg: print "SS: ONLY closed form steady state information supplied...attempting to solve SS..."
+            if self._mesg: print "SS: ONLY CF-SS information supplied...attempting to solve SS..."
             alldic = {}
             alldic.update(self.paramdic)
             intup = (self.manss_sys,alldic)
@@ -595,15 +595,16 @@ class DSGEmodel(object):
                 numss_set = set()
                 for keyo in self.ssidic.keys():
                     numss_set.add(keyo)
-                ##### OPTION 4a: If there is an ssidic and its keys are identical to manss_set, the use as suggestion for new ssi_dic
-                if manss_set == numss_set:
+                ##### OPTION 4a: If there is an ssidic and its keys are subset of manss_set, the use as suggestion for new ssi_dic
+                if numss_set.issubset(manss_set):
                     if self._mesg: print "SS: CF-SS and NUM-SS (overlapping) information information supplied...attempting to solve SS..."
                     alldic = {}
                     alldic.update(self.paramdic)
                     intup = (self.manss_sys,alldic)
                     self.sssolvers.manss = ManualSteadyState(intup)
                     self.sssolvers.manss.solve()
-                    self.ssidic.update(self.sssolvers.manss.sstate)
+                    for keyo in self.ssidic.keys():
+                        self.ssidic[keyo] = self.sssolvers.manss.sstate[keyo]
             ##### OPTION 4b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
             # If it is empty, then just compute the closed form SS and pass to ssidic as starting value
             elif self.ssidic == {}:
@@ -620,8 +621,7 @@ class DSGEmodel(object):
                     sys.exit()
         ######## Finally start the numerical root finder with old or new ssidic from above
         if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:
-            if self._mesg: print "SS: ONLY numerical steady state information information supplied...attempting to solve SS..."            
+           not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:            
             self.sssolvers.fsolve.solve()
         elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
            all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:           
@@ -643,7 +643,9 @@ class DSGEmodel(object):
                 if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
 
         ########## Here we are trying to merge numerical SS solver's results with result closed-form calculations, if required
-        if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
         # Check for existence of closedform AND numerical steady state
         # We need to stop the model instantiation IFF numerical solver was attempted but failed AND closed form solver depends on it.
         if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
@@ -654,7 +656,7 @@ class DSGEmodel(object):
                 sys.exit()
             ##### OPTION 5: We have both numerical and (residual) closed form information
             # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
-            elif self.switches['ss_suc'] == ['1','1'] and manss_set != numss_set:
+            elif self.switches['ss_suc'] == ['1','1'] and not numss_set.issubset(manss_set):
                 if self._mesg: print "SS: CF-SS (residual) and NUM-SS information information supplied...attempting to solve SS..."
                 alldic = {}
                 alldic.update(self.sstate)

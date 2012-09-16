@@ -3,7 +3,7 @@ This is just a standard RBC model, as you can see.
 
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Name = Standard RBC Model, RES-SS;
+Name = Standard RBC Model, CF-SS;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -55,17 +55,14 @@ None
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   y_bar = @F_bar;
+[1]   k_bar = ((1/rho)*(R_bar-1+delta))**(1/(rho-1));
+[2]   y_bar = z_bar*k_bar**rho;
+[3]   c_bar = y_bar-delta*k_bar;
+[4]   betta = 1/(1+@Fk_bar-delta);
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   @F_bar-@inv_bar-c_bar = 0;
-[2]   betta*@R_bar-1 = 0;
-[3]   betta*R_bar-1 = 0;
-
-[1]   c_bar = 1.0;
-[2]   k_bar = 1.0;
-[3]   betta = 0.9;
+None
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
