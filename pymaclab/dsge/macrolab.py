@@ -1841,7 +1841,6 @@ class DSGEmodel(object):
                 jdic[i1+1] = job()[1]
             self.numj = numj
             self.jdic = jdic
-        if mesg: job_server.print_stats()
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
