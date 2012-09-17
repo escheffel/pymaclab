@@ -764,8 +764,7 @@ def subs_in_subs(self):
             pos, poe = ma.span()
             indx = variables.index(ma.group())
             # Important: When substituting in, put the term between brackets!
-            rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
-                rhs_eq[poe:]
+            rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+rhs_eq[poe:]
         # Don't do below anymore as the term above has been inserted between brackets, so okay that way
         '''
         # Finally get rid of possible `+-` or `-+` occurences
@@ -924,13 +923,17 @@ def mk_timeshift(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
     _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
     _mreg2 = 'BB[_](?P<bint>\d{1,2})\{.*?\}'
+    _mreg3 = '\s*DIFF{.*?,.*?}\s*'
     mreg = re.compile(_mreg)
     mreg2 = re.compile(_mreg2)
+    mreg3 = re.compile(_mreg3)
     for i1,elem in enumerate(list_tmp2):
         # First search for forward shifting terms
         while mreg.search(list_tmp2[i1][1]):
             ma = mreg.search(list_tmp2[i1][1])
             matn = ma.group()
+            # Skip if the is a part which needs to be differentiated
+            if mreg3.search(matn): break            
             starts = ma.start()
             ends = ma.end()
             fint = int(ma.group('fint'))
@@ -942,6 +945,8 @@ def mk_timeshift(self):
         while mreg2.search(list_tmp2[i1][1]):
             ma = mreg2.search(list_tmp2[i1][1])
             matn = ma.group()
+            # Skip if the is a part which needs to be differentiated
+            if mreg3.search(matn): break  
             starts = ma.start()
             ends = ma.end()
             bint = int(ma.group('bint'))
@@ -953,6 +958,65 @@ def mk_timeshift(self):
     self.nlsubs_raw2 = deepcopy(list_tmp2)  
     return self
 
+def ext_differ_out(self):
+    '''
+    This function will check differentiation instructions and augment the original one
+    for timeshifts and the discount factor
+    '''
+    list_tmp2 = deepcopy(self.nlsubs_raw2)
+    # Also allow for differentiation in substitution list
+    _mreg = '\s*DIFF{.*?,.*?}\s*'
+    mreg = re.compile(_mreg)
+    _mregv1 = '\w+\d*_bar'
+    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    for kk1,elem in enumerate(list_tmp2):
+        # Skip any line in which the steady state needs to be take before DIFF
+        if list_tmp2[kk1][1][:4] == 'DIFF' and 'SS{' in list_tmp2[kk1][1]: continue
+        if mreg.search(list_tmp2[kk1][1]):
+            maout = mreg.search(list_tmp2[kk1][1])
+            expout = maout.group()
+            starts_out = maout.end()
+            ends_out = maout.start()
+            evalstr = expout.replace('DIFF','')
+            evalstr = evalstr.replace('{','')
+            evalstr = evalstr.replace('}','')
+            differo = evalstr.split(',')[1]
+            evalstr = evalstr.split(',')[0]
+            # Should be only one variable, so take the first element
+            diff_li = list(self.vreg(patup,differo,True,'max'))[0]
+            var_li = list(self.vreg(patup,evalstr,True,'max'))
+            # Expectations timing and differos stem name
+            diff_conf = diff_li[2][:2]
+            # The differos time subscript
+            diff_conf2 = int(diff_li[2][-1])
+            # Check for case that we need to augment the expression to be differentiated
+            modcase = False
+            chrondiff = []
+            for elem in var_li:
+                if elem[2][:2] == diff_conf and int(elem[2][-1]) != diff_conf2:
+                    chrondiff.append((-1)*(diff_conf2+int(elem[2][-1])))
+                    modcase = True
+            if modcase:
+                if '@DISCOUNT' not in dict(self.nlsubs_raw2).keys():
+                    print "ERROR: For this model you need to define the discount rate explicitly!"
+                    print "You can do this by inserting the special reserved @DISCOUNT variable into the substitution section"
+                    sys.exit()
+                else:
+                    disco = dict(self.nlsubs_raw2)['@DISCOUNT']
+                maxfor = max(chrondiff)
+                minfor = min(chrondiff)
+                finalexp = 'DIFF{'+evalstr
+                for kk2 in range(minfor,maxfor+1):
+                    if kk2 == 0: continue
+                    elif kk2 > 0: finalexp += '+'+disco+'**'+'('+str(kk2)+')'+'*FF_'+str(kk2)+'{'+evalstr+'}'
+                    elif kk2 < 0: finalexp += '+'+disco+'**'+'('+str(-kk2)+')'+'*BB_'+str(kk2)+'{'+evalstr+'}'
+                finalexp += ','+differo+'}'
+                list_tmp2[kk1][1] = finalexp
+    self.nlsubs_raw2 = deepcopy(list_tmp2)
+    return self
+            
+
+
 def differ_out(self):
     # Copy in raw nlsubs which has substitutions inside
     # substitutions already replaced by previous function call
@@ -963,8 +1027,12 @@ def differ_out(self):
     _mregv1 = '\w+\d*_bar'
     _mregv1b = '(?<!E)\(t[\+|-]{0,1}\d{0,2}\)'
     mregv1b = re.compile(_mregv1b)
-    _mregv1bb = '\(t[\+|-]\d{1,2}\)'
+    _mregv1b2 = '(?<!E)__ll__t[\+|-]{0,1}\d{0,2}__rr__'
+    mregv1b2 = re.compile(_mregv1b)
+    _mregv1bb = '\(t[\+|-]\d{1,2}\)'    
     mregv1bb = re.compile(_mregv1bb)
+    _mregv1bb2 = '__l__t[\+|-]\d{1,2}__r__'    
+    mregv1bb2 = re.compile(_mregv1bb2)    
     _mregv1c = '\([p+|m+]\)'
     mregv1c = re.compile(_mregv1c)
     _mregv1d = 'E\(t[\+|-]{0,1}\d{0,2}\)\|'
@@ -1098,16 +1166,28 @@ def differ_out(self):
             ###################################################
             # Steady State branch ends here
             ###################################################
-            # Replace expectations operators with square brackets
-            while mregv1d.search(evalstr):
-                ma = mregv1d.search(evalstr)
-                vname = ma.group()
-                ends = ma.end()
-                starts = ma.start()
-                vname = vname.replace('(','__ll__')
-                vname = vname.replace(')','__rr__')
-                vname = vname.replace('|','_DELIM_')
-                evalstr = evalstr[:starts]+vname+evalstr[ends:]
+            var_li2 = deepcopy(var_li)
+            var_li2.reverse()
+            # Replace t+1 or t-1 with something without the operators, in evalstr
+            for jj1,elem in enumerate(var_li2):
+                tmp_li = list(elem)
+                # Replace expectations operators with something else inside evalstr
+                if mregv1d.search(tmp_li[0]):
+                    ma = mregv1d.search(tmp_li[0])
+                    vname = ma.group()
+                    ends = ma.end()
+                    starts = ma.start()
+                    vname = vname.replace('(','__ll__')
+                    vname = vname.replace(')','__rr__')
+                    vname = vname.replace('|','DELIM__')
+                    tmp_li[0] = tmp_li[0][:starts]+vname+tmp_li[0][ends:]                      
+                evalstr = evalstr[:elem[3][0]]+tmp_li[0].\
+                replace('(','__l__').\
+                replace(')','__r__').\
+                replace('|','DELIM__')+\
+                evalstr[elem[3][1]:]
+
+            # Replace expectations operators with something else inside varli
             for i1,varo in enumerate(var_li):
                 if mregv1d.search(varo[0]):
                     str1 = varo[0].split('|')[1]
@@ -1115,13 +1195,13 @@ def differ_out(self):
                     str2 = str2.replace('(','__ll__')
                     str2 = str2.replace(')','__rr__')
                     var_li[i1] = list(varo)
-                    var_li[i1][0] = str2+'_DELIM_'+str1
+                    var_li[i1][0] = str2+'DELIM__'+str1
             # Replace the LOGs and EXPs with square brackets
             while mregle_ng.search(evalstr):
                 ma = mregle_ng.search(evalstr)
                 starts = ma.start()
                 ends = ma.end()
-                evalstr = evalstr[:ends] + ']' + evalstr[ends+1:]
+                evalstr = evalstr[:ends-1] + ']' + evalstr[ends:]
                 evalstr = evalstr[:starts+3] + '[' + evalstr[starts+4:]
             # Replace t+1 or t-1 with something without the operators, inside var_li
             for i1,varo in enumerate(var_li):
@@ -1133,26 +1213,25 @@ def differ_out(self):
                     if '+' in varo[0]:
                         str1 = varo[0].split('(')[0]
                         counto = varo[0].split('+')[1][0]
-                        var_li[i1][0] = str1+'('+int(counto)*'p' + ')'
+                        var_li[i1][0] = str1+'__l__'+int(counto)*'p' + '__r__'
                     if '-' in varo[0]:
                         str1 = varo[0].split('(')[0]
                         counto = varo[0].split('-')[1][0]
-                        var_li[i1][0] = str1+'('+int(counto)*'m' + ')'
-            # Replace t+1 or t-1 with something without the operators, also in evalstr
-            while mregv1bb.search(evalstr):
-                ma = mregv1bb.search(evalstr)
+                        var_li[i1][0] = str1+'__l__'+int(counto)*'m' + '__r__'
+            while mregv1bb2.search(evalstr):
+                ma = mregv1bb2.search(evalstr)
                 varn = ma.group()
                 ends = ma.end()
                 starts = ma.start()
                 if '+' in varn:
-                    str1 = varn.split('(')[0]
+                    str1 = varn.split('__l__')[0]
                     counto = varn.split('+')[1][0]
-                    varn_new = str1+'('+int(counto)*'p' + ')'
+                    varn_new = str1+'__l__'+int(counto)*'p' + '__r__'
                     evalstr = evalstr[:starts]+varn_new+evalstr[ends:]
                 if '-' in varn:
-                    str1 = varn.split('(')[0]
+                    str1 = varn.split('__l__')[0]
                     counto = varn.split('-')[1][0]
-                    varn_new = str1+'('+int(counto)*'m' + ')'
+                    varn_new = str1+'__l__'+int(counto)*'m' + '__r__'
                     evalstr = evalstr[:starts]+varn_new+evalstr[ends:]
             # Replace left and right round brackets for variables and expose to sympycore
             for i1,varo in enumerate(var_li):
@@ -1199,7 +1278,7 @@ def differ_out(self):
                     str_tmp3 = pre+'__l__'+'t' + '__r__'                    
             differo_new = deepcopy(str_tmp3)
             # Also replace the delimiter when expectations are present in differo
-            while '|' in differo_new: differo_new = differo_new.replace('|','_DELIM_')
+            while '|' in differo_new: differo_new = differo_new.replace('|','DELIM__')
             locals()[differo_new] = SP.Symbol(differo_new)
             # Replace left and right brackets for the entire expression before calling diff
             var_li.reverse()
@@ -1240,6 +1319,7 @@ def differ_out(self):
                 for elem in self.ssidic.keys():
                     tmp_dic[elem] = SP.Symbol(elem)
                 locals().update(tmp_dic)
+            expr = eval(evalstr)
             try:
                 expr = eval(evalstr)
             except:
@@ -1258,7 +1338,7 @@ def differ_out(self):
             while '__rr__' in resstr:
                 resstr = resstr.replace('__rr__',')')
             # Also replace the DELIM with |
-            while '_DELIM_' in resstr: resstr = resstr.replace('_DELIM_','|')
+            while 'DELIM__' in resstr: resstr = resstr.replace('DELIM__','|')
             # Now also switch back to normal t+1/t-x notation
             while mregv1c.search(resstr):
                 ma = mregv1c.search(resstr)
@@ -1669,6 +1749,10 @@ def populate_model_stage_one_b(self, secs):
         self = subs_in_subs(self)
         # Apply steady state transformation where needed
         self = mk_steady(self)
+        # Extend the differ out before doing the differ out
+        self = ext_differ_out(self)
+        # Apply timeshifts where needed
+        self = mk_timeshift(self)
         # Make a first differentiation pass for DIFFs inside timeshifters
         self = differ_out(self)
         # Apply timeshifts where needed
