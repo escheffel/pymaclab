@@ -1,46 +1,95 @@
 %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-This is just a standard NK model, as you can see.
+This is a New Keynesian model with the following features:
+1) It only has price contracts, no wage contracts
+2) The model exhibits habit persistence in consumption
 
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Name = Standard New Keynesian model;
+Name = NK model only price contracts;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+###############################################################
+# Standard parameters
+###############################################################
 # Impatience/Discount factor
 betta                   = 0.99;
 # Production function share of capital
 alpha                   = 0.3;
+# Physical capital depreciation
+delta_k                 = 0.025;
+# Steady state money growth rate
+u_bar                   = 1.012;
+# Steady state inflation rate
+inf_bar                 = u_bar;
+# Steady state real rate
+r_bar                   = 1/betta;
+# Steady state nominal rate
+i_bar                   = r_bar*inf_bar;
+###############################################################
+# Other parameters
+###############################################################
+# Share of government expenditure in GDP
+gs                      = 0.2;
+###############################################################
+# Adjustment cost parameters
+###############################################################
+# Physical capital adj cost parameter kappa
+kappa                   = 2.5;
+# This can be used to choose between different adj costs
+omega                   = 1.0;
+###############################################################
+# Utility function parameters
+###############################################################
 # Habit persistence parameter
 B                       = 0.65;
 # nu_m parameter
 nu_m                    = 1.0;
 # sigma_m parameter
-sigma_m                 = 10.5;
+sigma_m                 = 1.5;
 # nu_n parameter
 nu_n                    = 1.0;
 # sigma_n parameter
 sigma_n                 = 1.5;
+################################################################
+# Calvo parameters
+################################################################
+# Probability of price resetting
+gamma                   = 0.25;
+# Parameter of markup
+theta                   = 0.85;
+################################################################
+# Shock parameters
+################################################################
+# Technology AR1 parameter
+z_bar                   = 1.0;
+rho_z                   = 0.95;
+sigma_eps               = 0.008;
+# Money growth AR1 parameter
+rho_u                   = 0.80;
+sigma_epsu              = 0.007;
+# Government spending AR1 parameter
+rho_g                   = 0.75;
+sigma_epsg              = 0.02
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]    k(t):capital{endo}[log,cf]
 [2]    n(t):labour{con}[log,cf]
 [3]    c(t):consumption{endo}[log,cf]
-[3]    cuk(t):caputil{con}[log,cf]
 [4]    y(t):output{con}[log,cf]
-[5]    w(t):rwage{con}[log,cf]
-[4]    rm(t):rmoney{con}[log,cf]
-[6]    inf(t):inflation{con}[log,cf]
-[7]    infr(t):rinflation{con}[log,cf]
-[8]    infw(t):winflation{con}[log,cf]
-[9]    infwr(t):wrinflation{con}[log,cf]
-[6]    aa(t):arec{con}[log,cf]
-[7]    bb(t):brec{con}[log,cf]
-[8]    cc(t):crec{con}[log,cf]
-[9]    dd(t):drec{con}[log,cf]
-[6]    rmc(t):rmcost{con}[log,cf]
-[4]    z(t):eps(t):technology{exo}[log,cf]
+[5]    r(t):rrate{con}[log,cf]
+[6]    i(t):irate{con}[log,cf]
+[7]    lam(t):lambdar{con}[log,cf]
+[8]    w(t):wage{con}[log,cf]
+[9]    m(t):rmoney{endo}[log,cf]
+[10]   inf(t):inflation{con}[log,cf]
+[11]   infr(t):rinflation{con}[log,cf]
+[12]   aa(t):arec{con}[log,cf]
+[13]   bb(t):brec{con}[log,cf]
+[14]   z(t):eps(t):technology{exo}[log,cf]
+[15]   u(t):eps_u(t):mgrowth{exo}[log,cf]
+[16]   g(t):eps_g(t):govspend{exo}[log,cf]
 
 
 
@@ -53,17 +102,31 @@ None
 # Special reserved discount variable
 [2]     @DISCOUNT  = betta;
 # Utility function
-[1]     @U(t)      = LOG(c(t)-B*c(t-1))+nu_m/(1-sigma_m)*rm(t)**(1-sigma_m)-nu_n/(1+sigma_n)*n(t);
+[1]     @U(t)      = LOG(c(t)-B*c(t-1))+nu_m/(1-sigma_m)*m(t)**(1-sigma_m)-nu_n/(1-sigma_n)*n(t)**(1-sigma_n);
 [2]     @Uc(t)     = DIFF{@U(t),c(t)};
+[2]     @Uc(t+1)   = FF_1{@Uc(t)};
+[3]     @Um(t)     = DIFF{@U(t),m(t)};
+[4]     @Un(t)     = DIFF{@U(t),n(t)};
+[3]     @DF(t+1)   = @DISCOUNT*@Uc(t+1)/@Uc(t);
 # Production function
-[1]     @F(t)      = z(t)*(cuk(t)*k(t-1))**alpha*n(t)**(1-alpha);
+[1]     @F(t)      = z(t)*(k(t-1))**alpha*n(t)**(1-alpha);
 [2]     @F_bar     = SS{@F(t)};
+# Marginal Product of Physical Capital
 [3]     @Fk(t)     = DIFF{@F(t),k(t-1)};
 [4]     @Fk(t+1)   = FF_1{@Fk(t)};
+# Marginal Product of Labour
 [4]     @Fn(t)     = DIFF{@F(t),n(t)};
 [6]     @Fn(t+1)   = FF_1{@Fn(t)};
+# Investment
+[4]     @inv(t)    = k(t)-(1-delta_k)*k(t-1);
 # Real marginal cost expression
-[7]     @rmc(t)    = w(t)**(1-alpha)*z(t)*alpha/(alpha**alpha*(1-alpha)**(1-alpha)*z(t));
+[7]     @mc(t)     = (1/(1-alpha))**(1-alpha)*(1/alpha)**alpha*(@Fk(t))**alpha*(@Fn(t));
+# Investment adjustment cost
+[4]     @sinv(t)   = (1-kappa/2*(inv(t)/inv(t-1)-1)**2);
+# Capital adjustment cost
+[6]     @sk(t)     = kappa/2*(inv(t)/k(t-1)-delta_k)**2;
+# Weighted average adjustment function
+[7]     @wadjc(t)  = (1-omega*@sinv(t)-(1-omega)*sk(t)*(k(t-1)/inv(t)))*inv(t);
 
 
 
@@ -71,13 +134,53 @@ None
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
+# Budget constraint
+[1]   y(t)-c(t)-@inv(t) = 0;
+
+# Definition of lambdar
+[2]   lam(t)-@Uc(t) = 0;
+
+# Definition of output
+[3]   y(t)-@F(t) = 0;
+
+# Definition of wage rate with markup
+[4]   w(t)-(1/theta)*@mc(t) = 0;
+
+# Fisher equation
+[5]   r(t)-i(t)/E(t)|inf(t+1) = 0;
+
+# FOC w.r.t physical capital
+[6]   lam(t)-betta*E(t)|lam(t+1)*r(t) = 0;
+
+# FOC w.r.t. real money balances (i.e. money demand equation)
+[7]   @Um(t)/@Uc(t)-((i(t)-1)/i(t)) = 0;
+
+# FOC w.r.t. labour
+[8]   @Un(t)/@Uc(t)+w(t) = 0;
 
 # Firm recursion parameter aa
-[2]   aa(t)-inf(t)*(@rmc(t)*y(t)+(1-gamma)*)
+[9]   aa(t)-inf(t)*(@mc(t)*y(t)+(1-gamma)*(r(t))**(-1)*E(t)|inf(t+1)**(1/(1-theta))*E(t)|aa(t+1)) = 0;
+
+# Firm recursion parameter bb
+[10]  bb(t)-y(t)-(1-gamma)*(r(t))**(-1)*E(t)|inf(t+1)**(1/(1-theta))*E(t)|bb(t+1) = 0;
+
+# Reset inflation
+[11]  infr(t)-(1/theta)*(aa(t)/bb(t)) = 0;
+
+# Actual inflation
+[12]  inf(t)-(gamma*infr(t)**(theta/(theta-1))+(1-gamma))**((theta-1)/theta) = 0;
+
+# Money Supply
+[13]  m(t)-u(t)*m(t-1)/inf(t) = 0;
+
+# Govspending shock evolution
+[14]  LOG(E(t)|g(t+1))-rho_g*LOG(g(t))-(1-rho_g)*LOG(g_bar)-eps(t) = 0;
 
 # technology shock evolution
-[22] LOG(E(t)|z(t+1))-rho_z*LOG(z(t))-eps(t) = 0;
+[15]  LOG(E(t)|z(t+1))-rho_z*LOG(z(t))-eps(t) = 0;
 
+# money growth shock evolution
+[16]  E(t)|u(t+1))-(1-rho_u)*u_bar-rho_u*u(t)-eps_u(t) = 0;
 
 
 
@@ -95,7 +198,9 @@ None
 
 
 %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Sigma = [sigma_eps**2];
+Sigma = [sigma_epsg**2  0  0
+         0  sigma_eps**2   0    
+         0  0   sigma_epsu**2];
 
 
 %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -76,13 +76,16 @@ class Fsolve(SSsolvers):
             subdic[y[0]] = (y[0],y[1],z)
         list_tmp1 = copy.deepcopy(self.ssm)
         for var in self.ssi.keys():
-            _mreg = '(\+|\*|-|/|^|[(])'+var
+            _mreg = '(\+|\*|-|/|^|\()'+var
             mreg = re.compile(_mreg)
             _rlog = 'LOG\('
             _rexp = 'EXP\('
             rlog = re.compile(_rlog)
             rexp = re.compile(_rexp)            
             for i1,line in enumerate(list_tmp1):
+                # First strip away any whitespace
+                while ' ' in list_tmp1[i1]:
+                    list_tmp1[i1] = list_tmp1[i1].replace(' ','')
                 while rlog.search(list_tmp1[i1]):
                     list_tmp1[i1] = re.sub(rlog,'np.log(',list_tmp1[i1])
                 while rexp.search(list_tmp1[i1]):
@@ -97,8 +100,8 @@ class Fsolve(SSsolvers):
                         pos = ma.span()[0]                      
                     poe = ma.span()[1]
                     list_tmp1[i1] = list_tmp1[i1][:pos]+'invar['+str(subdic[var][2])+']'+list_tmp1[i1][poe:]
-
         func_repr = list_tmp1
+        self.ssm_alt = func_repr
 
         # Define the function to be handed over
         # to fsolve
@@ -121,6 +124,7 @@ class Fsolve(SSsolvers):
         init_val = [x[1] for x in inlist]
         (output,infodict,ier,mesg) = optimize.fsolve(func,init_val,
                                                 full_output=1)
+        self.output = output
         # Attach the outputs of the solver as attributes
         self.fsout={}
         for x,y in zip(output,inlist):

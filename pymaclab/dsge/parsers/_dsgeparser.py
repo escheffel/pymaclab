@@ -754,7 +754,7 @@ def mk_subs_dic(self, secs):
 def subs_in_subs(self):
     list_tmp2 = deepcopy(self.nlsubs_raw1)
     # Replace substitutions inside substitutions, for both time-subscripted and steady state vars!
-    mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)|@(E\(t.*?\)\|){0,1}.*?_bar')
+    mreg = re.compile('@DISCOUNT|@(E\(t.*?\)\|){0,1}.*?\(t.*?\)|@(E\(t.*?\)\|){0,1}.*?_bar')
     variables = [x[0] for x in list_tmp2] # do this once
     self.subs_vars = deepcopy(variables)
     for i,x in enumerate(list_tmp2):
@@ -816,7 +816,17 @@ def ff_chron_str(self,str1='',ff_int=1):
             else:
                 oper = '+'
                 counto = str(counto)
-        varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        # Split off expectations operator if present
+        if '|' in varn:
+            expos = varn.split('|')[0]
+            rems = varn.split('|')[1]
+        else:
+            expos = ''
+            rems = varn
+        if expos == '':
+            varn_new = rems.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        else:
+            varn_new = expos+'|'+rems.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
         # Add an expectations term if needed, but only if it is not already inside the original variable
         if oper == '+' and int(counto) > 0:
             if not mregv1c.search(varn_new): varn_new = 'E(t)|'+varn_new
@@ -921,16 +931,33 @@ def mk_steady2(self):
 
 def mk_timeshift(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
-    _mreg = '(?<!DI)FF[_](?P<fint>\d{1,2})\{.*?\}'
-    _mreg2 = 'BB[_](?P<bint>\d{1,2})\{.*?\}'
+    _mreg = '(?<=\*)FF[_](?P<fint>\d{1,2})\{.*?\}'
+    _mreg2 = '(?<=\*)BB[_](?P<bint>\d{1,2})\{.*?\}'
+    _mreg_b = '(?<!\*)FF[_](?P<fint>\d{1,2})\{.*?\}'
+    _mreg2_b = '(?<!\*)BB[_](?P<bint>\d{1,2})\{.*?\}'
     _mreg3 = '\s*DIFF{.*?,.*?}\s*'
     mreg = re.compile(_mreg)
     mreg2 = re.compile(_mreg2)
+    mregb= re.compile(_mreg_b)
+    mreg2b = re.compile(_mreg2_b)
     mreg3 = re.compile(_mreg3)
     for i1,elem in enumerate(list_tmp2):
         # First search for forward shifting terms
         while mreg.search(list_tmp2[i1][1]):
             ma = mreg.search(list_tmp2[i1][1])
+            matn = ma.group()
+            # Skip if the is a part which needs to be differentiated
+            if mreg3.search(matn): break            
+            starts = ma.start()
+            ends = ma.end()
+            fint = int(ma.group('fint'))
+            str_tmp = matn
+            str_tmp = str_tmp.split('{')[1].split('}')[0]
+            str_tmp = ff_chron_str(self,str1=str_tmp,ff_int=fint)
+            list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
+        # First search for forward shifting terms
+        while mregb.search(list_tmp2[i1][1]):
+            ma = mregb.search(list_tmp2[i1][1])
             matn = ma.group()
             # Skip if the is a part which needs to be differentiated
             if mreg3.search(matn): break            
@@ -954,7 +981,19 @@ def mk_timeshift(self):
             str_tmp = str_tmp.split('{')[1].split('}')[0]
             str_tmp = bb_chron_str(self,str1=str_tmp,bb_int=bint)
             list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
-
+        # Now search for backward shifting terms
+        while mreg2b.search(list_tmp2[i1][1]):
+            ma = mreg2b.search(list_tmp2[i1][1])
+            matn = ma.group()
+            # Skip if the is a part which needs to be differentiated
+            if mreg3.search(matn): break  
+            starts = ma.start()
+            ends = ma.end()
+            bint = int(ma.group('bint'))
+            str_tmp = matn
+            str_tmp = str_tmp.split('{')[1].split('}')[0]
+            str_tmp = bb_chron_str(self,str1=str_tmp,bb_int=bint)
+            list_tmp2[i1][1] = list_tmp2[i1][1][:starts]+str_tmp+list_tmp2[i1][1][ends:]
     self.nlsubs_raw2 = deepcopy(list_tmp2)  
     return self
 
@@ -973,45 +1012,48 @@ def ext_differ_out(self):
         # Skip any line in which the steady state needs to be take before DIFF
         if list_tmp2[kk1][1][:4] == 'DIFF' and 'SS{' in list_tmp2[kk1][1]: continue
         if mreg.search(list_tmp2[kk1][1]):
-            maout = mreg.search(list_tmp2[kk1][1])
-            expout = maout.group()
-            starts_out = maout.end()
-            ends_out = maout.start()
-            evalstr = expout.replace('DIFF','')
-            evalstr = evalstr.replace('{','')
-            evalstr = evalstr.replace('}','')
-            differo = evalstr.split(',')[1]
-            evalstr = evalstr.split(',')[0]
-            # Should be only one variable, so take the first element
-            diff_li = list(self.vreg(patup,differo,True,'max'))[0]
-            var_li = list(self.vreg(patup,evalstr,True,'max'))
-            # Expectations timing and differos stem name
-            diff_conf = diff_li[2][:2]
-            # The differos time subscript
-            diff_conf2 = int(diff_li[2][-1])
-            # Check for case that we need to augment the expression to be differentiated
-            modcase = False
-            chrondiff = []
-            for elem in var_li:
-                if elem[2][:2] == diff_conf and int(elem[2][-1]) != diff_conf2:
-                    chrondiff.append((-1)*(diff_conf2+int(elem[2][-1])))
-                    modcase = True
-            if modcase:
-                if '@DISCOUNT' not in dict(self.nlsubs_raw2).keys():
-                    print "ERROR: For this model you need to define the discount rate explicitly!"
-                    print "You can do this by inserting the special reserved @DISCOUNT variable into the substitution section"
-                    sys.exit()
-                else:
-                    disco = dict(self.nlsubs_raw2)['@DISCOUNT']
-                maxfor = max(chrondiff)
-                minfor = min(chrondiff)
-                finalexp = 'DIFF{'+evalstr
-                for kk2 in range(minfor,maxfor+1):
-                    if kk2 == 0: continue
-                    elif kk2 > 0: finalexp += '+'+disco+'**'+'('+str(kk2)+')'+'*FF_'+str(kk2)+'{'+evalstr+'}'
-                    elif kk2 < 0: finalexp += '+'+disco+'**'+'('+str(-kk2)+')'+'*BB_'+str(kk2)+'{'+evalstr+'}'
-                finalexp += ','+differo+'}'
-                list_tmp2[kk1][1] = finalexp
+            maoutli = mreg.finditer(list_tmp2[kk1][1])
+            maoutli = [elem for elem in maoutli]
+            maoutli.reverse()
+            for maout in maoutli:
+                expout = maout.group()
+                starts_out = maout.start()
+                ends_out = maout.end()
+                evalstr = expout.replace('DIFF','')
+                evalstr = evalstr.replace('{','')
+                evalstr = evalstr.replace('}','')
+                differo = evalstr.split(',')[1]
+                evalstr = evalstr.split(',')[0]
+                # Should be only one variable, so take the first element
+                diff_li = list(self.vreg(patup,differo,True,'max'))[0]
+                var_li = list(self.vreg(patup,evalstr,True,'max'))
+                # Expectations timing and differos stem name
+                diff_conf = diff_li[2][:2]
+                # The differos time subscript
+                diff_conf2 = int(diff_li[2][-1])
+                # Check for case that we need to augment the expression to be differentiated
+                modcase = False
+                chrondiff = []
+                for elem in var_li:
+                    if elem[2][:2] == diff_conf and int(elem[2][-1]) != diff_conf2:
+                        chrondiff.append((-1)*(diff_conf2+int(elem[2][-1])))
+                        modcase = True
+                if modcase:
+                    if '@DISCOUNT' not in dict(self.nlsubs_raw2).keys():
+                        print "ERROR: For this model you need to define the discount rate explicitly!"
+                        print "You can do this by inserting the special reserved @DISCOUNT variable into the substitution section"
+                        sys.exit()
+                    else:
+                        disco = dict(self.nlsubs_raw2)['@DISCOUNT']
+                    maxfor = max(chrondiff)
+                    minfor = min(chrondiff)
+                    finalexp = 'DIFF{'+evalstr
+                    for kk2 in range(minfor,maxfor+1):
+                        if kk2 == 0: continue
+                        elif kk2 > 0: finalexp += '+'+disco+'**'+'('+str(kk2)+')'+'*FF_'+str(kk2)+'{'+evalstr+'}'
+                        elif kk2 < 0: finalexp += '+'+disco+'**'+'('+str(-kk2)+')'+'*BB_'+str(kk2)+'{'+evalstr+'}'
+                    finalexp += ','+differo+'}'
+                    list_tmp2[kk1][1] = list_tmp2[kk1][1][:starts_out]+finalexp+list_tmp2[kk1][1][ends_out+1:]
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     return self
             
@@ -1759,8 +1801,12 @@ def populate_model_stage_one_b(self, secs):
         self = mk_timeshift(self)
         # Apply steady state transformation where needed
         self = mk_steady(self)
+        # Extend the differ out before doing the differ out
+        self = ext_differ_out(self)
         # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
+        # Apply timeshifts where needed
+        self = mk_timeshift(self)
     return self
 
 def populate_model_stage_one_bb(self, secs):
