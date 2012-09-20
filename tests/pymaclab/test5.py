@@ -6,7 +6,7 @@ from pymaclab.modfiles import models
 from matplotlib import pyplot as plt
 
 # Instantiate a new DSGE model instance like so
-rbc1 = pm.newMOD(models.rbc1_res)
+rbc1 = pm.newMOD(models.stable.rbc1_res)
 
 # Now solve and simulate the model
 rbc1.modsolvers.forkleind.solve()

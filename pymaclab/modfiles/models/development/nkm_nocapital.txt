@@ -1,0 +1,105 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is one version of the standard Calvo-pricing New Keynesian model with no physical capital.
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = NK Model no capital;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+betta     = 0.99;
+sigma     = 1.0;
+xi        = 1.0; 
+ups       = 1.0;
+theta     = 3.5;
+phi       = 0.75;
+rho       = 0.9;
+rhom      = 0.5;
+psi       = 1.0;
+veps      = 11.0;
+n_bar     = 0.2;
+inf_bar   = 0.0;
+inf_star  = 0.01;
+infa_bar  = 0.0;
+z_bar     = 1.0;
+mgro_bar  = 0.01;
+sigma_e   = 0.007;
+sigma_em  = 0.002;
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  c(t):consumption{con}[log,cf]
+[2]  y(t):output{con}[log,cf]
+[3]  lam(t):lambdar{con}[log,cf]
+[4]  w(t):rwage{con}[log,cf]
+[5]  n(t):labour{con}[log,cf]
+[6]  m(t):rmoney{endo}[log,cf]
+[7]  mgro(t):mgrowth{con}[log,cf]
+[8]  aa(t):arec{con}[log,cf]
+[9]  bb(t):brec{con}[log,cf]
+[8]  inf(t):inflation{con}[log,cf]
+[9]  rinf(t):inflation{con}[log,cf]
+[10] r(t):rrate{con}[log,cf]
+[11] i(t):nrate{con}[log,cf]
+[12] z(t):eps_z(t):productivity{exo}[log,cf]
+[13] u(t):eps_u(t):mshock{exo}[log,cf]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+# Special reserved keyword
+[1]   @DISCOUNT = betta;
+# The utility function
+[2]   @U(t)     = (c(t)**(1-sigma)-1)/(1-sigma)+theta*((1-n(t))**(1-zeta)-1)/(1-zeta)+phi*(m(t)**(1-nu)-1)/(1-nu);
+[3]   @Uc(t)    = DIFF{@U(t),c(t)};
+[4]   @Uc(t+1)  = FF_1{@Uc(t)};
+[5]   @Un(t)    = DIFF{@U(t),n(t)};
+[6]   @Um(t)    = DIFF{@U(t),m(t)};
+# The production function
+[1]   @F(t)     = z(t)*n(t);
+[2]   @Fn(t)    = DIFF{@F(t),n(t)};
+
+
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the non-linear FOCs in format g(x)=0
+
+
+# The budget constraint
+[1]   w(t)*n(t)-c(t) = 0;
+# Shadow value of consumption
+[2]   lam(t)-@Uc(t) = 0;
+# Definition of output
+[3]   y(t)-@F(t) = 0;
+# Fisher equation
+[4]   lam(t)-betta*E(t)|lam(t+1)*i(t)/E(t)|inf(t+1) = 0;
+# FOC w.r.t. money
+[5]   @Um(t)-lam(t)+betta*E(t)|lam(t+1)/E(t)|inf(t+1) = 0;
+# FOC w.r.t. labour
+[6]   @Un(t)+@Uc(t)*w(t) = 0;
+# Markup relationship to wage
+[7]   w(t)-((vareps-1)/vareps)*z(t) = 0;
+# Definition of reset inflation
+[8]   rinf(t)-((vareps-1)/vareps)*(aa(t)/bb(t)) = 0;
+
+
+%Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_e 0;
+         0 sigma_em];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

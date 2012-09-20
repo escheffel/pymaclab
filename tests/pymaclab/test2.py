@@ -7,7 +7,7 @@ from matplotlib import rc
 rc('text', usetex=True)
 
 # Instantiate a new DSGE model instance like so
-rbc1 = pm.newMOD(models.rbc1_res)
+rbc1 = pm.newMOD(models.stable.rbc1_res)
 
 # Create an array representing a finely-spaced range of possible impatience values
 # Then convert to corresponding steady state gross real interest rate value

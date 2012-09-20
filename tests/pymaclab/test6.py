@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from copy import deepcopy
 
 # Instantiate a new DSGE model instance like so
-rbc1 = pm.newMOD(models.rbc1_res,mk_hessian=False)
+rbc1 = pm.newMOD(models.stable.rbc1_res,mk_hessian=False)
 
 # Now solve and simulate the model
 rbc1.modsolvers.forkleind.solve()
