@@ -6,33 +6,33 @@ root_dir = root_dir[0]
 
 # Now do for stable branch
 def expose_stable(scopedic=None):   
-	fcont = os.listdir(os.path.join(root_dir,'modfiles/stable'))
+	fcont = os.listdir(os.path.join(root_dir,'modfiles/models/stable'))
 	modfiles = [x for x in fcont if x[-4:] == '.txt']
 	modpdic = {}
 	for modo in modfiles:
-		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/stable',modo)
+		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/models/stable',modo)
 	# Now expose the model files' paths to the local scope to make it accessible for users
 	for elem in modpdic.keys():
 		exec elem+'='+'"'+modpdic[elem]+'"' in scopedic
 
 # Now do for development branch
 def expose_development(scopedic=None):
-	fcont = os.listdir(os.path.join(root_dir,'modfiles/development'))
+	fcont = os.listdir(os.path.join(root_dir,'modfiles/models/development'))
 	modfiles = [x for x in fcont if x[-4:] == '.txt']
 	modpdic = {}
 	for modo in modfiles:
-		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/development',modo)
+		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/models/development',modo)
 	# Now expose the model files' paths to the local scope to make it accessible for users
 	for elem in modpdic.keys():
 		exec elem+'='+'"'+modpdic[elem]+'"' in scopedic
 
 # Now do for testing branch
 def expose_testing(scopedic=None):
-	fcont = os.listdir(os.path.join(root_dir,'modfiles/testing'))
+	fcont = os.listdir(os.path.join(root_dir,'modfiles/models/testing'))
 	modfiles = [x for x in fcont if x[-4:] == '.txt']
 	modpdic = {}
 	for modo in modfiles:
-		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/testing',modo)
+		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/models/testing',modo)
 	# Now expose the model files' paths to the local scope to make it accessible for users
 	for elem in modpdic.keys():
 		exec elem+'='+'"'+modpdic[elem]+'"' in scopedic

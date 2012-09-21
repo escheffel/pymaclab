@@ -1024,6 +1024,8 @@ def ext_differ_out(self):
                 evalstr = evalstr.replace('}','')
                 differo = evalstr.split(',')[1]
                 evalstr = evalstr.split(',')[0]
+                # When the variable differo is steady state then we can skip this test
+                if '_bar' in differo: continue
                 # Should be only one variable, so take the first element
                 diff_li = list(self.vreg(patup,differo,True,'max'))[0]
                 var_li = list(self.vreg(patup,evalstr,True,'max'))
