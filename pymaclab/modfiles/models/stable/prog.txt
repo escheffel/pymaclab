@@ -9,6 +9,9 @@ Name = Open source programmer DSGE model;
 
 
 %Parameters+++++++++++++++++++++++++++++++++++++++++
+# Utility function parameters
+A          = 1.0;
+sigma      = 1.5;
 # Parameters for production in capital sector
 A_k        = 1.0;
 alpha_k    = 0.3;
@@ -29,8 +32,7 @@ delta_r    = 0.010;
 eta        = 1.0;
 ups        = -1.25;
 # Matching function parameters
-lambdar_v  = 0.40;
-lambdar_s  = 0.40;
+lambdar    = 0.40;
 mu         = 0.004;
 rho_z      = 0.95;
 psi        = 0.07;
@@ -43,25 +45,19 @@ sigma_z    = 0.007;
 
 %Variable Vectors++++++++++++++++++++++++++++++++++++
 [1]  n(t):employment{endo}[log,cf]
-[2]  n_p(t):labour_projects{con}[log,cf]
-[3]  n_os(t):labour_opensource{con}[log,cf]
-[4]  n_nos(t):labour_non_opensource{con}[log,cf]
-[5]  l(t):leisure{con}[log,cf]
-[6]  p(t):projects{con}[log,cf]
-[7]  pu(t):projects_util{con}[log,cf]
-[8]  pk(t):price_capital{con}[log,cf]
+[2]  np(t):labour_projects{con}[log,cf]
+[3]  nos(t):labour_opensource{con}[log,cf]
+[4]  nnos(t):labour_non_opensource{con}[log,cf]
+[5]  p(t):projects{con}[log,cf]
+[6]  pu(t):projects_util{con}[log,cf]
+[7]  pk(t):price_capital{con}[log,cf]
 [8]  ph(t):price_human{con}[log,cf]
-[8]  k(t):physical_capital{endo}[log,cf]
-[9]  v(t):capshare{con}[log,cf]
-[9]  ik(t):physical_capital_prod{con}[log,cf]
-[11] ros(t):reputation{endo}[log,cf]
-[12] ma(t):labmatch{con}[log,cf]
-[13] va(t):vacancies{con}[log,cf]
-[13] vac(t):vacancies_cost{con}[log,cf]
-[14] sic(t):search_cost{con}[log,cf]
-[15] si(t):search_intensity{con}[log,cf]
-[16] v(t):capital_share[log,cf]
-[13] z(t):epsz(t):productivity{exo}[log,cf]
+[9]  k(t):physical_capital{endo}[log,cf]
+[10] ma(t):labmatch{con}[log,cf]
+[11] va(t):vacancies{con}[log,cf]
+[12] si(t):search_intensity{con}[log,cf]
+[13] v(t):capital_share{con}[log,cf]
+[14] z(t):epsz(t):productivity{exo}[log,cf]
 
 
 %Boundary Conditions+++++++++++++++++++++++++++++++++
@@ -69,28 +65,32 @@ None
 
 
 %Variable Substitution Non-Linear System+++++++++++++
+#######################################################
+# Definition of leisure
+[12]  @L(t)      = 1-n(t-1);
+#######################################################
 # The utility function and its derivatives
-[1]   @U(t)      = ((pu(t)*l(t)**A)**(1-sigma)-1)/(1-sigma);
+[1]   @U(t)      = ((pu(t)*@L(t)**A)**(1-sigma)-1)/(1-sigma);
 [2]   @MUp(t)    = DIFF{@U(t),pu(t)};
 [2]   @MUp(t+1)  = FF_1{@MUp(t)};
-[3]   @MUl(t)    = DIFF{@U(t),l(t)};
+[3]   @MUl(t)    = DIFF{@U(t),n(t-1)};
 [3]   @MUl(t+1)  = FF_1{@MUl(t)};
 ################################################
 # The matching function and its derivatives
-[3]   @MA(t)     = (va(t)*ros(t-1))**(1-lambdar)*(si(t)*(1-n(t-1)))**lambdar;
+[3]   @MA(t)     = (va(t)*(nos(t)/nos_bar))**(1-lambdar)*(si(t)*(1-n(t-1)))**lambdar;
 [3]   @MA_bar    = SS{@MA(t)};
 
 [4]   @MAv(t)    = DIFF{@MA(t),va(t)};
 [5]   @MAv(t+1)  = FF_1{@MAv(t)};
 [5]   @MAv_bar   = SS{@MAv(t)};
 
-[4]   @MAn(t)    = DIFF{@MA(t),n(t)} ;
+[4]   @MAn(t)    = DIFF{@MA(t),n(t-1)} ;
 [5]   @MAn(t+1)  = FF_1{@MAn(t)};
 [4]   @MAn_bar   = SS{@MAn(t)};
 
-[4]   @MAros(t)  = DIFF{@MA(t),ros(t-1)} ;
-[5]   @MAros(t+1)= FF_1{@MAros(t)};
-[4]   @MAros_bar = SS{@MAros(t)};
+[4]   @MAos(t)   = DIFF{@MA(t),nos(t)} ;
+[5]   @MAos(t+1) = FF_1{@MAos(t)};
+[4]   @MAos_bar  = SS{@MAos(t)};
 
 [4]   @MAsi(t)   = DIFF{@MA(t),si(t)};
 [5]   @MAsi(t+1) = FF_1{@MAsi(t)};
@@ -104,91 +104,81 @@ None
 [11]  @Css(t)    = DIFF{@Cs(t),si(t)};
 [11]  @Css(t+1)  = FF_1{@Css(t)};
 [11]  @Css_bar   = SS{@Css(t)};
+######################################################
+# The vacancy cost function
+[11]  @Vac(t)    = a*va(t);
 #######################################################
 # Production function in project sector
-[11]  @Fp(t)     = A_p*(v(t)*k(t-1))**alpha_p*n_p(t)**(1-alpha_p);
+[11]  @Fp(t)     = A_p*(v(t)*k(t-1))**alpha_p*np(t)**(1-alpha_p);
 
-[12]  @Fpn(t)    = DIFF{@Fp(t),n_p(t)};
+[12]  @Fpn(t)    = DIFF{@Fp(t),np(t)};
 [12]  @Fpn(t+1)  = FF_1{@Fpn(t)};
 
 [12]  @Fpk(t)    = DIFF{@Fp(t),k(t-1)};
 ###########################################################
 # Production function in the physical capital sector
-[13]  @Fk(t)     = A_k*((1-v(t))*k(t-1))**alpha_k*n_nos(t)**betta_k*n_os(t)**(1-alpha_k-betta_k);
+[13]  @Fk(t)     = A_k*((1-v(t))*k(t-1))**alpha_k*nnos(t)**betta_k*nos(t)**(1-alpha_k-betta_k);
 
-[14]  @Fknos(t)  = DIFF{@Fk(t),n_nos(t)};
+[14]  @Fknos(t)  = DIFF{@Fk(t),nnos(t)};
 [12]  @Fknos(t+1)= FF_1{@Fknos(t)};
 
-[15]  @Fkos(t)   = DIFF{@Fk(t),n_os(t)};
+[15]  @Fkos(t)   = DIFF{@Fk(t),nos(t)};
 [12]  @Fkos(t+1) = FF_1{@Fkos(t)};
 
 [15]  @Fkk(t)    = DIFF{@Fk(t),k(t-1)};
 [16]  @Fkk(t+1)  = FF_1{@Fkk(t)};
 ##########################################################
 # Production function in the human capital sector
-[13]  @Fx(t)     = A_x*n_nos(t)**alpha_h*n_os(t)**(1-alpha_x);
+[13]  @Fx(t)     = A_x*nnos(t)**alpha_x*nos(t)**(1-alpha_x);
 
-[14]  @Fxnos(t)  = DIFF{@Fh(t),n_nos(t)};
-
-[15]  @Fxos(t)   = DIFF{@Fh(t),n_os(t)};
+[14]  @Fxnos(t)  = DIFF{@Fx(t),nnos(t)};
+[15]  @Fxnos(t+1)= FF_1{@Fxnos(t)};
+[15]  @Fxos(t)   = DIFF{@Fx(t),nos(t)};
+[15]  @Fxos(t+1) = FF_1{@Fxos(t)};
 
 
 %Non-Linear First-Order Conditions+++++++++++++++++++
 
-# Time constraint of only employment
-[1]   n(t-1)-n_os(t)-n_nos(t)-n_p(t) = 0;
+# Time constraint of only employment, defines n(t-1)
+[1]   n(t-1)-nos(t)-nnos(t)-np(t) = 0;
 
-# Definition of leisure
-[2]   l(t)+n(t-1)-1 = 0;
+# Matching function labour market, assuming reputational capital is an input, defines ma(t)
+[2]   ma(t)-@MA(t) = 0;
 
-# Definition of vacancies cost
-[3]   vac(t)-a*va(t) = 0;
+# Evolution of total labour, defines n(t)
+[3]   n(t)-(1-phi)*n(t-1)-ma(t) = 0;
 
-# Matching function labour market, assuming reputational capital is an input
-[3]   ma(t)-vac(t)**(1-lambdar_v)*(s(t)*l(t))**lambdar_s*ros(t-1)**(1-lambdar_v-lambdar_s) = 0;
+# Definition of the relative price of physical capital, also FOC w.r.t. capital share v(t), defines pk(t)
+[4]   pk(t)-@Fpk(t)/@Fkk(t) = 0;
 
-# Evolution of total labour
-[4]   n(t)-(1-phi)*n(t-1)-ma(t) = 0;
+# Definition of relative price of human capital, defines ph(t)
+[5]   ph(t)-(pk(t)*A_k@Fknos(t)-A_p*@Fpn(t))/A_x*@Fxnos(t) = 0;
 
-# Definition of the relative price of physical capital, also FOC w.r.t. capital share v(t)
-[5]   pk(t)-@Fpk(t)/@Fkk(t) = 0;
+# Definition of real budget constraint, defines pu(t)
+[6]   pu(t)-@Fpn(t)*np(t)-pk(t)*(@Fknos(t)+@Fkos(t))+@Cs(t)+@Vac(t) = 0;
 
-# Definition of relative price of human capital
-[6]   ph(t)-(pk(t)*A_k@Fknos(t)-A_p*@Fpn(t))/A_x*@Fxnos(t) = 0;
+# Investment physical capital law of motion, defines k(t)
+[7]   k(t)-(1-delta_k)*k(t-1)-@Fk(t) = 0;
 
-# Definition of real budget constraint
-[5]   pu(t)-@Fpn(t)*n_p(t)-pk(t)*(@Fknos(t)+@Fkos(t))+sic(t)+vac(t) = 0;
-
-# Capital goods investment function
-[6]   ik(t)-A_k*((1-v(t))*k(t-1))**alpha_k*n_k(t)**(1-alpha_k) = 0;
-
-# Investment physical capital law of motion
-[7]   k(t)-(1-delta_k)*k(t-1)-ik(t) = 0;
-
-# Definition of search cost
-[8]   sic(t)-@Cs(t) = 0;
-
-# Projects production function
-[10]  p(t)-A_p*(v(t)*k(t-1))**alpha_p*n_p(t)**(1-alpha_p) = 0;
-
-# Law of motion for labour reputation using open source
-[11]  ros(t)-(1-delta_r)*ros(t-1)-n_os(t) = 0;
+# Projects production function, defines p(t)
+[8]   p(t)-A_p*(v(t)*k(t-1))**alpha_p*np(t)**(1-alpha_p) = 0;
 
 # Euler equation for physical capital
-[11]  @MUp(t)*pk(t)-betta*(@MUp(t+1)*@Fpk(t)+@MUp(t+1)*E(t)|pk(t+1)*(1+@Fkk(t+1)-delta_k) = 0;
+[9]   @MUp(t)*pk(t)-betta*(@MUp(t+1)*@Fpk(t)+@MUp(t+1)*E(t)|pk(t+1)*(1+@Fkk(t+1)-delta_k) = 0;
 
 # Euler equation w.r.t human capital
-[12]  @MUp(t)*ph(t)-betta*(@MUp(t+1)*E(t)|ph(t+1)*(1+@Fx(t)-delta_x)+@MUp(t+1)*E(t)|pk(t+1)*@Fknos(t+1)+@MUp(t+1)*@Fpn(t+1)) = 0;
+[10]  @MUp(t)*ph(t)-betta*(@MUp(t+1)*E(t)|ph(t+1)*(1+@Fx(t)-delta_x)+@MUp(t+1)*E(t)|pk(t+1)*@Fknos(t+1)+@MUp(t+1)*@Fpn(t+1)) = 0;
 
-# Euler equation w.r.t labour
-[12]  x;
+#First-order condition w.r.t open-source programming time
+[11]  ((@MUp(t)*pk(t)*@Fkos(t)+@MUp(t)*@Fxos(t))/@MAos(t))-betta*(@MUp(t+1)*(@Fpn(t+1)+@Cs(t+1))+@MUl(t+1)+...
+      ((@MUp(t+1)*E(t)|pk(t+1)*@Fkos(t+1)+@MUp(t+1)*@Fxos(t+1))/@MAos(t+1))*((1-psi)+@MAn(t+1))) = 0;
 
 # First-order condition w.r.t. vacancies, va(t)
-[12]  (a*@MUp(t)/@MAv(t))-betta*(@MUp(t+1)*(@Fpn(t+1)+@Cs(t+1))-@MUl(t+1)+...
+[12]  (a*@MUp(t)/@MAv(t))-betta*(@MUp(t+1)*(@Fpn(t+1)+@Cs(t+1))+@MUl(t+1)+...
       (a*@MUp(t+1)/@MAv(t+1))*((1-psi)+@MAn(t+1))) = 0;
 
 # Euler equation 3, si(t)
-[13]  (@MUp(t)*@Css(t)*(1-n(t-1))/@MAsi(t))-betta*(@MUp(t+1)*(@Fpn(t+1)+@Cs(t+1))-@MUl(t+1)+...
+[13]  (@MUp(t)*@Css(t)*(1-n(t-1))/@MAsi(t))-betta*(@MUp(t+1)*(@Fpn(t+1)+@Cs(t+1))+@MUl(t+1)+...
       (@MUp(t+1)*@Css(t+1)*(1-n(t))/@MAsi(t+1))*((1-psi)+@MAn(t+1))) = 0;
 
 # Evolution of exogenous productivity shock
@@ -204,26 +194,7 @@ None
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++
-
-# Steady State budget constraint
-[1]  @F_bar-c_bar-delta*k_bar-a*va_bar-@Cs_bar = 0;
-# Steady state employment law of motion, i.e. steady state of matches in labour market
-[2]  @MA_bar-psi*em_bar = 0;
-# Physical capital Eurler steady state equation
-[3]  @MUc_bar-betta*(@MUc_bar*(1+@Fk_bar-delta)) = 0;
-# Vacancies Euler equation
-[4]  (a*@MUc_bar/@MAv_bar)-betta*(@MUc_bar*(@Fn_bar+@Cs_bar)-@MUem_bar+...
-     (a*@MUc_bar/@MAv_bar)*((1-psi)+@MAem_bar)) = 0;
-# Search Intensity Euler equation
-[5]  (@MUc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)-betta*(@MUc_bar*(@Fn_bar+@Cs_bar)-...
-      @MUem_bar+(@MUc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)*((1-psi)+@MAem_bar)) = 0;
-
-# For this model, sensible starting values are key to solving the steady state !
-[1]  c_bar     = 2.0;
-[2]  si_bar    = 0.01;
-[3]  va_bar    = 0.01;
-[4]  k_bar     = 12.0;
-[5]  em_bar    = 0.3;
+None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++

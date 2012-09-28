@@ -1122,16 +1122,17 @@ def differ_out(self):
             # Also skip if evalstr has uncomputed timeshifter
             if mregsh.search(evalstr): break
             evalstr = evalstr.split(',')[0]
-            if '_bar' not in evalstr:
-                try:
-                    var_li = list(self.vreg(patup,evalstr,True,'max'))
-                except:
-                    print "Model parsing error, problem with processing this text string:\n"+"'"+list_tmp2[kk1][0]+" = "+list_tmp2[kk1][1]+"'."
-                    sys.exit()
+            time_vars = False
+            try:
+                var_li = list(self.vreg(patup,evalstr,True,'max'))
+                if var_li: time_vars = True
+            except:
+                print "Model parsing error, problem with processing this text string:\n"+"'"+list_tmp2[kk1][0]+" = "+list_tmp2[kk1][1]+"'."
+                sys.exit()
             ##################################################
             # Do for steady state expressions, as is very easy
             ##################################################
-            if '_bar' not in evalstr and '_bar' in differo:
+            if '_bar' not in evalstr and not time_vars and '_bar' in differo:
                 # First replace all chronological variables in evalstr with _bar equivalents
                 varbar_li = deepcopy(var_li)
                 varbar_li.reverse()
@@ -1172,7 +1173,7 @@ def differ_out(self):
                 resstr = expr_bar.diff(locals()[str(differo)])
                 list_tmp2[kk1][1] = str(resstr)
                 continue
-            elif '_bar' in evalstr and '_bar' in differo:
+            elif '_bar' in evalstr and not time_vars and '_bar' in differo:
                 # Now substitute out exp and log in terms of sympycore expressions
                 elog = re.compile('LOG\(')
                 while elog.search(evalstr):
@@ -1212,6 +1213,7 @@ def differ_out(self):
             ###################################################
             var_li2 = deepcopy(var_li)
             var_li2.reverse()
+            ss_li = [x[2][1]+'_bar' for x in var_li2]
             # Replace t+1 or t-1 with something without the operators, in evalstr
             for jj1,elem in enumerate(var_li2):
                 tmp_li = list(elem)
@@ -1363,6 +1365,11 @@ def differ_out(self):
                 for elem in self.ssidic.keys():
                     tmp_dic[elem] = SP.Symbol(elem)
                 locals().update(tmp_dic)
+            # Also expose any variables from the ss_li, just in case
+            tmp_dic = {}
+            for elem in ss_li:
+                tmp_dic[elem] = SP.Symbol(elem)
+            locals().update(tmp_dic)
             expr = eval(evalstr)
             try:
                 expr = eval(evalstr)
