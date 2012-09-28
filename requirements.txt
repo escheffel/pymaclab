@@ -3,5 +3,4 @@ scipy
 matplotlib==1.0.1
 pandas
 scikits.timeseries
-pp
 cloud_sptheme==1.4

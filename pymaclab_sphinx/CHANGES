@@ -4,12 +4,32 @@
 Release History
 ===============
 
-**0.90.1-dev** (2012-9-12)
+**0.90.1** (2012-9-27)
 ==========================
 
+    * Differentiation in the variable substitution section is now "smarter" and understands inter-temporal differentiation with special @DISCOUNT variable
+
     * Implemented the Christiano-Fitzgerald asymmetric band-pass filter to extract stationary cycle from simulated data.
+    
+    * Eliminated some small bugs in parser module.
+    
+    * Made new stats.VAR and stats.FAVAR experimentally available, but this is not documented yet !
+    
+    * Also included the Fred API with the PyMacLab package to download data from the St. Louis Fed.
+    
+    * The DSGE model filepath handles have been split into "models.stable.xmodel", "models.development.xmodel" and "models.testing.xmodel"
+    
+    * The updater methods for dynamic runtime changes to DSGE models to are pretty much complete now.
+
+    * Have started adding more API documentation to PyMacLab Sphinx docs.
+    
+    * The example/test files have been considerably updated. But need to implement Python nose cases next.
 
     * Updated documentation substantially.
+    
+    * TODO: More DSGE models have to be added and existing ones modified.
+    
+    * TODO: The documentation is still not complete. Especially the stats module is not explained.
 
 
 **0.89.1** (2012-9-11)

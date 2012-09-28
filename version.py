@@ -1,3 +1,3 @@
 from datetime import datetime
 
-version = '0.88.1'
+version = '0.90.1'

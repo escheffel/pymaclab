@@ -65,11 +65,11 @@ AUTHOR = "Eric M. Scheffel"
 MAINTAINER = "Eric M. Scheffel"
 MAINTAINER_EMAIL = "emscheffel@gmail.com"
 URL = 'http://github.com/escheffel/pymaclab/'
-DOWNLOAD_URL="http://github.com/escheffel/pymaclab/tarball/v0.85"
+DOWNLOAD_URL="http://github.com/escheffel/pymaclab/tarball/v0.90.1"
 CLASSIFIERS=["Scientific", "Macroeconomics", "General Equilibrium", "DSGE", "Time Series"]
 
 MAJOR = 0
-MINOR = 88
+MINOR = 90
 MICRO = 1
 ISRELEASED = True
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)

@@ -272,7 +272,7 @@ A Description of the model file's individual sections
 
    ::
 
-      [1] x(t):var_name{endo|con|exo}[log,hp|bk,cf]
+      [1] x(t):var_name{endo|con|exo}[log,hp|bk|cf]
 
   The first element is a descriptor of how the time-subscripted variable will appear in the system of nonlinear equations. The second
   descriptor is a more revealing but still short name, such as `capital` or `consumption`. It is preferable to write longer variable names
@@ -299,14 +299,14 @@ A Description of the model file's individual sections
 
    ::
 
-      [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-      [2]   @F(t)     = z(t)*k(t-1)**rho;
-      [3]   @F_bar    = SS{@F(t)};
-      [4]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-      [5]   @R(t+1)   = FF_1{@R(t)};
-      [6]   @U(t)     = c(t)**(1-eta)/(1-eta);
-      [7]   @MU(t)    = DIFF{@U(t),c(t)};
-      [8]   @MU(t+1)  = FF_1{@MU(t)};
+     [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+     [2]   @F(t)     = z(t)*k(t-1)**rho;
+     [3]   @F_bar    = SS{@F(t)};
+     [4]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+     [5]   @R(t+1)   = FF_1{@R(t)};
+     [6]   @U(t)     = c(t)**(1-eta)/(1-eta);
+     [7]   @MU(t)    = DIFF{@U(t),c(t)};
+     [8]   @MU(t+1)  = FF_1{@MU(t)};
 
   These can then be used in the following section instead of having to work with the full expressions instead. Additionally, convience operators
   are accessible, given by:
@@ -332,7 +332,26 @@ A Description of the model file's individual sections
       [1]   @F_bar   = z_bar*k_bar**rho;
 
   In PyMacLab steady state expressions of variables strictly have to adhere to the `x_bar` naming convention, i.e. be expressed by the stem
-  variable name abbreviation followed by and underscore and the word `bar`.
+  variable name abbreviation followed by and underscore and the word `bar`. Finally, the DIFF{EXPRESSION,x(t)} is smart enough to differentiate
+  across different time periods. So as an example with habit persistence in consumption our utility function depends on current and past consumption:
+  
+   ::
+    
+      [1]   @DISCOUNT = betta;
+      [2]   @U(t)     = LOG(c(t)-B*c(t-1));
+      [3]   @Uc(t)    = DIFF{@U(t),c(t)};
+      
+  Here the differentiation operator is smart enough to forward the expression by one period before taking the derivative w.r.t to c(t).
+  In fact, internally the above will be replaced with:
+   
+   ::
+     
+      [1]   @DISCOUNT = betta;
+      [2]   @U(t)     = LOG(c(t)-B*c(t-1));
+      [3]   @Uc(t)    = DIFF{LOG(c(t)-B*c(t-1))+betta*LOG(E(t)|c(t+1)-B*c(t)),c(t)};
+      
+  This feature only works if the special reserved keyword @DISCOUNT is defined at the top of the list. This tells PyMacLab which discount rate to
+  apply to future (or past) expressions.
 
 *Non-Linear First-Order Conditions Section*
 

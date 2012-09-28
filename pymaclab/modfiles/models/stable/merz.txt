@@ -25,19 +25,19 @@ sigma_z  = 0.007;
 
 
 %Variable Vectors++++++++++++++++++++++++++++++++++++
-[1]  k(t):capital{endo}[log,hp]
-[2]  c(t):consumption{con}[log,hp]
-[3]  y(t):output{con}[log,hp]
-[4]  em(t):employment{endo}[log,hp]
-[5]  ma(t):matches{con}[log,hp]
-[6]  va(t):vacancies{con}[log,hp]
-[7]  vac(t):vacancy_cost{con}[log,hp]
-[8]  sic(t):search_cost{con}[log,hp]
-[9]  si(t):search_intensity{con}[log,hp]
-[10] inv(t):investment{con}[log,hp]
+[1]  k(t):capital{endo}[log,cf]
+[2]  c(t):consumption{con}[log,cf]
+[3]  y(t):output{con}[log,cf]
+[4]  em(t):employment{endo}[log,cf]
+[5]  ma(t):matches{con}[log,cf]
+[6]  va(t):vacancies{con}[log,cf]
+[7]  vac(t):vacancy_cost{con}[log,cf]
+[8]  sic(t):search_cost{con}[log,cf]
+[9]  si(t):search_intensity{con}[log,cf]
+[10] inv(t):investment{con}[log,cf]
 [11] r(t):real_rate{con}
-[12] w(t):wage{con}[log,hp]
-[13] z(t):epsz(t):productivity{exo}[log,hp]
+[12] w(t):wage{con}[log,cf]
+[13] z(t):epsz(t):productivity{exo}[log,cf]
 
 
 %Boundary Conditions+++++++++++++++++++++++++++++++++
