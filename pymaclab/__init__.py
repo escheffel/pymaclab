@@ -19,6 +19,9 @@ from stats import favar
 import linalg
 import sys
 
+# Expose the version number into library root
+from version import version as __version__
+
 # Some helper functions
 def db_graph(dbase,tseries):
 	fig = TPL.tsfigure()

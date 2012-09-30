@@ -14,7 +14,8 @@
 import numpy
 import scipy
 import scipy.stats
-from scikits import timeseries as ts
+# We don't need this anywhere and it should also be replaced by Pandas in the future
+#from scikits import timeseries as ts
 import matplotlib as mpl
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})

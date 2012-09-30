@@ -15,7 +15,8 @@
 from __future__ import division
 import numpy
 import scipy
-from scikits import timeseries as ts
+# We don't need this anywhere and it should also be replaced with Pandas in the future
+#from scikits import timeseries as ts
 import matplotlib as mpl
 from matplotlib import rc
 rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})

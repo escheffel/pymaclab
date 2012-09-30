@@ -12,7 +12,10 @@
 '''
 
 #from __future__ import division
-from scikits import timeseries as ts
+# Have taken out the dependency from this module by commenting out
+# The TimeSeries Database as well as the get_data method on the DSGE class
+# In future versions this has to be replaced with Pandas instead
+#from scikits import timeseries as ts
 import copy
 from copy import deepcopy
 import os
@@ -79,7 +82,7 @@ if use_matlab:
 # Empty locdic for the locate helper function
 locdic = {}
 
-
+'''
 ################THE TIMESERIES DATABASE CLASS (WORKS)#################
 class TSDataBase:
     """
@@ -279,6 +282,7 @@ class TSDataBase:
             self.VAR.do_irf(spos)
             self.VAR.IRF_attr['shock_var'] = varord[[x1[1] for x1 in varord].index(spos-1)][0]
 """***********************************************************"""
+'''
 ##################THE DSGE MODEL CLASS (WORKS)#####################
 class DSGEmodel(object):
     '''
@@ -1055,6 +1059,8 @@ class DSGEmodel(object):
             return 'Error: Your chosen view does not exist for this model!'
         else:
             self.cv = eval('self.modsolvers.'+instring)
+
+    '''
     # Get data method, in case model has not been loaded with database object
     def getdata(self,datafile=None,dbase=None):
         '''
@@ -1101,6 +1107,7 @@ class DSGEmodel(object):
             self.VAR = dbase.VAR
         elif datafile == None and dbase == None:
             self.data = None
+    '''
 
     # The regex function
     def vreg(self,paratuple=(None,'all','0'),cinstring='',iter=False,info='min'):

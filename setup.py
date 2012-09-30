@@ -1,14 +1,82 @@
 #!/usr/bin/env python
+import os
+import sys
+import shutil
+import glob
+
+
+######################################################################
+# Check dependencies and install using pip
+######################################################################
+# Now check for numpy and install if needed
+numpy_version = False
+try:
+    import numpy
+    numpy_version = numpy.__version__
+    if numpy_version and numpy_version != '1.6.2':
+        print "You need Numpy version 1.6.2 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install numpy==1.6.2")    
+except:
+    print "Numpy not detected. Fetching version 1.6.2 now using pip..."
+    os.system("pip install numpy==1.6.2")
+    
+# Now check for scipy and install if needed
+scipy_version = False
+try:
+    import scipy
+    scipy_version = scipy.__version__
+    if scipy_version and scipy_version != '0.11.0':
+        print "You need Scipy version 0.11.0 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install scipy==0.11.0") 
+except:
+    print "Scipy not detected. Fetching version 0.11.0 now using pip..."
+    os.system("pip install scipy==0.11.0")
+
+# Now check for matplotlib and install if needed
+matplotlib_version = False
+try:
+    import matplotlib
+    matplotlib_version = matplotlib.__version__
+    if matplotlib_version and matplotlib_version != '1.0.1':
+        print "You need Matplotlib version 1.0.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install matplotlib==1.0.1") 
+except:
+    print "Matplotlib not detected. Fetching now using pip..."
+    os.system("pip install matplotlib==1.0.1")
+
+# Now check for pandas and install if needed
+pandas_version = False
+try:
+    import pandas
+    pandas_version = pandas.__version__
+    if pandas_version and pandas_version != '0.8.1':
+        print "You need Pandas version 0.8.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pandas==0.8.1") 
+except:
+    print "Pandas not detected. Fetching now using pip..."
+    os.system("pip install pandas==0.8.1")
+    
+# Now check for ipython and install if needed
+ipython_version = False
+try:
+    import IPython
+    ipython_version = IPython.__version__
+    if ipython_version and ipython_version != '0.13':
+        print "You should use IPython version 0.13 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install ipython==0.13") 
+except:
+    print "IPython not detected. Fetching now using pip..."
+    os.system("pip install ipython==0.13")
+##########################################################################
+# Done checking for dependencies
+##########################################################################
+    
 
 from datetime import datetime
 
 # import setuptools # have to do this to be able to setup.py develop
 from numpy.distutils.core import setup
 from numpy import get_include
-import os
-import sys
-import shutil
-import glob
 
 # Remove the build directory
 if 'build' in os.listdir(os.getcwd()): shutil.rmtree(os.path.join(os.getcwd(),'build'))
