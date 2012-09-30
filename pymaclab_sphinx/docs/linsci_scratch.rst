@@ -33,3 +33,33 @@ Understanding the wider system
   As it turns out, if one wishes to run Numpy as efficiently and as fast as possible, some reference BLAS and LAPACK implementations need to be
   installed on the system in form of dynamically loadable libraries. One some systems and for inexperienced Linux users it may be no easy feat
   to configure their system to correctly and most efficiently make use of these tried and tested industry standard libraries.
+  
+  *All* matrix manipulation software, whether it is for-pay such as Matlab or free such as Octave or Scilab or indeed Numpy/Scipy, *always* relies
+  on the BLAS and LAPACK libraries. This is because they are free, have been around for decades and have been tweaked for performance for such a
+  long period of time as to make them close to perfect. They are also coded in Fortran, which makes them super-efficient. It would be impossible
+  to re-invent the wheel here (although see comments about GotoBlas further below). That is why all of these packages use them.
+
+  BLAS stands for "Basic Linear Algebra Suite" and LAPACK stands for "Linear Algebra Package". BLAS is the starting point for everything and indeed
+  LAPACK needs an existing BLAS installation in order to compile and run, so BLAS is a core dependency for LAPACK. Both are usually installed as Fortran
+  libraries and are hence very fast and efficient, but BLAS, which contains the most rudimentary matrix and vector functionality can be heavily optimized
+  for different hardware set-ups, i.e. different CPU architectures. Enter the special BLAS library with the name ATLAS = "Automatically tuned linear algebra
+  suite", which is essentially another BLAS implementation, but one which detects the hardware setup when it gets compiled from source and intelligently
+  adapts its own source code to fit the existing hardware perfectly, like a glove, so-to-speak. The performance differences between a vanilla
+  run-of-the-mill BLAS reference library and the optimized ATLAS version can be staggering, depending on what kind of hardware you are running.
+  Professional scientists running on expensive number-crunching hardware will always use ATLAS or something similar.
+
+  And since I am describing everything here in full I might as well not conceal the fact that in 2007 or around that time a Japanese computer
+  genius with the surname "Goto" hand-coded using assembly language a BLAS implementation for different hardware platforms which beats even ATLAS in speed
+  by some margin and is called GotoBlas or GotoBlas2, depending on what kind of version you prefer. The moment the public heard of this, I think he got
+  snatched up by Microsoft or something like that. Also, he stopped working on GotoBlas and it kind of got neglected. Some Chinese researchers took
+  GotoBlas' source code and continue to maintain and improve the code basis under the name "OpenBlas". You may also find other people which may have started
+  maintaining their own version of GotoBlas, but to my knowledge OpenBlas is the most popular one.
+
+  PyMacLab does *not* work correctly with a Numpy version which was compiled against an OpenBlas library, which is a shame, but tolerable given that the speed
+  difference between ATLAS BLAS and GotoBlas is not that big. Actually it does work, but it breaks the use of parallel computation using PP
+  (Parallel Python) in PyMacLab, which is one of the great features of PyMacLab helping to speed it up considerably exploiting multi-core CPUs. I found out
+  about this bug a while ago but I don't know it's exact cause. The point to take away from this is to only use Numpy compiled against either a standard
+  vanilla BLAS implementation or the older faster implementation called ATLAS. And what was the point of all of what I have written so far? Only to tell you
+  that PyMacLab needs Numpy, Numpy needs LAPACK and LAPACK needs BLAS (of which there exist various versions, some of which are tightly optimized for
+  existing hardware architectures). When installing PyMacLab, both some BLAS and LAPACK need to be installed system-wide in your OS' library directory,
+  which must be the same in a Macintosh OS as in Linux/BSD, which after all is just some variant of BSD Unix which itself is structured similarly to Linux.

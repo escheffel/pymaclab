@@ -65,7 +65,7 @@ try:
         print "You should use IPython version 0.13 for PyMacLab. Re-installing correct version now..."
         os.system("pip install ipython==0.13") 
 except:
-    print "IPython not detected. Fetching now using pip..."
+    print "IPython not detected but is fun to use with PyMacLab. Fetching now using pip..."
     os.system("pip install ipython==0.13")
 ##########################################################################
 # Done checking for dependencies

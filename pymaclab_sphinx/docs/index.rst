@@ -34,7 +34,7 @@ First things first
 
 Features at a Glance
 --------------------
-  * No "paper-and-pencil" linearization required, done automatically py parsing a DSGE model file.
+  * No "paper-and-pencil" linearization required, done automatically by parsing a DSGE model file.
   * Solutions based on analytical computation of Jacobian and Hessian of models using `Sympycore <http://www.sympy.org/>`_.
   * DSGE models are Python DSGE class instances, treat them as if they were data structures, pass them around, copy them, stack them into arrays,
     and work with many of them simultaneously!
@@ -43,7 +43,7 @@ Features at a Glance
   * Choose from a number of tried and tested perturbation methods, such as Klein's 1st order accurate and Klein & Gomme's 2nd order accurate methods.
   * Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of analytical Jacobian and Hessian employs parallelized multi-core CPU approach.
   * DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) :cite:`ChrEicEva:2005`.
-  * Benefit from a large and growing set of convience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
+  * Benefit from a large and growing set of convenience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
   * Carry out advanced empirical macroeconometric analyses using the VAR and FAVAR classes which come provided.
   * Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.
   * Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab.
@@ -71,7 +71,7 @@ Introduction
 :doc:`What is PyMacLab? <pymaclab_intro>`
     This is a succinct introduction to PyMacLab including an explanation of its current features.
 :doc:`Philosophy behind PyMacLab <pymaclab_philo>`
-    Here I discuss the basic Philosophy behind PyMacLand and what it sets out to do now and in the near future.
+    Here I discuss the basic Philosophy behind PyMacLab and what it sets out to do now and in the near future.
 :doc:`Why Macroeconomics in Python? <pymaclab_python>`
     In this section I touch upon the the pros and cons of doing Macroeconomics or scientific computing using Python in general.
 
@@ -122,7 +122,28 @@ Download & Installation
 
   PyMacLab is known to work with any of Python version greater than or equal to 2.4 and smaller than 3.0.
   In the future we will consider implementing a compatibility branch for versions of Python greater
-  than or equal to 3.0, once all core dependencies are known to have been migrated as well.
+  than or equal to 3.0, once all core dependencies are known to have been migrated as well. PyMacLab is always
+  extensively tested on Linux and is therefore well supported on this platform. In particular, the author of
+  PyMacLab is running his hardware on `Slackware 14.0 <http://www.slackware.com>`_, but other distributions such
+  as `Ubuntu <http://www.ubuntu.com>`_ should also work.
+  
+  It will also work on Windows and MacOS so long as users are capable and willing to navigate the murky waters of
+  getting a Numpy/Scipy environment set up on their operating systems, which because of BLAS and LAPACK dependencies
+  can on occasion be tricky. The internet is littered with explanations of how to do this so I will refrain from
+  repeating it here. I should point out however that any Python/Numpy/Scipy system definitely requires system-wide
+  available BLAS and LAPACK installations as well as available C++ and Fortran compilers.
+  
+  In Linux these features are standard, in other "user-oriented" operating operating systems this may not be the case.
+  In particular, using Windows, users are best advised to employ the `MinGW32 <http://mingw.org/>`_ Linux system clone and
+  to set up a scientific Python environment there. Again, the Numpy/Scipy website contains help pages which describe how to
+  do this. Macintosh users are encouraged to take a look at `Scipy Superpack <http://fonnesbeck.github.com/ScipySuperpack/>`_
+  which appears to be the better choice over the alternative `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_,
+  which is also available for Windows (EPD).
+  
+  No matter which route users choose to install PyMacLab, the rule of thumb is that so long as they manage to compile both
+  Numpy and Scipy from their source files without problems, installing PyMacLab should also pose no further difficulties. The
+  key to success is to have detectable BLAS and LAPACK libraries as well as required compilers installed on the system, where
+  in particular a good Fortran compiler will be necessary.
 
 Dependencies
 -------------
@@ -135,11 +156,10 @@ Dependencies
   * `Sympycore <http://www.sympy.org>`_,
   * `Parallel Python <http://www.parallelpython.com/>`_
   * `Matplotlib <http://matplotlib.sourceforge.net/>`_
-  * `scikits.timeseries <http://pytseries.sourceforge.net/>`_
   * `Pandas <http://pandas.pydata.org/>`_
 
   Sympycore and Parallel Python come distributed with PyMacLab and will be installed along with the main library; the other
-  required Python libraries need to be installed separately before and installation of PyMacLab is attempted. All of the
+  required Python libraries need to be installed separately before an installation of PyMacLab is attempted. All of the
   mentioned scientific packages are great libraries by themselves and should be checked out by any serious scientist interested
   in doing work in Python.
   
@@ -164,13 +184,16 @@ Option 1
   command inside a Linux shell using ``pip``::
 
     sudo pip install pymaclab
+    
+  Using this option will also automatically take care of the dependencies by downloading and installing them on-the-fly whenever they
+  are not already encountered on the system.
 
 Option 2
 ---------
 
   Otherwise get the latest source code compressed as a tarball here:
 
-    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.88.1.tar.gz>`_
+    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.90.1.tar.gz>`_
 
   And install it in the usual way by running in a Linux shell the command::
 
@@ -187,6 +210,8 @@ Option 3
 
   This will create a new folder called pymaclab containing the latest version of the source code as well as the
   installation script ``setup.py`` which you can then use in the usual way to install the module on your system.
+  Alternatively you can also download a zip file containing the latest "bleeding-edge" version of PyMacLab by
+  clicking `here <https://github.com/escheffel/pymaclab/zipball/master>`_.
 
 .. raw:: latex
 

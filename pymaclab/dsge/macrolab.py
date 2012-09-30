@@ -93,10 +93,6 @@ class TSDataBase:
         self.modif = {}
 
     def nameimDatStr(self,filename='none'):
-        '''
-        This imports the DataStream datafile using the
-        file's NAME as an argument.
-        '''
         str_tmp1 = open(os.path.join(datapath,filename),'r')
         flist = str_tmp1.read().splitlines()[:]
         dat_Start = flist[0].split(',')[1].strip()[:]
@@ -146,10 +142,6 @@ class TSDataBase:
         self.datdic[dat_Code]['alias'] = False
 
     def strimDatStr(self,csvfile):
-        '''
-        This imports the DataStream datafile using the
-        entire file as a STRING as an argument.
-        '''
         str_tmp1 = deepcopy(csvfile)
         flist = str_tmp1.splitlines()[:]
         dat_Start = flist[0].split(',')[1].strip()[:]
@@ -1063,10 +1055,6 @@ class DSGEmodel(object):
     '''
     # Get data method, in case model has not been loaded with database object
     def getdata(self,datafile=None,dbase=None):
-        '''
-        A separate method useful for importing and attaching to the model data which may
-        be used for estimation purposes, which has however not been implemented yet.
-        '''
         self.data = {}
         if datafile != None:
             input = open(os.path.join(os.getcwd(),datafile), 'r')
