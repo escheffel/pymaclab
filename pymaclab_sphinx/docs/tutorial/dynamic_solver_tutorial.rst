@@ -25,7 +25,7 @@ Introduction
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1)
 
   Since we have not supplied the instantiation call with the `initlev` argument, the model has been solved out completely, which includes the
   computation of a preferred dynamic solution, which in the current library's version is Paul Klein's 1st-order accurate method based on the
@@ -41,12 +41,12 @@ The Jacobian and Hessian: A Detour
   similar in functionality to Mathematica and Maple. You can inspect the analytical counterparts to the exact numerical Jacobian and Hessian which have not yet
   been evaluated numerically at ``rbc1.jdicc`` and ``rbc1.hdicc``, where the latter reference actually refers to the 3-dimensional analytical
   Hessian. If the model is composed of `n` equations describing equilibrium and optimality conditions, then the Jacobian is made up of
-  :math:`n\times\left(n\times 2\right)` elements and has dimension :math:`\left\{n,n\times 2\right\}`, because the derivatives are formed not
+  :math:`n\times\left(n\times 2\right)` elements and has dimension :math:`\left(n,n\times 2\right)`, because the derivatives are formed not
   only w.r.t. to current-period, but also future-period variables. Equally, the Hessian is a 3-dimensional matrix of dimension
-  :math:`\left\{n,n\times 2,n\times 2\right\}` [#f1]_.
+  :math:`\left(n,n\times 2,n\times 2\right)` [#f1]_.
 
   Notice that for the numerical counterpart to the 3-dimensional Hessian, PyMacLab instead
-  uses an alternatively dimensioned version of dimension :math:`\left\{n\times n\times 2,n\times 2\right\}`, which is the Magnus and Neudecker
+  uses an alternatively dimensioned version of dimension :math:`\left(n\times n\times 2,n\times 2\right)`, which is the Magnus and Neudecker
   definition of a Hessian and is useful when one wishes to avoid using matrices of dimension larger than 2 and the corresponding Tensor notation.
   Again, you can exploit PyMacLab's DSGE model instance's design in order to inspect the derivatives contained in the Jacobian and Hessian
   inside an IPython interactive shell environment, such as follows:
@@ -58,7 +58,7 @@ The Jacobian and Hessian: A Detour
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1)
 
     # Check some elements of the analytical Jacobian and Hessian
     
@@ -146,6 +146,6 @@ Choosing the degree of approximation
 .. rubric:: Footnotes
 
 .. [#f1] Obviously, we are abusing clearly defined mathematical definitions here to some extent, as a classical Jacobian would be
-         of dimension :math:`\left\{n,n\right\}` and a classical Hessian of dimension :math:`\left\{n,n,n\right\}`. The only reason
+         of dimension :math:`\left(n,n\right)` and a classical Hessian of dimension :math:`\left(n,n,n\right)`. The only reason
          why here computed dimensions tend to be twice as large has to do with the fact that for Klein's first-order accurate solution
          method we require knowledge of derivatives w.r.t. both current and future (expected) versions of the set of all variables.

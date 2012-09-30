@@ -109,10 +109,8 @@ class Fsolve(SSsolvers):
             locals().update(self.paramdic)
             locals().update(self.nonbardic)
             fdot = np.zeros((len(func_repr)),float)
-            i1=0
-            for x in func_repr:
+            for i1,x in enumerate(func_repr):
                 fdot[i1] = eval(x)
-                i1 = i1 + 1
             return fdot
 
         # Define the initial values and

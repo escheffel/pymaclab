@@ -16,9 +16,12 @@ Understanding the wider system
   handle these tasks as fast and efficiently as possible, conditional on any given hardware platform researchers may work with. In this short
   text I will describe how to set up a Python numerical/scientific environment in Linux which handles the above mentioned tasks - as well as
   others - and focus on the step-by-step installation of various individual packages, which together make up such an environment. Among other,
-  this will make clear how many modern interactive scientific environments continue to follows the tried-and-tested approach of often exposing
+  this will make clear how many modern interactive scientific environments continue to follow the tried-and-tested approach of often exposing
   their core functions as wrappers to open-source industry standard libraries of which many have been around for decades. PyMacLab which uses
-  Numpy and Scipy forms no exception here.
+  Numpy and Scipy makes no exception in this regards. What this discussion will make clear is that at their core, scientific programming suites
+  such as Matlab, Octave, Scilab, Gauss, Numpy/Scipy or indeed PyMacLab (which builds on Numpy/Scipy) are in some sense all identical in that they
+  inherit the functionality of tried-and-tested libraries which have been around for decades and which are permitted to be included in free as well
+  as proprietary software packages.
 
 *Starting the Build*
 

@@ -43,6 +43,9 @@ Advantages of PyMacLab in Python
   +------------------------------------+----------------------------------------------------------------------------------------------------+ 
   |Scikits.TimeSeries                  | The first library to provide a convenient library containing an advanced time series data type     |
   +------------------------------------+----------------------------------------------------------------------------------------------------+ 
+  |PyCuda                              | A powerful Python library which allows seemless integration of GPGPU computation into Python       |
+  |                                    | using NVidia CUDA                                                                                  |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+ 
 
   This list barely touches the surface of what is currently out there available for free for Python prgrammers wanting to do scientific
   computing. Even if a specific library does not exist directly, it is usually easy to produce wrappers for traditional and mature libraries

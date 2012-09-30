@@ -4,8 +4,8 @@
 
    \newpage
 
-Tutorial 2 - The Python DSGE instance
-=====================================
+Tutorial 2 - The PyMacLab DSGE instance
+=======================================
 
 Introduction
 ------------
@@ -40,7 +40,7 @@ Understanding the PyMacLab DSGE model class and its instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1)
 
   After executing these lines of code in an interactive environment such as that provided by IPython, which emulates well the feel and behaviour
   of the Matlab interactive environment, the DSGE instance or data object going by the name of `rbc1` now exists in the namespace of the running
@@ -68,7 +68,7 @@ Understanding the PyMacLab DSGE model class and its instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so, but adding initlev=0 as extra argument
-    In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=0)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1,initlev=0)
 
   5) Instantiation Step 3: The information is used in order to attempt to compute the numerical steady-state of the model. If you want the model
      instance to do ONLY this next step and stop there for you to explore further interactively, you must call the command with and extra
@@ -81,7 +81,7 @@ Understanding the PyMacLab DSGE model class and its instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so, but adding initlev=1 as extra argument
-    In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=1)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1,initlev=1)
 
 
   6) Instantiation Step 4:  If the steady state was computed successfully then the model's analytical and numerical Jacobian and
@@ -145,7 +145,7 @@ Working with DSGE model instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so, but adding initlev=0 as extra argument
-    In [3]: rbc1 = pm.newMOD(models.rbc1,initlev=0)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1,initlev=0)
 
     # This datafield contains the original nonlinear system expressed as g(x)=0
     In [4]: rbc1.sssolvers.fsolve.ssm
@@ -185,7 +185,7 @@ Working with DSGE model instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [3]: rbc1 = pm.newMOD(models.rbc1)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1)
 
     # Inspect the data fields and methods of the DSGE model instance
     In [4]: dir(rbc1)
@@ -262,7 +262,7 @@ Working with DSGE model instances
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [3]: rbc1 = pm.newMOD(models.rbc1)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1)
 
     # Access one of the model's fields
     In [4]: rbc1.ssys_list
@@ -294,7 +294,7 @@ DSGE modelling made intuitive
     from matplotlib import pyplot as plt
 
     # Instantiate a new DSGE model instance like so
-    rbc1 = pm.newMOD(models.rbc1)
+    rbc1 = pm.newMOD(models.stable.rbc1)
 
     # Create an array representing a finely-spaced range of possible impatience values
     # Then convert to corresponding steady state gross real interest rate values

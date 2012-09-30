@@ -136,11 +136,16 @@ Dependencies
   * `Parallel Python <http://www.parallelpython.com/>`_
   * `Matplotlib <http://matplotlib.sourceforge.net/>`_
   * `scikits.timeseries <http://pytseries.sourceforge.net/>`_
+  * `Pandas <http://pandas.pydata.org/>`_
 
   Sympycore and Parallel Python come distributed with PyMacLab and will be installed along with the main library; the other
   required Python libraries need to be installed separately before and installation of PyMacLab is attempted. All of the
   mentioned scientific packages are great libraries by themselves and should be checked out by any serious scientist interested
   in doing work in Python.
+  
+  The Pandas data library is *not* needed by the DSGE-modelling features of PyMacLab itself, but is instead required in the experimentally
+  made available modules used to estimated and work with VAR and FAVAR models. These modules are in the ``pymaclab.stats.`` branch and
+  some test files are included in the test/stats directory.
 
   If you want to enjoy a Matlab-style interactive environment in which to execute and inspect DSGE and other data structures,
   you'd be hard-pressed to pass over the brilliant and now extra features-ladden `IPython <http://ipython.org/>`_. When downloading

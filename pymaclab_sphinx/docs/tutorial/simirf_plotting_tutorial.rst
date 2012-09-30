@@ -25,7 +25,7 @@ Introduction
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
 Simulating the model
 --------------------
@@ -42,7 +42,7 @@ Simulating the model
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [3]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now simulate the model
     In [4]: rbc1.modsolvers.forkleind.sim(200,('productivity'))
@@ -58,7 +58,7 @@ Simulating the model
     In [2]: from pymaclab.modfiles import models
 
     # Instantiate a new DSGE model instance like so
-    In [3]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [3]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now simulate the model
     In [4]: rbc1.modsolvers.forkleind.sim(200)
@@ -77,7 +77,7 @@ Simulating the model
     In [3]: from matplotlib import pyplot as plt
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now solve and simulate the model
     In [5]: rbc1.modsolvers.forkleind.solve()
@@ -113,7 +113,7 @@ Cross-correlation tables
     In [4]: from copy import deepcopy
 
     # Instantiate a new DSGE model instance like so
-    In [5]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [5]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now solve and simulate the model
     In [6]: rbc1.modsolvers.forkleind.solve()
@@ -156,7 +156,7 @@ Simulating while keeping random shocks fixed
     In [4]: from copy import deepcopy
 
     # Instantiate a new DSGE model instance like so
-    In [5]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [5]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now solve and simulate the model
     In [6]: rbc1.modsolvers.forkleind.solve()
@@ -195,7 +195,7 @@ Simulating while keeping random shocks fixed
     In [4]: from copy import deepcopy
 
     # Instantiate a new DSGE model instance like so
-    In [5]: rbc1 = pm.newMOD(models.rbc1_res,mk_hessian=False)
+    In [5]: rbc1 = pm.newMOD(models.stable.rbc1_res,mk_hessian=False)
 
     # Now solve and simulate the model
     In [6]: rbc1.modsolvers.forkleind.solve()
@@ -260,7 +260,7 @@ Generating impulse-response functions
     In [3]: from matplotlib import pyplot as plt
 
     # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     # Now solve and simulate the model
     In [5]: rbc1.modsolvers.forkleind.solve()

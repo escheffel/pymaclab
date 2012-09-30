@@ -13,8 +13,15 @@ Introduction
   stated goal of PyMacLab is to permit researchers to work with DSGE models who know how to and enjoy to use the programming language Python.
   This tutorial assumes that you already know how to use Python, if you are completely new to it I suggest you consult one of the many tutorials
   available on the internet to get started with the language. Don't forget that Python is free as in free as freedom, no proprietary software such
-  as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab. The easiest way to get started and explore the
-  features of PyMacLab is to launch a IPython session and to import PyMacLab into it
+  as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab.
+  
+  The easiest and best way to get started and explore all of the available features of PyMacLab, or for that matter any other Python library, is to
+  work with `IPython <http://ipython.org/>`_, which is an abbreviation for Interactive Python. With this program, Python users who are scientifically
+  inclined, can more or less emulate the behaviour of programs such as Matlab, Octave or Scilab. This means that sessions can be launched in which commands
+  entered into a command prompt are executed immediately and resulting output is printed to screen. It also means that generated objects resulting from such
+  computations carried out at the command prompt (such as matrices or DSGE models) begin to exist within the session's variable scope and become ready for
+  further manipulation, i.e. they persist. Before being able to work with PyMacLab we have to launch an IPython session and import the library into it's
+  scope:
 
   .. sourcecode:: ipython
 
@@ -23,7 +30,7 @@ Introduction
 
     # Get the version and author's name
     In [2]: pm.__version__
-    '0.8'
+    '0.90.1'
 
     # Get the library's author's name
     In [3]: pm.__author__
@@ -41,20 +48,17 @@ Introduction
     # this command returns a list
     In [2]: dir(pm)
     ['OPS',
-    '__author__',
     '__builtins__',
-    '__date__',
     '__doc__',
     '__file__',
-    '__loader__',
     '__name__',
     '__package__',
     '__path__',
-    '__revision__',
-    '__version__',
+    'dattrans',
     'db_graph',
     'dsge',
     'explain',
+    'favar',
     'filters',
     'ldbs',
     'linalg',
@@ -67,13 +71,17 @@ Introduction
     'modinfo',
     'modsolve',
     'newDB',
+    'newFAVAR',
     'newMOD',
     'newVAR',
     'pyed',
     'stats',
-    'texedit']
+    'sys',
+    'texedit',
+    'var']
 
-  As you can see the module contains a quite a few attributes, many of which are still expermimental and perhaps best not called at this stage. The most mature
+
+  As you can see the module contains a quite a few attributes, many of which are still experimental and perhaps best not called at this stage. The most mature
   and arguable most interesting method call is that called ``pm.newMOD``, which allows users to instantiate a DSGE model instance, which would be done like so:
 
   .. sourcecode:: ipython
@@ -83,7 +91,7 @@ Introduction
     In [2]: import os
 
     # Define the relative path to your modfiles
-    In [3]: modpath = "../pymaclab/modfiles/"
+    In [3]: modpath = "../pymaclab/modfiles/models/stable"
 
     # Instantiate a new DSGE model instance like so
     In [4]: rbc1 = pm.newMOD(os.path.join(modpath,"rbc1_res.txt"))
@@ -96,7 +104,9 @@ Introduction
     'y_bar': 3.7100681031791227}
 
   Alternatively, you can also test some of the DSGE model files which come supplied with PyMacLab's standard installation. For this to work all you have to do is
-  to import a provided handler module, ``pymaclab.modfiles.models``, which contains all of the DSGE models' names and their correspoding full file paths:
+  to import a provided handler module, ``pymaclab.modfiles.models``, which contains all of the DSGE models' names and their correspoding full file paths.
+  Notice however that the models themselves are further classified into three categories, ``models.stable``, ``models.testing`` and ``models.development``
+  which helps to distinguish between models which are in the process of being added and such which are known to work correctly:
     
   .. sourcecode:: ipython
 
@@ -105,38 +115,63 @@ Introduction
     # Import the DSGE models' filepath handle
     In [2]: from pymaclab.modfiles import models
     
-    #Check all of the available models
-    In [3]: dir(models)
+    #Check all of the available models in the stable branch
+    In [3]: dir(models.stable)
     ['__builtins__',
-     '__doc__',
-     '__file__',
-     '__name__',
-     '__package__',
-     '__path__',
-     'cee',
-     'max1',
-     'max2',
-     'mbc1',
-     'merz',
-     'model2',
-     'model3',
-     'nk_nocapital',
-     'rbc1_res',
-     'rbc1_ext',
-     'rbc2',
-     'sims']
+    '__doc__',
+    '__file__',
+    '__name__',
+    '__package__',
+    '__path__',
+    'merz',
+    'prog',
+    'rbc1_cf',
+    'rbc1_ext',
+    'rbc1_num',
+    'rbc1_res',
+    'rbc1_sug',
+    'rbc2',
+    'sims']
+    
+    #Check all of the available models in the development branch
+    In [4]: dir(models.development)
+    ['__builtins__',
+    '__doc__',
+    '__file__',
+    '__name__',
+    '__package__',
+    '__path__',
+    'max1',
+    'max2',
+    'mbc1',
+    'model2',
+    'model3',
+    'nk_nocapital',
+    'nkm',
+    'nkm_nocapital']
+    
+    #Check all of the available models in the testing branch
+    In [5]: dir(models.testing)
+    ['__builtins__',
+    '__doc__',
+    '__file__',
+    '__name__',
+    '__package__',
+    '__path__',
+    'cee']
+
 
     # The DSGE models objects in pymaclab.modfiles.models
     # are just references to full file paths, i.e.
 
-    In [4]: pm.modfiles.models.rbc1_res
+    In [6]: models.stable.rbc1_res
     '/usr/lib/python2.7/site-packages/pymaclab/modfiles/rbc1_res.txt'
 
     #Instantiate a new DSGE model instance like so
-    In [5]: rbc1 = pm.newMOD(models.rbc1_res)
+    In [7]: rbc1 = pm.newMOD(models.stable.rbc1_res)
 
     #As an example, check the models computed steady stated
-    In [6]: print rbc1.sstate
+    In [8]: print rbc1.sstate
     {'betta': 0.99009900990099009,
     'c_bar': 2.7560505909330626,
     'k_bar': 38.160700489842398,

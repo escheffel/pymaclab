@@ -14,7 +14,7 @@ from numpy import matlib as MAT
 from numpy import linalg as LIN
 from numpy.linalg import matrix_rank
 from .. import helpers as HLP
-from pymaclab.linalg import qz, ordqz
+from scipy.linalg import qz
 import numpy as np
 import pylab as P
 from matplotlib import pyplot as PLT
@@ -32,6 +32,7 @@ except:
 class MODsolvers(object):
     def __init__(self):
         pass
+
 
 class PyUhlig(MODsolvers):
     def __init__(self,intup):
@@ -448,6 +449,7 @@ class PyUhlig(MODsolvers):
             Z[:,i:i+2] = Z[:,i:i+2]*wz
             Q[i:i+2,:] = xy*Q[i:i+2,:]
         return (A,B,Q,Z)
+
 #----------------------------------------------------------------------------------------------------------------------
 class MatUhlig:
 

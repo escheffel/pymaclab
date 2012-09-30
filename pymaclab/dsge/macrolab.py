@@ -737,8 +737,9 @@ class DSGEmodel(object):
         ######################## LINEAR METHODS !!! ############################
         # see if there are any log-linearized equations
         if any([False if 'None' in x else True for x in secs['modeq'][0]]):
-            from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein           
+            from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein
             if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
+
             # Open the matlab Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -749,6 +750,7 @@ class DSGEmodel(object):
                  sess1,
                  self.vardic)
             self.modsolvers.matuhlig = MatUhlig(intup)
+
             # Open the native Uhlig object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -758,6 +760,7 @@ class DSGEmodel(object):
                  self.diffli2,
                  sess1)
             self.modsolvers.pyuhlig = PyUhlig(intup)
+
             # Open the matlab Klein object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -767,6 +770,7 @@ class DSGEmodel(object):
                  self.diffli2,
                  sess1)
             self.modsolvers.matklein = MatKlein(intup)
+
             # Open the Fortran Klein object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -2462,6 +2466,7 @@ class DSGEmodel(object):
                  self.diffli2,
                  sess1)
             self.modsolvers.pyuhlig = PyUhlig(intup)
+
             # Open the matlab Klein object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,
@@ -2471,6 +2476,7 @@ class DSGEmodel(object):
                  self.diffli2,
                  sess1)
             self.modsolvers.matklein = MatKlein(intup)
+
             # Open the Fortran Klein object
             intup = ((self.nendo,self.ncon,self.nexo),
                  self.eqindx,

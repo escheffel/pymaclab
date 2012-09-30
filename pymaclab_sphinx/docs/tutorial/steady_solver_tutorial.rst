@@ -18,6 +18,10 @@ Introduction
   the approximation method of perturbations is to first obtain the steady state solution around which the approximations are computed. In total
   we are going to explore 5 different variants suitable for seeking to compute the steady state. So let's get started.
 
+.. raw:: latex
+
+   \newpage
+
 Option 1: Using the model's declared FOCs and passing arguments at model instantiation
 --------------------------------------------------------------------------------------
 
@@ -123,7 +127,7 @@ Option 1: Using the model's declared FOCs and passing arguments at model instant
     In [6]: ssidic['y_bar'] = 1.0
 
     # Instantiate a new DSGE model instance like so
-    In [7]: rbc1 = pm.newMOD(models.rbc1_ext,use_focs=[0,1,2],ssidic=ssidic)
+    In [7]: rbc1 = pm.newMOD(models.stable.rbc1_ext,use_focs=[0,1,2],ssidic=ssidic)
 
   The default value passed to the DSGE model instance's argument "use_focs" is `False`, the alternative value is a zero-indexed Python list
   (or tuple) indicating the equations of the declared system of FOCs to use in finding the steady state numerically. In the case of the model
@@ -131,6 +135,10 @@ Option 1: Using the model's declared FOCs and passing arguments at model instant
   initial starting values or guesses for the three steady state values we wish to search for and pass this as a value to the argument `ssidic`.
   This method has the added advantage that steady state initial starting values can be determined intelligently at runtime external to the
   model file.
+  
+.. raw:: latex
+
+   \newpage
 
 Option 2: Supplying the non-linear steady state system in the model file
 ------------------------------------------------------------------------
@@ -226,6 +234,10 @@ Option 2: Supplying the non-linear steady state system in the model file
  
   As one can see easily in this case, we are instructing the model to solve the 4 equation system in the four variables `c_bar`, `k_bar`,
   `y_bar` and `betta`. This is also a very common option to choose in order to obtain the model's steady state efficiently and conveniently.
+
+.. raw:: latex
+
+   \newpage
 
 Option 3: Use the numerical root finder to solve for some steady states and get remaining ones residually
 ---------------------------------------------------------------------------------------------------------
@@ -328,6 +340,10 @@ Option 3: Use the numerical root finder to solve for some steady states and get 
   and larger-dimensioned non-linear systems to the root-finding algorithm will decrease the chances of finding a solution easily, especially
   when simple generic starting values are employed. The issue of starting values take us straight to the next available option available to
   PyMacLab users.
+
+.. raw:: latex
+
+   \newpage
 
 Option 4: Use the numerical root finder to solve for steady states with pre-computed starting values
 ----------------------------------------------------------------------------------------------------
@@ -432,6 +448,10 @@ Option 4: Use the numerical root finder to solve for steady states with pre-comp
   give the program a better way of checking the overlap of the two sets of variables. Whenever they are omitted, this specific case of computing
   the steady state is triggered whenever the number of suggested starting values in the `Closed Form` section is exactly equal to the number of
   non-linear equations in the `Manual` section.
+
+.. raw:: latex
+
+   \newpage
 
 Option 5: Finding the steady state by only supplying information in the Closed Form section
 -------------------------------------------------------------------------------------------
