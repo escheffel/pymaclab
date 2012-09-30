@@ -72,7 +72,10 @@ Usage
 -----
 The below code snippet is indicative of how PyMacLab can be used in an environment such as IPython. Since the library
 is still undergoing change, it is always advisable to enter the subdirectory containing the test.py test-script and
-inspect/run this to better understand PyMacLab's syntax.
+inspect/run this to better understand PyMacLab's syntax. This could be outdated information. Please always consult
+PyMacLab's Sphinx documentation for the latest explanation of how to use the library at
+[www.pymaclab.com](http://www.pymaclab.com/).
+
 ```python
 # Import the PyMacLab library
 import pymaclab as pm
