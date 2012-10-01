@@ -33,6 +33,11 @@ Advantages of PyMacLab in Python
   +------------------------------------+----------------------------------------------------------------------------------------------------+
   |Scipy                               | Library of many scientific routines,such as basic statistics, optimization, filtering, etc.        |
   +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |IPython                             | The interactive Python shell. Powerful shell in order to use Python interactively. Also has web    |
+  |                                    | server which comes supplied with it which allows users to work with Python remotely from a browser |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |Spyder                              | Another interactive shell for Python. Aims to replicate Matlab user experience with array editor   |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
   |Statsmodels                         | More advanced and dedicated library for advanced statistics in Python                              |
   +------------------------------------+----------------------------------------------------------------------------------------------------+
   |Pandas                              | Library providing a data frame and time series data type and a large number of data methods        |
@@ -47,7 +52,7 @@ Advantages of PyMacLab in Python
   |                                    | using NVidia CUDA                                                                                  |
   +------------------------------------+----------------------------------------------------------------------------------------------------+ 
 
-  This list barely touches the surface of what is currently out there available for free for Python prgrammers wanting to do scientific
+  This list barely touches the surface of what is currently out there available for free for Python programmers wanting to do scientific
   computing. Even if a specific library does not exist directly, it is usually easy to produce wrappers for traditional and mature libraries
   originally written in C, C++ or Fortran. A great and comprehensive reference text book introducing serious scientific computing using Python
   is Langtangen's "Python Scripting for Computational Science" :cite:`Lan:2009`. This last point brings me straight to the next advantage users

@@ -1,6 +1,5 @@
-numpy
-scipy
+numpy==1.6.2
+scipy==0.11
 matplotlib==1.0.1
-pandas
-scikits.timeseries
+pandas=0.8.1
 cloud_sptheme==1.4

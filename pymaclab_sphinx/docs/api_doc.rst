@@ -77,14 +77,6 @@ The pymaclab.filters module
    :undoc-members:
    :inherited-members:
 
-.. rst-class:: html-toggle
-The pymaclab.linalg module
-------------------------
-.. automodule:: pymaclab.linalg
-   :members:
-   :undoc-members:
-   :inherited-members:
-
 .. raw:: latex
 
    \newpage

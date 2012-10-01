@@ -105,7 +105,7 @@ def parse_mod(fname, modfmt='pymaclab'):
     Parameters
     ----------
     fname : str
-        Filename to parse.
+        Filename to parse. Could also be the model info as string itself.
     modfmt : str {'pymaclab'}
         Only native .mod formats are currently supported.
 
@@ -113,10 +113,21 @@ def parse_mod(fname, modfmt='pymaclab'):
     -------
     ParsedMod class.
     """
-    with open(os.path.join(modfpath, fname), 'r') as txtfile:
-        filestring = txtfile.read()
+    if os.path.exists(fname):
+        with open(os.path.join(modfpath, fname), 'r') as txtfile:
+            filestring = txtfile.read()
+            if modfmt == 'pymaclab':
+                parsed_mod = read_nativefmt(filestring, fname)
+            else:
+                raise ValueError("modfmt %s not understood" % modfmt)
+    # Assume here that the model information was directly passed as a string
+    elif '%Model Description+++++++' in fname:
         if modfmt == 'pymaclab':
-            parsed_mod = read_nativefmt(filestring, fname)
+            parsed_mod = read_nativefmt(fname, fname)
         else:
             raise ValueError("modfmt %s not understood" % modfmt)
+    #  Otherwise don't know what to do with the input and throw error
+    else:
+        raise ValueError("modfmt %s not understood" % modfmt)
+        
     return parsed_mod

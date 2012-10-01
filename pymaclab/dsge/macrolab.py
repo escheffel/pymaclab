@@ -12,10 +12,6 @@
 '''
 
 #from __future__ import division
-# Have taken out the dependency from this module by commenting out
-# The TimeSeries Database as well as the get_data method on the DSGE class
-# In future versions this has to be replaced with Pandas instead
-#from scikits import timeseries as ts
 import copy
 from copy import deepcopy
 import os
@@ -37,7 +33,7 @@ import pp
 #NOTE: Imports from the refactor
 from pymaclab.filters._hpfilter import hpfilter
 from pymaclab.filters._bkfilter import bkfilter
-from ..stats.var import VAR #TODO: remove for statsmodels version
+from ..stats.var import VAR
 from solvers.steadystate import SSsolvers, ManualSteadyState, Fsolve
 from parsers._modparser import parse_mod
 from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_one_a,\
@@ -82,199 +78,6 @@ if use_matlab:
 # Empty locdic for the locate helper function
 locdic = {}
 
-'''
-################THE TIMESERIES DATABASE CLASS (WORKS)#################
-class TSDataBase:
-    """
-    This is the Time Series Database class.
-    """
-    def __init__(self):
-        self.datdic = {}
-        self.modif = {}
-
-    def nameimDatStr(self,filename='none'):
-        str_tmp1 = open(os.path.join(datapath,filename),'r')
-        flist = str_tmp1.read().splitlines()[:]
-        dat_Start = flist[0].split(',')[1].strip()[:]
-        dat_End = flist[1].split(',')[1].strip()[:]
-        dat_Freq = re.sub('"','',flist[2].split(',')[1]).strip()[:]
-        dat_Name = re.sub('"','',flist[3].split(',')[1]).strip()[:]
-        dat_Code = re.sub('"','',flist[4].split(',')[1]).strip()[:]     
-        dat_Curr = re.sub('"','',flist[5].split(',')[1]).strip()[:]
-        datadate = flist[6:]
-        datacsv = ''
-        i1=0
-        for x in datadate:
-            str_tmp1 = x.split(',')[1]
-            datacsv = datacsv[:] + str_tmp1[:]+'\n'
-            i1 = i1 + 1
-        output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
-        output.write(datacsv)
-        pdata = np.loadtxt('tmp_001.csv', delimiter=",")
-        os.remove(os.getcwd()+'/'+'tmp_001.csv')
-        if dat_Freq == 'D':
-            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=int(dat_Start[6:10]),
-                                          month=int(dat_Start[3:5]),
-                                          day=int(dat_Start[0:2])))
-        elif dat_Freq == 'M':
-            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=int(dat_Start[6:10]),
-                                          month=int(dat_Start[3:5])))
-        elif dat_Freq == 'Q':
-            tsdata = data = ts.time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=int(dat_Start[6:10]),
-                                          quarter=int(dat_Start[3:4])))
-
-        self.datdic[dat_Code]={}
-        self.datdic[dat_Code]['infile'] = tsdata
-        self.datdic[dat_Code]['is_DatStr'] = True
-        self.datdic[dat_Code]['Dat_Desc'] = dat_Name
-        self.datdic[dat_Code]['DatStr_Code'] = dat_Code
-        self.datdic[dat_Code]['imTimeStamp'] = now_is()
-        self.datdic[dat_Code]['start_date'] = tsdata.start_date
-        self.datdic[dat_Code]['end_date'] = tsdata.end_date
-        self.datdic[dat_Code]['freq'] = tsdata.freqstr[0:1]
-        self.datdic[dat_Code]['infile'].TSdesc = dat_Name
-        self.datdic[dat_Code]['infile'].TSname = dat_Code
-        self.datdic[dat_Code]['svalue'] = tsdata.dates[0].value
-        self.datdic[dat_Code]['evalue'] = tsdata.dates[-1].value
-        self.datdic[dat_Code]['alias'] = False
-
-    def strimDatStr(self,csvfile):
-        str_tmp1 = deepcopy(csvfile)
-        flist = str_tmp1.splitlines()[:]
-        dat_Start = flist[0].split(',')[1].strip()[:]
-        dat_End = flist[1].split(',')[1].strip()[:]
-        dat_Freq = re.sub('"','',flist[2].split(',')[1]).strip()[:]
-        dat_Name = re.sub('"','',flist[3].split(',')[1]).strip()[:]
-        dat_Code = re.sub('"','',flist[4].split(',')[1]).strip()[:]     
-        dat_Curr = re.sub('"','',flist[5].split(',')[1]).strip()[:]
-        datadate = flist[6:]
-        datacsv = ''
-        i1=0
-        for x in datadate:
-            if i1 != len(datadate):
-                str_tmp1 = x.split(',')[1]
-                datacsv = datacsv + str_tmp1+',\n'
-            else:
-                str_tmp1 = x.split(',')[1]
-                datacsv = datacsv + str_tmp1+'\n'
-            i1 = i1 + 1
-        output = open(os.getcwd()+'/'+'tmp_001.csv', 'w')
-        output.write(datacsv)
-        pdate = np.loadtxt('tmp_001.csv', delimiter=",")
-        os.remove(os.getcwd()+'/'+'tmp_001.csv')
-        if dat_Freq == 'D':
-            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=dat_Start[0:1],
-                                          month=dat_Start[3:4],
-                                          day=dat_Start[6:9]))
-        elif dat_Freq == 'M':
-            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=dat_Start[0:1],
-                                          month=dat_Start[3:4]))
-        elif dat_Freq == 'Q':
-            tsdata = data = time_series(pdata,start_date=ts.Date(freq=dat_Freq,
-                                          year=dat_Start[0:1],
-                                          quarter=dat_Start[3:4]))
-
-        self.datdic[dat_Name]={}
-        self.datdic[dat_Name]['infile'] = tsdata
-        self.datdic[dat_Name]['is_DatStr'] = True
-        self.datdic[dat_Name]['DatStr_Code'] = dat_Code
-        self.datdic[dat_Name]['imTimeStamp'] = now_is()
-
-    def tsim(self,datname,tsdesc,tsin):
-        self.datdic[datname]={}
-        self.datdic[datname]['infile'] = tsin
-        self.datdic[datname]['is_DatStr'] = False
-        self.datdic[datname]['Dat_Desc'] = tsdesc
-        self.datdic[datname]['DatStr_Code'] = None
-        self.datdic[datname]['imTimeStamp'] = now_is()
-        self.datdic[datname]['start_date'] = tsin.start_date
-        self.datdic[datname]['end_date'] = tsin.end_date
-        self.datdic[datname]['freq'] = tsin.freqstr[0:1]
-        self.datdic[datname]['infile'].TSdesc = tsdesc
-        self.datdic[datname]['infile'].TSname = datname
-        self.datdic[datname]['svalue'] = tsin.dates[0].value
-        self.datdic[datname]['evalue'] = tsin.dates[-1].value
-        self.datdic[datname]['alias'] = False
-
-    def isDatStreamCSV(self,csvfile):
-        str_tmp1 = deepcopy(csvfile)
-        flist = str_tmp1.splitlines()[:]
-        if '"Start"' in flist[0] and \
-           '"End"' in flist[1] and \
-           '"Frequency"' in flines[2] and \
-           '"Names"' in flist[3] and \
-           '"Code"' in flist[4] and \
-           '"CURRENCY"' in flist[5]:
-            return True
-        else:
-            return False
-
-    def mkhpf(self,tsname,tsout,lam=1600):
-        tsinf = self.datdic[tsname]['infile']
-        tsin = self.datdic[tsname]
-        tsoutf = hpfilter(tsinf,np.zeros((np.shape(tsinf)[0],3)),
-            np.shape(tsinf)[0],lam,0)
-        tsoutf = ts.time_series\
-               (tsoutf,start_date=tsinf.start_date,freq=tsin['freq'])
-        self.tsim(tsout,tsin['Dat_Desc']+',hp-filtered',tsoutf)
-
-    def mklog(self,tsname,tsout):
-        tsinf = self.datdic[tsname]['infile']
-        tsin = self.datdic[tsname]
-        tsoutf = np.log(tsinf)
-        self.tsim(tsout,tsin['Dat_Desc']+',logarithmic',tsoutf)
-
-    def mkexp(self,tsname,tsout):
-        tsinf = self.datdic[tsname]['infile']
-        tsin = self.datdic[tsname]
-        tsoutf = np.exp(tsinf)
-        self.tsim(tsout,tsin['Dat_Desc']+',to base e',tsoutf)
-
-    def mkalias(self,dbtsname,alname):
-        if self.datdic.has_key(dbtsname):
-            self.datdic[dbtsname]['alias'] = alname
-
-    def mkmodif(self,freq):
-        list_tmp = []
-        for x1 in self.datdic.items():
-            if x1[1]['alias'] != 'None' and x1[1]['freq'] == freq:
-                list_tmp = list_tmp + [[x1[0],x1[1]['alias'],x1[1]['svalue'],x1[1]['evalue']],]
-        sval_list = []
-        for x1 in list_tmp:
-            sval_list = sval_list + [x1[2],]
-        eval_list = []
-        for x1 in list_tmp:
-            eval_list = eval_list + [x1[3],]
-        max_sval = max(sval_list)
-        min_eval = min(eval_list)
-        s_date = ts.Date(freq,value=max_sval)
-        e_date = ts.Date(freq,value=min_eval)
-        list_tmp = []
-        for x1 in self.datdic.items():
-            if x1[1]['alias'] != 'None' and x1[1]['freq'] == freq:
-                self.modif[x1[1]['alias']] = x1[1]['infile'][s_date:e_date]
-
-    def mkvar(self,varlag=1,varord='None',spos='None',useconst='const'):
-        tmp_dic={}
-        for x1 in varord:
-            tmp_dic[x1[0]] = self.modif[x1[0]]
-        dat_mat = mat.zeros((np.shape(np.mat(tmp_dic.items()[0][1].data).T)[0],len(varord)))
-        self.datmat = dat_mat
-        for x1 in varord:
-            self.datmat[:,x1[1]-1] = np.mat(tmp_dic[x1[0]].data).T
-        self.VAR = VAR(varlag,self.datmat,useconst)
-        self.VAR.ols()
-        self.VAR.ols_comp()
-        if spos != 'None':
-            self.VAR.do_irf(spos)
-            self.VAR.IRF_attr['shock_var'] = varord[[x1[1] for x1 in varord].index(spos-1)][0]
-"""***********************************************************"""
-'''
 ##################THE DSGE MODEL CLASS (WORKS)#####################
 class DSGEmodel(object):
     '''
@@ -901,7 +704,7 @@ class DSGEmodel(object):
         for x in tmplist:
             os.remove(x)
         return 'Model Website opened!'
-    # Set the author of the current model
+    
     def setauthor(self,author=None):
         '''
         Convience method for setting the model's author's name.
@@ -910,7 +713,7 @@ class DSGEmodel(object):
             self.author = 'No author'
         else:
             self.author = author
-    # pdflatex the model tex file and open with pdf viewer
+
     def pdf(self):
         '''
         This will pdflatex the model's tex file and then view it in the system's pdf viewer.
@@ -969,7 +772,7 @@ class DSGEmodel(object):
             os.remove(os.path.join(modfpath,modfname+'.dvi'))
         if modfname+'.log' in os.listdir(os.getcwd()):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
-    # Opens the model text file for editing
+
     def txted(self):
         '''
         A convience method for launching an editor editing the model's associated
@@ -993,7 +796,7 @@ class DSGEmodel(object):
             os.remove(os.path.join(modfpath,modfname+'.log'))
         if modfname+'.log' in os.listdir(os.getcwd()):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
-    # Opens the model latex file for editing
+
     def texed(self):
         '''
         A convenience method which allows users to launch the model's tex file in an
@@ -1022,7 +825,7 @@ class DSGEmodel(object):
             os.remove(os.path.join(modfpath,modfname+'.log'))
         if modfname+'.log' in os.listdir(os.getcwd()):
             os.remove(os.path.join(os.getcwd(),modfname+'.log'))
-    # Choose to delete the current model's latex file. Your are asked again whether yes/no
+
     def deltex(self):
         '''
         A simple method which allows you to delete the current tex file associated with this model.
@@ -1038,7 +841,7 @@ class DSGEmodel(object):
                 os.remove(os.path.join(modfpath,modfname+'.tex'))
         elif answ in ['N','n']:
             return
-    # Change the 'current view' of model solution algorithms
+
     def ccv(self,instring=None):
         '''
         This is just a convenience method which allows the current preferred dynamic
@@ -1052,52 +855,6 @@ class DSGEmodel(object):
         else:
             self.cv = eval('self.modsolvers.'+instring)
 
-    '''
-    # Get data method, in case model has not been loaded with database object
-    def getdata(self,datafile=None,dbase=None):
-        self.data = {}
-        if datafile != None:
-            input = open(os.path.join(os.getcwd(),datafile), 'r')
-            output = open(os.path.join(os.getcwd(),'tmp_001.csv'), 'w')
-            wholefile = input.read()
-            lines = wholefile.splitlines()
-            varnames = lines[0]
-            varnlist = varnames.split(',')[:]
-            varnlist = [x.replace('"','') for x in varnlist][:]
-            str_tmp=''
-            for x1 in lines[1:]:
-                str_tmp = str_tmp + x1+'\n'
-            output.write(str_tmp)
-            output.close()
-            rawdata = np.loadtxt('tmp_001.csv', delimiter=",")
-            os.remove(os.getcwd()+'/'+'tmp_001.csv')
-            self.rawdata = rawdata
-            for x1 in self.dataprop.items():
-                if type(x1[1]) != type('x'):
-                    exec(x1[0]+'='+str(x1[1]))
-                elif type(x1[1]) == type('x'):
-                    exec(x1[0]+'='+"'"+x1[1]+"'")
-
-            if np.shape(rawdata)[1] != len(self.varnames):
-                print 'DAT IMPORT ERR: Len(varnames) != Len(data)'
-                data = TimeSeries(rawdata,start_date=ts.Date(freq=freq,year=year,month=month))
-            else:
-                data = TimeSeries(rawdata,start_date=ts.Date(freq=freq,year=year,month=month))
-            self.data = TimeSeriesCol(varnlist,data)
-        elif dbase != None:
-            varnames = []
-            for x in self.vardic.keys():
-                for y in self.vardic[x]['var']:
-                    varnames.append(y[1])
-            for x1 in varnames:
-                if dbase.modif.has_key(x1):
-                    self.data[x1] = dbase.modif[x1]
-            self.VAR = dbase.VAR
-        elif datafile == None and dbase == None:
-            self.data = None
-    '''
-
-    # The regex function
     def vreg(self,paratuple=(None,'all','0'),cinstring='',iter=False,info='min'):
         '''
         The regex function for variable detection out of strings
@@ -1311,7 +1068,6 @@ class DSGEmodel(object):
         else:
             return False
 ###########ANALYTIC AND NUMERICAL JACOBIAN AND HESSIAN METHODS############
-    # The unparallelized Jacobian, Hessian computation method
     def mkjahe(self):
         '''
         An unparallelized method using native Python and Sympycore in oder

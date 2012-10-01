@@ -31,6 +31,16 @@ First things first
   * Latest bleeding-edge source via git at `http://github.com/escheffel/pymaclab <http://github.com/escheffel/pymaclab>`_
   * Source code issues tracker at `http://github.com/escheffel/pymaclab/issues/ <http://github.com/escheffel/pymaclab/issues/>`_
   * Download this online documentation as a PDF document :download:`here <PyMacLab.pdf>`.
+  
+.. note::
+
+    If you want to give PyMacLab a try without installing it onto your own computer you can access an IPython web server frontend in which
+    you can create notebooks (as in Mathematica and Maple) from which calls to Python, Numpy, Scipy and PyMacLab can be made. Plots are
+    directly rendered to screen. Access this experimental web portal at:
+    
+                                   `http://www.notebook.pymaclab.com <http://notebook.pymaclab.com>`_
+    
+    There you will also find provided example scripts which can be run inside your webbrowser.
 
 Features at a Glance
 --------------------
@@ -127,23 +137,28 @@ Download & Installation
   PyMacLab is running his hardware on `Slackware 14.0 <http://www.slackware.com>`_, but other distributions such
   as `Ubuntu <http://www.ubuntu.com>`_ should also work.
   
-  It will also work on Windows and MacOS so long as users are capable and willing to navigate the murky waters of
-  getting a Numpy/Scipy environment set up on their operating systems, which because of BLAS and LAPACK dependencies
-  can on occasion be tricky. The internet is littered with explanations of how to do this so I will refrain from
-  repeating it here. I should point out however that any Python/Numpy/Scipy system definitely requires system-wide
-  available BLAS and LAPACK installations as well as available C++ and Fortran compilers.
+  PyMacLab will also work on Windows and MacOS so long as users are capable and willing to navigate the
+  `murky waters <http://www.scipy.org/Installing_SciPy>`_ of getting a Numpy/Scipy environment set up on their operating
+  systems, which because of BLAS and LAPACK dependencies can on occasion be tricky. The internet is littered with explanations
+  of how to do this so I will refrain from repeating it here. I should point out however that any Python/Numpy/Scipy system
+  definitely requires system-wide available BLAS and LAPACK installations as well as available C++ and Fortran compilers.
+  At least one reason for this is that PyMacLab compiles and links in Klein & Gomme's solution routines during installation,
+  which they provide as Fortran source files and which come packaged with PyMacLab. Obviously without an installed Fortran
+  compiler and a correctly configured system this part of PyMacLab's installation routine is prone to failure.
   
-  In Linux these features are standard, in other "user-oriented" operating operating systems this may not be the case.
+  In Linux these features may come installed by default, in other "user-oriented" operating systems this may not be the case.
   In particular, using Windows, users are best advised to employ the `MinGW32 <http://mingw.org/>`_ Linux system clone and
-  to set up a scientific Python environment there. Again, the Numpy/Scipy website contains help pages which describe how to
-  do this. Macintosh users are encouraged to take a look at `Scipy Superpack <http://fonnesbeck.github.com/ScipySuperpack/>`_
+  to set up a scientific Python environment there. Again, the Numpy/Scipy website contains `help pages <http://scipy.github.com/building/windows.html>`_
+  which describe how to do this. Macintosh users are encouraged to take a look at `Scipy Superpack <http://fonnesbeck.github.com/ScipySuperpack/>`_
   which appears to be the better choice over the alternative `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_,
   which is also available for Windows (EPD).
   
-  No matter which route users choose to install PyMacLab, the rule of thumb is that so long as they manage to compile both
+  No matter which route users choose to install PyMacLab, the rule of thumb is that so long as they manage to *compile* both
   Numpy and Scipy from their source files without problems, installing PyMacLab should also pose no further difficulties. The
   key to success is to have detectable BLAS and LAPACK libraries as well as required compilers installed on the system, where
-  in particular a good Fortran compiler will be necessary.
+  *in particular* a good (free) `Fortran compiler <http://gcc.gnu.org/fortran/>`_ will be *absolutely* necessary. In the long run,
+  I may consider making pre-built binaries for various platforms available so that users can bypass the error-prone setup using
+  compilation from source.
 
 Dependencies
 -------------
