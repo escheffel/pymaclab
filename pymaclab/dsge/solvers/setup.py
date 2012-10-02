@@ -1,12 +1,29 @@
 # File setup.py
+import platform
 def configuration(parent_package='',top_path=None):
     from numpy.distutils.misc_util import Configuration
     from numpy.distutils.system_info import get_info
     config = Configuration('solvers',parent_package,top_path)
     lapack = dict(get_info('lapack_opt'))
-    config.add_extension('isolab', sources=['src/isolab.pyf', 
-            'src/solab.f90', 'src/isolab.f90'], libraries=['lapack'],
-            library_dirs=lapack['library_dirs'])
+    # Branch here for different operating systems
+    if platform.system() == 'Linux':
+        config.add_extension('isolab', sources=['src/isolab.pyf',
+                                                'src/solab.f90',
+                                                'src/isolab.f90'],
+                                       libraries=['lapack'],
+                                       library_dirs=lapack['library_dirs'])
+    elif platform.system() == 'Darwin':
+        config.add_extension('isolab', sources=['src/isolab.pyf',
+                                                'src/solab.f90',
+                                                'src/isolab.f90'],
+                                       libraries=['lapack'],
+                                       library_dirs=lapack['library_dirs'])
+    elif platform.system() == 'Windows':
+        config.add_extension('isolab', sources=['src/isolab.pyf',
+                                                'src/solab.f90',
+                                                'src/isolab.f90'],
+                                       libraries=['lapack'],
+                                       library_dirs=lapack['library_dirs'])
     return config
 
 if __name__ == "__main__":

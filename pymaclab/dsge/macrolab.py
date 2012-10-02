@@ -21,6 +21,7 @@ from helpers import now_is
 import numpy as np
 from numpy import matlib as mat
 from scipy.linalg import eig as scipyeig
+from scipy import optimize
 from tempfile import mkstemp
 import time
 import datetime
@@ -113,9 +114,14 @@ class DSGEmodel(object):
         
     :return self:             *(dsge_inst)* - A populated DSGE model instance with fields and methods
 
-    '''    
+    '''
+    # Instantiate a class jobserver
+    global ppservers, jobserver
+    ppservers = ()
+    jobserver = pp.Server(ppservers=ppservers)
     # Initializes the absolute basics, errors difficult to occur
-    def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,use_focs=False,ssidic=None):
+    def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
+                 use_focs=False,ssidic=None):
         self._initlev = initlev #TODO: remove this as an option
         self._mesg = mesg
         self._ncpus = ncpus
@@ -513,7 +519,7 @@ class DSGEmodel(object):
         # Add the queue process instance
         self.updaters_queued.process_queue = Process_Queue(other=self)
 
-    def init5(self):
+    def init5(self,update=False):
         '''
         This model instance initialisation step is the last substantial one in which the dynamic solution of the DSGE
         model instance is finally computed using a choice of methods which can be called at runtime.
@@ -582,15 +588,27 @@ class DSGEmodel(object):
     ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['focs'][0]]):
             from solvers.modsolvers import (MatWood, ForKleinD)
-            if ncpus > 1 and mk_hessian:
-                if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
-                self.mkjahepp()
-            elif ncpus > 1 and not mk_hessian:
-                if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
-                self.mkjahepp()
+            
+            if not update:
+                if ncpus > 1 and mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                    self.mkjahepp()
+                elif ncpus > 1 and not mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                    self.mkjahepp()
+                else:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                    self.mkjahe()
             else:
-                if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
-                self.mkjahe()
+                if ncpus > 1 and mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                    self.mkjaheppn()
+                elif ncpus > 1 and not mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                    self.mkjaheppn()
+                else:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                    self.mkjahen()                
 
             # Check if the obtained matrices A and B have correct dimensions
             if self.jAA.shape[0] != self.jAA.shape[1]:
@@ -602,6 +620,9 @@ class DSGEmodel(object):
                  self.nexo,self.ncon,
                  self.nendo,sess1)
             self.modsolvers.matwood = MatWood(intup)
+            # Make the AA and BB matrices as references available instead
+            self.modsolvers.matwood.jAA = self.jAA
+            self.modsolvers.matwood.jBB = self.jBB
             # Open the Fortran KleinD object
             if 'nlsubsys' in dir(self):
                 intup = (self.numj,
@@ -620,6 +641,9 @@ class DSGEmodel(object):
                      self.vardic,self.vdic,
                      self.mod_name,self.audic)
             self.modsolvers.forkleind = ForKleinD(intup)
+            # Make the AA and BB matrices as references available instead
+            self.modsolvers.forkleind.A = self.jAA
+            self.modsolvers.forkleind.B = self.jBB
 
     ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
         if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
@@ -643,9 +667,18 @@ class DSGEmodel(object):
                      self.mod_name,self.audic,
                      sess1)
             self.modsolvers.matklein2d = MatKlein2D(intup)
-            # Open the PyKlein2D object
+            # Make the AA and BB matrices as references available instead
+            self.modsolvers.matklein2d.A = self.jAA
+            self.modsolvers.matklein2d.B = self.jBB
+
+            # Open the PyKlein2D object, but don't pass mlabwrap session
             intup = intup[:-1]
             self.modsolvers.pyklein2d = PyKlein2D(intup)
+            # Make the AA and BB matrices as references available instead
+            self.modsolvers.pyklein2d.A = self.jAA
+            self.modsolvers.pyklein2d.B = self.jBB
+            self.modsolvers.pyklein2d.forkleind.A = self.jAA
+            self.modsolvers.pyklein2d.forkleind.B = self.jBB
             
     def init_out(self):
         '''
@@ -659,6 +692,90 @@ class DSGEmodel(object):
         # Compute the Eigenvalues of the AA matrix for inspection
         if 'jAA' in dir(self):
             self.mkeigv()
+            
+    def find_rss(self):
+        '''
+        The is a method which can be called to find the risky steady state
+           
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
+        '''
+        varbar = []
+        for elem in self.vardic['exo']['var']:
+            varbar.append(elem[0].split('(')[0]+'_bar')
+        for elem in self.vardic['endo']['var']:
+            varbar.append(elem[0].split('(')[0]+'_bar')
+        for elem in self.vardic['con']['var']:
+            varbar.append(elem[0].split('(')[0]+'_bar')
+        tmp_dic = {}
+        tmp_dic.update(self.paramdic)
+        tmp_dic.update(self.sstate)
+        sstate_li = []
+        sstate = {}
+        for elem in varbar:
+            if elem in tmp_dic.keys():
+                sstate[elem] = tmp_dic[elem]
+                sstate_li.append(tmp_dic[elem])
+        rsstate_li = deepcopy(sstate_li)
+        rsstate = deepcopy(sstate)
+
+        clone = copy.deepcopy(self)
+        clone._mesg = False
+        
+        # Define the function to be handed over
+        # to fsolve
+        def func(invar):
+            # Update ss with passed values
+            for i1,elem in enumerate(varbar):
+                clone.sstate[elem] = invar[i1]
+            # Update the model's derivatives, but only numerically
+            clone.init5(update=True)
+            # Solve the 2nd-order accurate solution
+            clone.modsolvers.pyklein2d.solve()
+            # Get retval into right shape
+            KX = clone.modsolvers.pyklein2d.KX
+            retval = [float(x) for x in KX]
+            KY = clone.modsolvers.pyklein2d.KY
+            for elem in KY:
+                retval.append(float(elem))
+            retval = np.array(retval)
+            return retval
+        
+        # Define the initial values and
+        # start the non-linear solver
+        init_val = deepcopy(np.array(sstate_li))
+        (output,infodict,ier,mesg) = optimize.fsolve(func,init_val,full_output=1)
+        
+        # Check the difference and do bounded minimisation (root-finding)
+        diff_dic = {}
+        bounds_dic = {}
+        for i1,keyo in enumerate(varbar):
+            if keyo in self.sstate.keys():
+                if output[i1] != self.sstate[keyo]:
+                    diff_dic[keyo] = output[i1]
+                    bounds_dic[keyo] = (output[i1],output[i1])
+        if bounds_dic != {}:
+            # Do constrained root finding here
+            clone.sssolvers.fsolve.solve(bounds_dic=bounds_dic)
+            # Also need to make sure residually computed SS get updated accordingly
+            if 'manss' in dir(clone.sssolvers):
+                clone.sssolvers.manss.paramdic.update(clone.sssolvers.fsolve.fsout)
+                clone.sssolvers.manss.solve()
+            
+        # Now attach final results to instance
+        self.rsstate = deepcopy(self.sstate)
+        self.rparamdic = deepcopy(self.paramdic)
+        for i1,elem in enumerate(varbar):
+            if elem in self.rsstate.keys(): self.rsstate[elem] = output[i1]
+            if elem in self.rparamdic.keys(): self.rparamdic[elem] = output[i1]
+        if bounds_dic != {}:
+            self.rsstate.update(clone.sssolvers.fsolve.fsout)
+            if 'manss' in dir(clone.sssolvers):
+                self.rsstate.update(clone.sssolvers.manss.sstate)
+
+            
+        
 
     # html info of model opened with webbrowser
     def info(self):
@@ -1539,16 +1656,12 @@ class DSGEmodel(object):
             else:
                 return (numj,jdic)
 
-        # Start parallel Python job server
-        ppservers = ()
         inputs = [x for x in xrange(len(self.func2))]
         # Support auto-detection of CPU cores
-        if ncpus == 'auto':
-            job_server = pp.Server(ppservers=ppservers)
-            if mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ " CPU cores..."
+        if self._ncpus == 'auto':
+            if mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
         else:
-            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
-            if mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ " CPU cores..."
+            if mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
 
         imports = ('numpy','numpy.matlib',)
         
@@ -1568,7 +1681,7 @@ class DSGEmodel(object):
         # globals - dictionary from which all modules, functions and classes
         # will be imported, for instance: globals=globals()
         
-        jobs = [job_server.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for inputo in inputs]
+        jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for inputo in inputs]
         if mk_hessian:
             jdic = {}
             hdic = {}
@@ -1977,7 +2090,7 @@ class DSGEmodel(object):
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
-    # The parallelized mkjahe version using parallel python
+
     def mkjaheppn(self):
         '''
         A parallelized method using native Python and Sympycore in oder
@@ -1998,7 +2111,8 @@ class DSGEmodel(object):
         self.numh: attaches numerical model Hessian to instance
         self.jAA: attaches numerical AA matrix used in Forkleind solution method
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
-        '''
+        '''  
+
         mk_hessian = self._mk_hessian
         # import local sympycore
         import sympycore
@@ -2105,17 +2219,14 @@ class DSGEmodel(object):
             else:
                 return numj
 
-        # Start parallel Python job server
-        ppservers = ()
+
         inputs = [x for x in xrange(len(self.func2))]
         if self._ncpus == 'auto':
-            job_server = pp.Server(ppservers=ppservers)
-            if self._mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ " CPU cores..."
+            if self._mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
         else:
-            job_server = pp.Server(ncpus=ncpus,ppservers=ppservers)
-            if self._mesg: print "INIT: Parallel execution started with "+str(job_server.get_ncpus())+ " CPU cores..."
+            if self._mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
         imports = ('numpy','copy','numpy.matlib',)
-        jobs = [job_server.submit(mkjaheseq,(input,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for input in inputs]
+        jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for inputo in inputs]
         if mk_hessian:
             job_0 = jobs[0]
             numj = job_0()[0]
@@ -2147,7 +2258,7 @@ class DSGEmodel(object):
             self.numh = numh
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
-        self.jBB = -self.numj[:,int(len(intup)/2):]
+        self.jBB = -self.numj[:,int(len(intup)/2):]       
 ##########################################################  
     # Method updating model IF model file has been changed externally !
     def updf(self):

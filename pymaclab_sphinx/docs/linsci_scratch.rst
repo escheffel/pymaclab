@@ -13,15 +13,18 @@ Understanding the wider system
   two kinds of tasks well. One of them is setting up and solving problems in linear algebra and/or problems requiring non-linear or other
   optimisation techniques while the other one is declaring and manipulating algebraic expressions, usually done with so-called CASs, or computer
   algebra systems. Also, sometimes it is not only important to be able to have access to environments which can handle these tasks, but also to
-  handle these tasks as fast and efficiently as possible, conditional on any given hardware platform researchers may work with. In this short
-  text I will describe how to set up a Python numerical/scientific environment in Linux which handles the above mentioned tasks - as well as
-  others - and focus on the step-by-step installation of various individual packages, which together make up such an environment. Among other,
+  handle these tasks as fast and efficiently as possible, conditional on any given hardware platform researchers may work with.
+  
+  In this short text I will describe how to set up a Python numerical/scientific environment in Linux which handles the above mentioned tasks -
+  as well as others - and focus on the step-by-step installation of various individual packages, which together make up such an environment. Among other,
   this will make clear how many modern interactive scientific environments continue to follow the tried-and-tested approach of often exposing
-  their core functions as wrappers to open-source industry standard libraries of which many have been around for decades. PyMacLab which uses
-  Numpy and Scipy makes no exception in this regards. What this discussion will make clear is that at their core, scientific programming suites
-  such as Matlab, Octave, Scilab, Gauss, Numpy/Scipy or indeed PyMacLab (which builds on Numpy/Scipy) are in some sense all identical in that they
-  inherit the functionality of tried-and-tested libraries which have been around for decades and which are permitted to be included in free as well
-  as proprietary software packages.
+  their core functions as wrappers to open-source industry standard libraries of which many have been around for decades.
+  
+  PyMacLab which uses Numpy and Scipy makes no exception in this regard. What this discussion will make clear is that at their core,
+  scientific programming suites such as Matlab, Octave, Scilab, Gauss, Numpy/Scipy or indeed PyMacLab (which builds on Numpy/Scipy) are in some sense
+  all identical in that they inherit the functionality of tried-and-tested libraries which have been around for decades and which are permitted to be
+  included in free as well as proprietary software packages. What sets many of these packages apart are the added methods they provide and the syntactic
+  choices they make.
 
 *Starting the Build*
 
@@ -29,6 +32,7 @@ Understanding the wider system
   is a library, whose main contribution lies in the provision of Python numerical array and matrix classes, apart from some small number of
   often statistical convenience methods employing these new data types, supplies little else in the domain of advanced scientific computing.
   This is where Scipy then enters which provides many such routines, such as for instance many currently popular optimisation algorithms.
+  
   So Scipy requires Numpy to install and run, but does Numpy and its numerical data types also require some other package or library to run?
   As it turns out, if one wishes to run Numpy as efficiently and as fast as possible, some reference BLAS and LAPACK implementations need to be
   installed on the system in form of dynamically loadable libraries. One some systems and for inexperienced Linux users it may be no easy feat
@@ -42,7 +46,9 @@ Understanding the wider system
   BLAS stands for "Basic Linear Algebra Suite" and LAPACK stands for "Linear Algebra Package". BLAS is the starting point for everything and indeed
   LAPACK needs an existing BLAS installation in order to compile and run, so BLAS is a core dependency for LAPACK. Both are usually installed as Fortran
   libraries and are hence very fast and efficient, but BLAS, which contains the most rudimentary matrix and vector functionality can be heavily optimized
-  for different hardware set-ups, i.e. different CPU architectures. Enter the special BLAS library with the name ATLAS = "Automatically tuned linear algebra
+  for different hardware set-ups, i.e. different CPU architectures.
+  
+  Enter the special BLAS library with the name ATLAS = "Automatically tuned linear algebra
   suite", which is essentially another BLAS implementation, but one which detects the hardware setup when it gets compiled from source and intelligently
   adapts its own source code to fit the existing hardware perfectly, like a glove, so-to-speak. The performance differences between a vanilla
   run-of-the-mill BLAS reference library and the optimized ATLAS version can be staggering, depending on what kind of hardware you are running.
@@ -59,7 +65,9 @@ Understanding the wider system
   difference between ATLAS BLAS and GotoBlas is not that big. Actually it does work, but it breaks the use of parallel computation using PP
   (Parallel Python) in PyMacLab, which is one of the great features of PyMacLab helping to speed it up considerably exploiting multi-core CPUs. I found out
   about this bug a while ago but I don't know it's exact cause. The point to take away from this is to only use Numpy compiled against either a standard
-  vanilla BLAS implementation or the older faster implementation called ATLAS. And what was the point of all of what I have written so far? Only to tell you
-  that PyMacLab needs Numpy, Numpy needs LAPACK and LAPACK needs BLAS (of which there exist various versions, some of which are tightly optimized for
-  existing hardware architectures). When installing PyMacLab, both some BLAS and LAPACK need to be installed system-wide in your OS' library directory,
-  which must be the same in a Macintosh OS as in Linux/BSD, which after all is just some variant of BSD Unix which itself is structured similarly to Linux.
+  vanilla BLAS implementation or the older faster implementation called ATLAS.
+  
+  And what was the point of all of what I have written so far? Only to tell you that PyMacLab needs Numpy, Numpy needs LAPACK and LAPACK needs BLAS
+  (of which there exist various versions, some of which are tightly optimized for existing hardware architectures). When installing PyMacLab, both some
+  BLAS and LAPACK need to be installed system-wide in your OS' library directory, which must be the same in a Macintosh OS as in Linux/BSD, which after
+  all is just some variant of BSD Unix which itself is structured similarly to Linux.

@@ -11,9 +11,9 @@ Introduction
   PyMacLab's strength or orginal design goal has been that of providing users with a rich and flexible DSGE data structure (also called
   class in object-oriented programming speak) which allows them to do lots of interesting things with DSGE models. Don't forget that another
   stated goal of PyMacLab is to permit researchers to work with DSGE models who know how to and enjoy to use the programming language Python.
-  This tutorial assumes that you already know how to use Python, if you are completely new to it I suggest you consult one of the many tutorials
-  available on the internet to get started with the language. Don't forget that Python is free as in free as freedom, no proprietary software such
-  as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab.
+  This tutorial assumes that you already know how to use Python, if you are completely new to it I suggest you consult one of the
+  `many tutorials <http://docs.python.org/tutorial/>`_ available on the internet to get started with the language. Don't forget that Python is
+  free as in free as freedom, no proprietary software such as Matlab is tainting the freedom of the environment you will be working in when using PyMacLab.
   
   The easiest and best way to get started and explore all of the available features of PyMacLab, or for that matter any other Python library, is to
   work with `IPython <http://ipython.org/>`_, which is an abbreviation for Interactive Python. With this program, Python users who are scientifically
@@ -23,166 +23,263 @@ Introduction
   further manipulation, i.e. they persist. Before being able to work with PyMacLab we have to launch an IPython session and import the library into it's
   scope:
 
-  .. sourcecode:: ipython
+    .. sourcecode:: ipython
 
-    # Import the pymaclab module into its namespace
-    In [1]: import pymaclab as pm
+      # Import the pymaclab module into its namespace
+      In [1]: import pymaclab as pm
 
-    # Get the version and author's name
-    In [2]: pm.__version__
-    '0.90.1'
+      # Get the version and author's name
+      In [2]: pm.__version__
+      '0.90.1'
 
-    # Get the library's author's name
-    In [3]: pm.__author__
-    'Eric M. Scheffel'
+      # Get the library's author's name
+      In [3]: pm.__author__
+      'Eric M. Scheffel'
 
   Here we simply have imported the PyMacLab module and inspected some of its attributes, such as the current version numbering as well as them
   module's author's name. Let's look deeper into the recesses of the module though to better understand who it is organized
 
-  .. sourcecode:: ipython
+    .. sourcecode:: ipython
 
-    # Import the pymaclab module into its namespace
-    In [1]: import pymaclab as pm
+      # Import the pymaclab module into its namespace
+      In [1]: import pymaclab as pm
 
-    # Use the dir() command to view all available attributes and method calls,
-    # this command returns a list
-    In [2]: dir(pm)
-    ['OPS',
-    '__builtins__',
-    '__doc__',
-    '__file__',
-    '__name__',
-    '__package__',
-    '__path__',
-    'dattrans',
-    'db_graph',
-    'dsge',
-    'explain',
-    'favar',
-    'filters',
-    'ldbs',
-    'linalg',
-    'lmods',
-    'lvars',
-    'macrolab',
-    'make_modfile',
-    'modedit',
-    'modfiles',
-    'modinfo',
-    'modsolve',
-    'newDB',
-    'newFAVAR',
-    'newMOD',
-    'newVAR',
-    'pyed',
-    'stats',
-    'sys',
-    'texedit',
-    'var']
+      # Use the dir() command to view all available attributes and method calls,
+      # this command returns a list
+      In [2]: dir(pm)
+      ['OPS',
+      '__builtins__',
+      '__doc__',
+      '__file__',
+      '__name__',
+      '__package__',
+      '__path__',
+      'dattrans',
+      'db_graph',
+      'dsge',
+      'explain',
+      'favar',
+      'filters',
+      'ldbs',
+      'linalg',
+      'lmods',
+      'lvars',
+      'macrolab',
+      'make_modfile',
+      'modedit',
+      'modfiles',
+      'modinfo',
+      'modsolve',
+      'newDB',
+      'newFAVAR',
+      'newMOD',
+      'newVAR',
+      'pyed',
+      'stats',
+      'sys',
+      'texedit',
+      'var']
 
 
   As you can see the module contains a quite a few attributes, many of which are still experimental and perhaps best not called at this stage. The most mature
   and arguable most interesting method call is that called ``pm.newMOD``, which allows users to instantiate a DSGE model instance, which would be done like so:
 
-  .. sourcecode:: ipython
+    .. sourcecode:: ipython
 
-    # Import the pymaclab module into its namespace, also import os module
-    In [1]: import pymaclab as pm
-    In [2]: import os
+      # Import the pymaclab module into its namespace, also import os module
+      In [1]: import pymaclab as pm
+      In [2]: import os
 
-    # Define the relative path to your modfiles
-    In [3]: modpath = "../pymaclab/modfiles/models/stable"
+      # Define the relative path to your modfiles
+      In [3]: modpath = "../pymaclab/modfiles/models/stable"
 
-    # Instantiate a new DSGE model instance like so
-    In [4]: rbc1 = pm.newMOD(os.path.join(modpath,"rbc1_res.txt"))
+      # Instantiate a new DSGE model instance like so
+      In [4]: rbc1 = pm.newMOD(os.path.join(modpath,"rbc1_res.txt"))
 
-    # As an example, check the models computed steady stated
-    In [5]: print rbc1.sstate
-    {'betta': 0.99009900990099009,
-    'c_bar': 2.7560505909330626,
-    'k_bar': 38.160700489842398,
-    'y_bar': 3.7100681031791227}
+      # As an example, check the models computed steady stated
+      In [5]: print rbc1.sstate
+      {'betta': 0.99009900990099009,
+      'c_bar': 2.7560505909330626,
+      'k_bar': 38.160700489842398,
+      'y_bar': 3.7100681031791227}
 
   Alternatively, you can also test some of the DSGE model files which come supplied with PyMacLab's standard installation. For this to work all you have to do is
   to import a provided handler module, ``pymaclab.modfiles.models``, which contains all of the DSGE models' names and their correspoding full file paths.
   Notice however that the models themselves are further classified into three categories, ``models.stable``, ``models.testing`` and ``models.development``
   which helps to distinguish between models which are in the process of being added and such which are known to work correctly:
     
-  .. sourcecode:: ipython
+    .. sourcecode:: ipython
 
-    # Import the pymaclab module into its namespace, also import os module
-    In [1]: import pymaclab as pm
-    # Import the DSGE models' filepath handle
-    In [2]: from pymaclab.modfiles import models
+      # Import the pymaclab module into its namespace, also import os module
+      In [1]: import pymaclab as pm
+      # Import the DSGE models' filepath handle
+      In [2]: from pymaclab.modfiles import models
+      
+      #Check all of the available models in the stable branch
+      In [3]: dir(models.stable)
+      ['__builtins__',
+      '__doc__',
+      '__file__',
+      '__name__',
+      '__package__',
+      '__path__',
+      'merz',
+      'prog',
+      'rbc1_cf',
+      'rbc1_ext',
+      'rbc1_num',
+      'rbc1_res',
+      'rbc1_sug',
+      'rbc2',
+      'sims']
+      
+      #Check all of the available models in the development branch
+      In [4]: dir(models.development)
+      ['__builtins__',
+      '__doc__',
+      '__file__',
+      '__name__',
+      '__package__',
+      '__path__',
+      'max1',
+      'max2',
+      'mbc1',
+      'model2',
+      'model3',
+      'nk_nocapital',
+      'nkm',
+      'nkm_nocapital']
+      
+      #Check all of the available models in the testing branch
+      In [5]: dir(models.testing)
+      ['__builtins__',
+      '__doc__',
+      '__file__',
+      '__name__',
+      '__package__',
+      '__path__',
+      'cee']
+
+
+      # The DSGE models objects in pymaclab.modfiles.models
+      # are just references to full file paths, i.e.
+
+      In [6]: models.stable.rbc1_res
+      '/usr/lib/python2.7/site-packages/pymaclab/modfiles/rbc1_res.txt'
+
+      #Instantiate a new DSGE model instance like so
+      In [7]: rbc1 = pm.newMOD(models.stable.rbc1_res)
+
+      #As an example, check the models computed steady stated
+      In [8]: print rbc1.sstate
+      {'betta': 0.99009900990099009,
+      'c_bar': 2.7560505909330626,
+      'k_bar': 38.160700489842398,
+      'y_bar': 3.7100681031791227}
     
-    #Check all of the available models in the stable branch
-    In [3]: dir(models.stable)
-    ['__builtins__',
-    '__doc__',
-    '__file__',
-    '__name__',
-    '__package__',
-    '__path__',
-    'merz',
-    'prog',
-    'rbc1_cf',
-    'rbc1_ext',
-    'rbc1_num',
-    'rbc1_res',
-    'rbc1_sug',
-    'rbc2',
-    'sims']
+  Finally, yet another way of getting the model information loaded into a PyMacLab DSGE model instance is to simply pass the model information as one
+  big (triple-quoted) string defined inside the Python (batch) script. So this could for instance be done like this:
+   
+   
+    .. sourcecode:: python
     
-    #Check all of the available models in the development branch
-    In [4]: dir(models.development)
-    ['__builtins__',
-    '__doc__',
-    '__file__',
-    '__name__',
-    '__package__',
-    '__path__',
-    'max1',
-    'max2',
-    'mbc1',
-    'model2',
-    'model3',
-    'nk_nocapital',
-    'nkm',
-    'nkm_nocapital']
+      import pymaclab as pm
     
-    #Check all of the available models in the testing branch
-    In [5]: dir(models.testing)
-    ['__builtins__',
-    '__doc__',
-    '__file__',
-    '__name__',
-    '__package__',
-    '__path__',
-    'cee']
+      modstr='''
+      %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      
+      This is just a standard RBC model, as you can see.
 
 
-    # The DSGE models objects in pymaclab.modfiles.models
-    # are just references to full file paths, i.e.
+      %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Name = Standard RBC Model, RES-SS;
 
-    In [6]: models.stable.rbc1_res
-    '/usr/lib/python2.7/site-packages/pymaclab/modfiles/rbc1_res.txt'
 
-    #Instantiate a new DSGE model instance like so
-    In [7]: rbc1 = pm.newMOD(models.stable.rbc1_res)
+      %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      rho       = 0.36;
+      delta     = 0.025;
+      R_bar     = 1.01;
+      betta     = 1/R_bar;
+      eta	  = 2.0; 
+      psi	  = 0.95;
+      z_bar     = 1.0;
+      sigma_eps = 0.052; 
 
-    #As an example, check the models computed steady stated
-    In [8]: print rbc1.sstate
-    {'betta': 0.99009900990099009,
-    'c_bar': 2.7560505909330626,
-    'k_bar': 38.160700489842398,
-    'y_bar': 3.7100681031791227}
 
+      %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      [1]  k(t):capital{endo}[log,bk]
+      [2]  c(t):consumption{con}[log,bk]
+      [4]  y(t):output{con}[log,bk]      
+      [5]  z(t):eps(t):productivity{exo}[log,bk]
+      [6]  @inv(t):investment[log,bk]
+      [7]  @R(t):rrate
+
+      %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      None
+
+
+      %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++
+      # Special discount variable
+      [1]   @DISCOUNT = betta;
+      [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+      [2]   @inv_bar  = SS{@inv(t)};
+      [2]   @F(t)     = z(t)*k(t-1)**rho;
+      [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
+      [2]   @Fk_bar   = SS{@Fk(t)};
+      [2]   @F_bar    = SS{@F(t)};
+      [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+      [4]   @R_bar    = SS{@R(t)};
+      [3]   @R(t+1)   = FF_1{@R(t)};
+      [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+      [5]   @MU(t)    = DIFF{@U(t),c(t)};
+      [5]   @MU_bar   = SS{@U(t)};
+      [6]   @MU(t+1)  = FF_1{@MU(t)};
+
+
+
+      %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++
+      # Insert here the non-linear FOCs in format g(x)=0
+
+      [1]   @F(t)-@inv(t)-c(t) = 0;
+      [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
+      [3]   @F(t)-y(t) = 0;
+      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+
+
+      %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      [1]   y_bar = @F_bar;
+
+
+      %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++
+      [1]   @F_bar-@inv_bar-c_bar = 0;
+      [2]   betta*@R_bar-1 = 0;
+      [3]   betta*R_bar-1 = 0;
+
+      [1]   c_bar = 1.0;
+      [2]   k_bar = 1.0;
+      [3]   betta = 0.9;
+
+      %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++
+      None
+
+
+      %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Sigma = [sigma_eps**2];
+
+
+      %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      '''
+      
+      rbc = pm.newMOD(modstr,mesg=True,ncpus='auto')
 
   Now we have already seen some of the power and simplicity we can leverage by using PyMacLab. Before learning some of its additional power, we do however
   still need to take a quick detour to study the model file ``rbc1.txt`` which we had to pass as an argument to the ``pm.newMOD`` method call, as its
   structure is determined by a set of conventions which are important to adhere to in order to enable PyMacLab to parse and employ the information contained
   therein correctly and efficiently.
 
+.. raw:: latex
+
+   \newpage
 
 The PyMacLab DSGE model file
 ----------------------------
@@ -192,86 +289,86 @@ The PyMacLab DSGE model file
   number of such files pre-compiled for you to experiment with. For instance the most basic real business cycle model is described in the model file
   ``rbc1.txt`` which looks as follows
 
-  ::
+    ::
 
-    %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    This is just a standard RBC model, as you can see.
-
-
-    %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    Name = Standard RBC Model;
+      %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      This is just a standard RBC model, as you can see.
 
 
-    %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    rho       = 0.36;
-    delta     = 0.025;
-    R_bar     = 1.01;
-    eta	      = 2.0; 
-    psi	      = 0.95;
-    z_bar     = 1.0;
-    sigma_eps = 0.052; 
+      %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Name = Standard RBC Model;
 
 
-    %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    [1]  k(t):capital{endo}[log,bk]
-    [2]  c(t):consumption{con}[log,bk]
-    [4]  y(t):output{con}[log,bk]      
-    [5]  z(t):eps(t):productivity{exo}[log,bk]
-    [6]  @inv(t):investment[log,bk]
-    [7]  @R(t):rrate
-
-    %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    None
+      %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      rho       = 0.36;
+      delta     = 0.025;
+      R_bar     = 1.01;
+      eta	= 2.0; 
+      psi	= 0.95;
+      z_bar     = 1.0;
+      sigma_eps = 0.052; 
 
 
-    %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-    [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-    [2]   @inv_bar  = SS{@inv(t)};
-    [2]   @F(t)     = z(t)*k(t-1)**rho;
-    [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
-    [2]   @Fk_bar   = SS{@Fk(t)};
-    [2]   @F_bar    = SS{@F(t)};
-    [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-    [4]   @R_bar    = SS{@R(t)};
-    [3]   @R(t+1)   = FF_1{@R(t)};
-    [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
-    [5]   @MU(t)    = DIFF{@U(t),c(t)};
-    [5]   @MU_bar   = SS{@U(t)};
-    [6]   @MU(t+1)  = FF_1{@MU(t)};
+      %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      [1]  k(t):capital{endo}[log,bk]
+      [2]  c(t):consumption{con}[log,bk]
+      [4]  y(t):output{con}[log,bk]      
+      [5]  z(t):eps(t):productivity{exo}[log,bk]
+      [6]  @inv(t):investment[log,bk]
+      [7]  @R(t):rrate
+
+      %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      None
+
+
+      %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++
+      [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+      [2]   @inv_bar  = SS{@inv(t)};
+      [2]   @F(t)     = z(t)*k(t-1)**rho;
+      [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
+      [2]   @Fk_bar   = SS{@Fk(t)};
+      [2]   @F_bar    = SS{@F(t)};
+      [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+      [4]   @R_bar    = SS{@R(t)};
+      [3]   @R(t+1)   = FF_1{@R(t)};
+      [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+      [5]   @MU(t)    = DIFF{@U(t),c(t)};
+      [5]   @MU_bar   = SS{@U(t)};
+      [6]   @MU(t+1)  = FF_1{@MU(t)};
 
 
 
-    %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    # Insert here the non-linear FOCs in format g(x)=0
+      %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++
+      # Insert here the non-linear FOCs in format g(x)=0
 
-    [1]   @F(t)-@inv(t)-c(t) = 0;
-    [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
-    [3]   @F(t)-y(t) = 0;
-    [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
-
-
-    %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    [1]   y_bar = @F_bar;
+      [1]   @F(t)-@inv(t)-c(t) = 0;
+      [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
+      [3]   @F(t)-y(t) = 0;
+      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
 
 
-    %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-    [1]   @F_bar-@inv_bar-c_bar = 0;
-    [2]   betta*@R_bar-1 = 0;
-    [3]   betta*R_bar-1 = 0;
-
-    [1]   c_bar = 1.0;
-    [2]   k_bar = 1.0;
-    [3]   betta = 0.9;
-
-    %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    None
+      %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      [1]   y_bar = @F_bar;
 
 
-    %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    Sigma = [sigma_eps**2];
+      %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++
+      [1]   @F_bar-@inv_bar-c_bar = 0;
+      [2]   betta*@R_bar-1 = 0;
+      [3]   betta*R_bar-1 = 0;
+
+      [1]   c_bar = 1.0;
+      [2]   k_bar = 1.0;
+      [3]   betta = 0.9;
+
+      %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++
+      None
 
 
-    %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+      Sigma = [sigma_eps**2];
+
+
+      %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 

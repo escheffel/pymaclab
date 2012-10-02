@@ -18,9 +18,19 @@ from stats import var
 from stats import favar
 import linalg
 import sys
+import pp
 
 # Expose the version number into library root
 from version import version as __version__
+
+# Start the job_server
+ppservers = ()
+jobserver = pp.Server(ppservers=ppservers)
+ncpus = jobserver.get_ncpus()
+del jobserver
+del ppservers
+print "PyMacLab started with parallel jobserver using "+str(ncpus)+" cores..."
+ 
 
 # Some helper functions
 def db_graph(dbase,tseries):
@@ -34,7 +44,8 @@ def db_graph(dbase,tseries):
 	fsp.legend()
 	P.show()
 
-def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,use_focs=False,ssidic=None):
+def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
+           mk_hessian=True,use_focs=False,ssidic=None):
 	'''
 	Model's second intialisation method called by newMOD() function call. The model's
 	__init__() method only creates the instance and adds information, but does no
@@ -45,8 +56,9 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=1,mk_hessian=True,
 	init_lev = 1: parsing and steady state calculations
 	init_lev = 2: parsing, steady state calculations and dynamic solution computation
 	'''
-	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,
-	                            mk_hessian=mk_hessian,use_focs=use_focs,ssidic=ssidic)
+	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,\
+	                            mk_hessian=mk_hessian,use_focs=use_focs,\
+	                            ssidic=ssidic)
 	modobj.init1()
 	modobj.init1a()
 	modobj.init1b()

@@ -21,6 +21,11 @@ Description
   (using the Magnus & Neudecker 1999 definition of the Hessian matrix). PyMacLab possesses the added advantage of being equipped with
   an advanced model file parser module, similar to the one available in `Dynare <http://www.dynare.org>`_, which automates cumbersome
   and error-prone (log-)linearization by hand. PyMacLab is also written entirely in Python, is free and incredibly flexible to use and extend.
+  
+  At this moment, what PyMacLab does not *yet* provide are any methods suitable for pulling in data and estimating deep-structure parameters based on
+  some specific estimation framework, such as Bayesian estimation, Maximum Likelihood, Method of Moments or some Limited Information estimation method.
+  Having said that, especially LI methods should be easy to "bolt onto" the library as it stands right now by experienced Python programmers using up
+  a comparatively little amount of their time. In the near future PyMacLab will provide a few estimation methods for users to work with.
 
 First things first
 ------------------
@@ -130,6 +135,9 @@ Reference
 Download & Installation
 =======================
 
+Introduction
+------------
+
   PyMacLab is known to work with any of Python version greater than or equal to 2.4 and smaller than 3.0.
   In the future we will consider implementing a compatibility branch for versions of Python greater
   than or equal to 3.0, once all core dependencies are known to have been migrated as well. PyMacLab is always
@@ -154,7 +162,7 @@ Download & Installation
   which is also available for Windows (EPD).
   
   No matter which route users choose to install PyMacLab, the rule of thumb is that so long as they manage to *compile* both
-  Numpy and Scipy from their source files without problems, installing PyMacLab should also pose no further difficulties. The
+  Numpy and Scipy from their *source files* without problems, installing PyMacLab should also pose no further difficulties. The
   key to success is to have detectable BLAS and LAPACK libraries as well as required compilers installed on the system, where
   *in particular* a good (free) `Fortran compiler <http://gcc.gnu.org/fortran/>`_ will be *absolutely* necessary. In the long run,
   I may consider making pre-built binaries for various platforms available so that users can bypass the error-prone setup using
