@@ -757,11 +757,13 @@ class DSGEmodel(object):
                     bounds_dic[keyo] = (output[i1],output[i1])
         if bounds_dic != {}:
             # Do constrained root finding here
-            clone.sssolvers.fsolve.solve(bounds_dic=bounds_dic)
+            if 'fsolve' in dir(clone.sssolvers):
+                clone.sssolvers.fsolve.solve(bounds_dic=bounds_dic)
             # Also need to make sure residually computed SS get updated accordingly
             if 'manss' in dir(clone.sssolvers):
-                clone.sssolvers.manss.paramdic.update(clone.sssolvers.fsolve.fsout)
-                clone.sssolvers.manss.solve()
+                if 'fsolve' in dir(clone.sssolvers):
+                    clone.sssolvers.manss.paramdic.update(clone.sssolvers.fsolve.fsout)
+                    clone.sssolvers.manss.solve()
             
         # Now attach final results to instance
         self.rsstate = deepcopy(self.sstate)
@@ -770,8 +772,9 @@ class DSGEmodel(object):
             if elem in self.rsstate.keys(): self.rsstate[elem] = output[i1]
             if elem in self.rparamdic.keys(): self.rparamdic[elem] = output[i1]
         if bounds_dic != {}:
-            self.rsstate.update(clone.sssolvers.fsolve.fsout)
-            if 'manss' in dir(clone.sssolvers):
+            if 'fsolve' in dir(clone.sssolvers):
+                self.rsstate.update(clone.sssolvers.fsolve.fsout)
+            if 'fsolve' in dir(clone.sssolvers) and 'manss' in dir(clone.sssolvers):
                 self.rsstate.update(clone.sssolvers.manss.sstate)
 
             
