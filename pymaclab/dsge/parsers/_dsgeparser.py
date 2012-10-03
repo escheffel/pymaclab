@@ -727,6 +727,9 @@ def mkaug2(self, insys):
 def mk_subs_dic(self, secs):
     # Make the substitution system by joining lines and stripping
     list_tmp2 = []
+    # This list is used to catch the @ALL instructions and store them
+    list_tmp3 = []
+    list_tmp3_ind = []
     i1=0
     linecounter=0
     for x in secs['vsfocs'][0]:
@@ -734,25 +737,121 @@ def mk_subs_dic(self, secs):
             linecounter += 1
         else:
             if linecounter == 0:
+                ################# Catch @ALL expressions and store################
+                if "@ALL" in x:
+                    raw_str = x.split('@ALL')[1].split('{')[1].split('}')[0]
+                    list_tmp3.append(raw_str.split(','))
+                    list_tmp3_ind.append(i1)
+                    continue
+                ##################################################################                
                 line = x.replace(';','').split(']')[1].strip()
             elif linecounter > 0: # have a multiline equation
                 str_tmp = ''
                 for y in secs['vsfocs'][0][i1-linecounter:i1+1]:
-                    str_tmp += y.replace('...','').replace(';',
-                                                           '').replace('//','').strip()
-                line = str_tmp.split(']')[1].strip()
+                    str_tmp += y.replace('...','').replace(';','').replace('//','').strip()
+                ################# Catch @ALL expressions and store################
+                if "@ALL" in str_tmp:
+                    raw_str = str_tmp.split('@ALL')[1].split('{')[1].split('}')[0]
+                    list_tmp3.append(raw_str.split(','))
+                    list_tmp3_ind.append(i1)
+                    continue
+                ##################################################################
+                if ']' in str_tmp: line = str_tmp.split(']')[1].strip()
+                else: line = str_tmp.strip()
                 linecounter = 0 
         i1 += 1
         splitline = line.split('=')
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
-
+    self.allsubs_raw1 = deepcopy(list_tmp3)
+    self.allsubs_index = deepcopy(list_tmp3_ind)
     self.nlsubs_raw1 = deepcopy(list_tmp2)
     self.nlsubsdic = dict(list_tmp2)
-    
     return self
+
+def subs_in_subs_all(self):
+    list_tmp3 = deepcopy(self.allsubs_raw1)
+    list_tmp2 = deepcopy(self.nlsubs_raw1)
+    # Replace substitutions inside substitutions, for both time-subscripted and steady state vars!
+    mreg = re.compile('@DISCOUNT|@(E\(t.*?\)\|){0,1}.*?\(t.*?\)|@(E\(t.*?\)\|){0,1}.*?_bar')
+    variables = [x[0] for x in list_tmp2] # do this once
+    for i,x in enumerate(list_tmp3):
+        expr = list_tmp3[i][0]
+        while mreg.search(expr):
+            ma = mreg.search(expr)
+            indx = variables.index(ma.group())
+            expr = list_tmp2[indx][1]
+            list_tmp3[i][0] = expr
+    self.allsubs_raw2 = deepcopy(list_tmp3)
+    return self
+
+def mk_all(self):
+    list_tmp1 = deepcopy(self.allsubs_raw2)
+    list_tmp2 = deepcopy(self.allsubs_raw1)
+    repldic_li = []
+    do_ss = False
+    for i1,elem in enumerate(list_tmp1):
+        repldic = {}
+        if 'SS' in elem: do_ss = True
+        stem = list_tmp2[i1][0].split('(')[0]
+        stem_time = '('+list_tmp2[i1][0].split('(')[1]
+        # Do the simplest SS conversion
+        repldic[stem+'_bar'] = 'SS{'+stem+stem_time+'}'
+        if '-' in elem[1]:
+            chron = range(int(elem[1].split('-')[0].split('[')[1]),int(elem[1].split('-')[1].split(']')[0])+1)
+        else:
+            chron = elem[2].split('[')[1].split(']')[0].split(',')
+            chron = [int(x) for x in chron]
+        # Do current-period differentiation and SS jobs first
+        patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+        varli = self.vreg(patup,list_tmp1[i1][0],True,'max')
+        for chrono in chron:
+            if chrono == 0:
+                for varo in varli:
+                    if varo[1][0] == 'con' and int(varo[2][2]) == 0:
+                        repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
+                        repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
+                    elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
+                        repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
+                        repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
+            else:
+                if stem_time == '(t)':
+                    stem_time_new = '(t+'+str(chrono)+')'
+                elif '+' in stem_time:
+                    old_t = int(stem_time.split('+')[1].split(')')[0])
+                    stem_time_new = '(t+'+str(old_t+chrono)+')'
+                elif '-' in stem_time:
+                    old_t = int('-'+stem_time.split('-')[1].split(')')[0])
+                    stem_time_new = '(t+'+str(old_t+chrono)+')'
+                for varo in varli:
+                    if chrono > 0:
+                        if varo[1][0] == 'con' and int(varo[2][2]) == 0:
+                            repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
+                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
+                        elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
+                            repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
+                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
+                    elif chrono < 0:
+                        if varo[1][0] == 'con' and int(varo[2][2]) == 0:
+                            repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
+                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str((chrono))+'{'+varo[0]+'}'+'}'
+                        elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
+                            repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
+                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str(abs(chrono))+'{'+varo[0]+'}'+'}'
+        repldic_li.append(repldic)
+    repldic_li.reverse()
+    indexli = deepcopy(self.allsubs_index)
+    indexli.reverse()
+    for i1,indexo in enumerate(indexli):
+        self.nlsubs_raw1 = self.nlsubs_raw1[:indexo]+[list(x) for x in repldic_li[i1].items()]+self.nlsubs_raw1[indexo:]
+    del self.allsubs_index
+    return self
+                
+            
+            
 
 def subs_in_subs(self):
     list_tmp2 = deepcopy(self.nlsubs_raw1)
+    list_tmp3 = deepcopy(self.allsubs_raw1)
     # Replace substitutions inside substitutions, for both time-subscripted and steady state vars!
     mreg = re.compile('@DISCOUNT|@(E\(t.*?\)\|){0,1}.*?\(t.*?\)|@(E\(t.*?\)\|){0,1}.*?_bar')
     variables = [x[0] for x in list_tmp2] # do this once
@@ -1796,6 +1895,9 @@ def populate_model_stage_one_a(self, secs):
 def populate_model_stage_one_b(self, secs):
     # Check and calculate the substitution list and dictionary
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        # Substitute out in @ALL list for expressions, then do expressions
+        self = subs_in_subs_all(self)
+        self = mk_all(self)
         # Create the raw nlsubs list 2 by replacing substitutions inside substitutions
         self = subs_in_subs(self)
         # Apply steady state transformation where needed
