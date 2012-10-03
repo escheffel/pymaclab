@@ -74,14 +74,15 @@ class Fsolve(SSsolvers):
         subdic = {}
         for y,z in zip(ssi.items(),range(len(ssi.items()))):
             subdic[y[0]] = (y[0],y[1],z)
+            
         list_tmp1 = copy.deepcopy(self.ssm)
-        for var in self.ssi.keys():
+        for var in ssi.keys():
             _mreg = '(\+|\*|-|/|^|\()'+var
             mreg = re.compile(_mreg)
             _rlog = 'LOG\('
             _rexp = 'EXP\('
             rlog = re.compile(_rlog)
-            rexp = re.compile(_rexp)            
+            rexp = re.compile(_rexp)
             for i1,line in enumerate(list_tmp1):
                 # First strip away any whitespace
                 while ' ' in list_tmp1[i1]:
@@ -92,6 +93,7 @@ class Fsolve(SSsolvers):
                     list_tmp1[i1] = re.sub(rexp,'np.exp(',list_tmp1[i1])                 
                 while mreg.search(list_tmp1[i1]):
                     ma = mreg.search(list_tmp1[i1])
+                    matot = ma.group()
                     if len(ma.group(1))>0:
                         var = ma.group()[1:]
                         pos = ma.span()[0]+1

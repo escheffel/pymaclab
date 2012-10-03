@@ -115,13 +115,15 @@ class DSGEmodel(object):
     :return self:             *(dsge_inst)* - A populated DSGE model instance with fields and methods
 
     '''
-    # Instantiate a class jobserver
+    # Instantiate a global class jobserver accessible from all instances
     global ppservers, jobserver
     ppservers = ()
     jobserver = pp.Server(ppservers=ppservers)
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
                  use_focs=False,ssidic=None):
+        # Make sure the jobserver has done his global jobs each time you instantiate a new instance
+        jobserver.wait()
         self._initlev = initlev #TODO: remove this as an option
         self._mesg = mesg
         self._ncpus = ncpus
@@ -692,6 +694,8 @@ class DSGEmodel(object):
         # Compute the Eigenvalues of the AA matrix for inspection
         if 'jAA' in dir(self):
             self.mkeigv()
+        # Make sure the jobserver has done his jobs
+        jobserver.wait()        
             
     def find_rss(self):
         '''
@@ -745,7 +749,13 @@ class DSGEmodel(object):
         # Define the initial values and
         # start the non-linear solver
         init_val = deepcopy(np.array(sstate_li))
-        (output,infodict,ier,mesg) = optimize.fsolve(func,init_val,full_output=1)
+        outobj = optimize.root(func,init_val,method='hybr')
+        rss_funcval1 = outobj.fun
+        output = outobj.x
+        mesg = outobj.message
+        ier = outobj.status
+        
+        self.rss_funcval1 = rss_funcval1
         
         # Check the difference and do bounded minimisation (root-finding)
         diff_dic = {}
@@ -756,14 +766,34 @@ class DSGEmodel(object):
                     diff_dic[keyo] = output[i1]
                     bounds_dic[keyo] = (output[i1],output[i1])
         if bounds_dic != {}:
+            # Also add the non-bar SS values to bounds_dic, before doing constrained minimisation
+            for keyo in self.sstate.keys():
+                if "_bar" not in keyo: bounds_dic[keyo] = (self.sstate[keyo],self.sstate[keyo])
             # Do constrained root finding here
             if 'fsolve' in dir(clone.sssolvers):
                 clone.sssolvers.fsolve.solve(bounds_dic=bounds_dic)
             # Also need to make sure residually computed SS get updated accordingly
-            if 'manss' in dir(clone.sssolvers):
-                if 'fsolve' in dir(clone.sssolvers):
+            if 'manss' in dir(clone.sssolvers) and 'fsolve' in dir(clone.sssolvers):
                     clone.sssolvers.manss.paramdic.update(clone.sssolvers.fsolve.fsout)
                     clone.sssolvers.manss.solve()
+
+            # Run loop one last time to get rss_funval2
+            if 'fsolve' in dir(clone.sssolvers):
+                clone.sstate.update(clone.sssolvers.fsolve.fsout)
+            if 'manss' in dir(clone.sssolvers):
+                clone.sstate.update(clone.sssolvers.manss.sstate)
+            clone.init5(update=True)
+            clone.modsolvers.pyklein2d.solve()
+            retval = []
+            # Get retval into right shape
+            KX = clone.modsolvers.pyklein2d.KX
+            retval = [float(x) for x in KX]
+            KY = clone.modsolvers.pyklein2d.KY
+            for elem in KY:
+                retval.append(float(elem))
+            retval = np.array(retval)
+            self.rss_funcval2 = retval
+            
             
         # Now attach final results to instance
         self.rsstate = deepcopy(self.sstate)
@@ -1683,7 +1713,9 @@ class DSGEmodel(object):
         # jobs in a given group to finish
         # globals - dictionary from which all modules, functions and classes
         # will be imported, for instance: globals=globals()
-        
+
+        # Make sure the jobserver has done his jobs
+        jobserver.wait()        
         jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for inputo in inputs]
         if mk_hessian:
             jdic = {}
@@ -2229,6 +2261,8 @@ class DSGEmodel(object):
         else:
             if self._mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
         imports = ('numpy','copy','numpy.matlib',)
+        # Make sure the jobserver has done his jobs
+        jobserver.wait()        
         jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian,self.jdic,self.hdic),(),imports) for inputo in inputs]
         if mk_hessian:
             job_0 = jobs[0]
