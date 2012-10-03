@@ -787,6 +787,8 @@ def subs_in_subs_all(self):
 def mk_all(self):
     list_tmp1 = deepcopy(self.allsubs_raw2)
     list_tmp2 = deepcopy(self.allsubs_raw1)
+    list_tmp3 = deepcopy(self.nlsubs_raw1)
+    subsli = [x[0] for x in list_tmp3]
     repldic_li = []
     do_ss = False
     for i1,elem in enumerate(list_tmp1):
@@ -795,7 +797,7 @@ def mk_all(self):
         stem = list_tmp2[i1][0].split('(')[0]
         stem_time = '('+list_tmp2[i1][0].split('(')[1]
         # Do the simplest SS conversion
-        repldic[stem+'_bar'] = 'SS{'+stem+stem_time+'}'
+        if stem+'_bar' not in subsli: repldic[stem+'_bar'] = 'SS{'+stem+stem_time+'}'
         if '-' in elem[1]:
             chron = range(int(elem[1].split('-')[0].split('[')[1]),int(elem[1].split('-')[1].split(']')[0])+1)
         else:
@@ -808,11 +810,15 @@ def mk_all(self):
             if chrono == 0:
                 for varo in varli:
                     if varo[1][0] == 'con' and int(varo[2][2]) == 0:
-                        repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
-                        repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
+                        if stem+varo[2][1]+stem_time not in subsli:
+                            repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
+                        if stem+varo[2][1]+'_bar' not in subsli:
+                            repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
                     elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
-                        repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
-                        repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
+                        if stem+varo[2][1]+stem_time not in subsli:
+                            repldic[stem+varo[2][1]+stem_time] = 'DIFF{'+stem+stem_time+','+varo[0]+'}'
+                        if stem+varo[2][1]+'_bar' not in subsli:
+                            repldic[stem+varo[2][1]+'_bar'] = 'SS{'+stem+varo[2][1]+stem_time+'}'
             else:
                 if stem_time == '(t)':
                     stem_time_new = '(t+'+str(chrono)+')'
@@ -825,18 +831,26 @@ def mk_all(self):
                 for varo in varli:
                     if chrono > 0:
                         if varo[1][0] == 'con' and int(varo[2][2]) == 0:
-                            repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
-                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
+                            if stem+stem_time_new not in subsli:
+                                repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
+                            if stem+varo[2][1]+stem_time_new not in subsli:
+                                repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
                         elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
-                            repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
-                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
+                            if stem+stem_time_new not in subsli:
+                                repldic[stem+stem_time_new] = 'FF_'+str(chrono)+'{'+stem+stem_time+'}'
+                            if stem+varo[2][1]+stem_time_new not in subsli:
+                                repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'FF_'+str(chrono)+'{'+varo[0]+'}'+'}'
                     elif chrono < 0:
                         if varo[1][0] == 'con' and int(varo[2][2]) == 0:
-                            repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
-                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str((chrono))+'{'+varo[0]+'}'+'}'
+                            if stem+stem_time_new not in subsli:
+                                repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
+                            if stem+varo[2][1]+stem_time_new not in subsli:
+                                repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str((chrono))+'{'+varo[0]+'}'+'}'
                         elif varo[1][0] == 'endo' and int(varo[2][2]) == -1:
-                            repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
-                            repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str(abs(chrono))+'{'+varo[0]+'}'+'}'
+                            if stem+stem_time_new not in subsli:
+                                repldic[stem+stem_time_new] = 'BB_'+str(abs(chrono))+'{'+stem+stem_time+'}'
+                            if stem+varo[2][1]+stem_time_new not in subsli:
+                                repldic[stem+varo[2][1]+stem_time_new] = 'DIFF{'+stem+stem_time_new+','+'BB_'+str(abs(chrono))+'{'+varo[0]+'}'+'}'
         repldic_li.append(repldic)
     repldic_li.reverse()
     indexli = deepcopy(self.allsubs_index)
