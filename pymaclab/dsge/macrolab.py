@@ -367,9 +367,17 @@ class DSGEmodel(object):
         if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
         # ONLY NOW try to solve !
         ##### OPTION 1: There is only information externally provided and we are using FOCs
-        if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
-           not all([False if 'None' in x else True for x in secs['manualss'][0]]) and self._use_focs and self._ssidic != None:
+        if self._use_focs and self._ssidic != None:
+            if self._mesg: print "SS: Using FOCs and EXTERNALLY supplied information...attempting to solve SS..."
             self.sssolvers.fsolve.solve()
+            if self.sssolvers.fsolve.ier == 1:
+                self.sstate = deepcopy(self.sssolvers.fsolve.fsout)
+                self.switches['ss_suc'] = ['1','1']
+                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
+            else:
+                self.switches['ss_suc'] = ['1','0']
+                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."            
+            return
             
         ##### OPTION 2: There is only information provided in the numerical section NOT in closed-form
         if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
