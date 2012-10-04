@@ -67,6 +67,18 @@ try:
 except:
     print "IPython not detected but is fun to use with PyMacLab. Fetching now using pip..."
     os.system("pip install ipython==0.13")
+
+# Now check for pp and install if needed
+pp_version = False
+try:
+    import pp
+    pp_version = pp.version
+    if pp_version and pp_version != '1.6.2':
+        print "You should use PP version 1.6.2 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pp==1.6.2")
+except:
+    print "PP not detected but makes PyMacLab much faster. Fetching now using pip..."
+    os.system("pip install pp==1.6.2") 
 ##########################################################################
 # Done checking for dependencies
 ##########################################################################
@@ -188,8 +200,7 @@ if __name__ == '__main__':
     for elem in sys.path:
         if 'site-packages' in elem: pathos = os.path.join(elem.split('site-packages')[0],'site-packages','pymaclab')
     '''
-    # Install pp and sympycore, but first remove old stuff
-    # Delte old sympycore stuff
+    # Install sympycore, but first remove old stuff
     try:
         # We don't want to import the package in the current working directory!
         sys.path.pop(0)
@@ -203,34 +214,7 @@ if __name__ == '__main__':
                 shutil.rmtree(elem)
     except:
         pass
-    # Delete old pp stuff
-    try:
-        # We don't want to import the package in the current working directory!
-        sys.path.pop(0)
-        import pp as ppp
-        filo = ppp.__file__
-        nameos = ['pptransport.py','pptransport.pyc',
-                  'ppauto.py','ppauto.pyc',
-                  'ppcommon.py','ppcommon.pyc',
-                  'pp.py','pp.pyc',
-                  'ppworker.py','ppworker.pyc',
-                  'pp-*.egg-info']
-        diro = filo.split('pp.')[0]
-        for elem in nameos:
-            if '*' not in nameos:
-                if elem in os.listdir(diro):
-                    shutil.rmtree(os.path.join(diro,elem))
-            else:
-                globo = glob.glob(os.path.join(diro,elem))
-                for elem2 in globo:
-                    lasto = elem2.split(r'/')[-1]
-                    if lasto in os.listdir(elem2.split(lasto)[0]):
-                        shutil.rmtree(elem2)
-        shutil.rmtree(patho[0])
-    except:
-        pass
     
     # Now insert the current directory back in
     sys.path[0] = ''    
-    os.system("python setup_pp.py install")
     os.system("python setup_sympycore.py install")
