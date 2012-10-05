@@ -705,7 +705,7 @@ class DSGEmodel(object):
         # Make sure the jobserver has done his jobs
         jobserver.wait()        
             
-    def find_rss(self):
+    def find_rss(self,mesg=False,rootm='hybr',scale=0.0):
         '''
         The is a method which can be called to find the risky steady state
            
@@ -713,9 +713,9 @@ class DSGEmodel(object):
         :type self:      dsge_inst
 
         '''
+         
         varbar = []
-        for elem in self.vardic['exo']['var']:
-            varbar.append(elem[0].split('(')[0]+'_bar')
+        nexo = self.nexo
         for elem in self.vardic['endo']['var']:
             varbar.append(elem[0].split('(')[0]+'_bar')
         for elem in self.vardic['con']['var']:
@@ -738,8 +738,16 @@ class DSGEmodel(object):
         # Define the function to be handed over
         # to fsolve
         def func(invar):
+            '''
+            ####### Put in a trap in case number turn negative ########
+            negli = [True if x < 0.0 else False for x in invar]
+            if any(negli):
+                for i1,elem in enumerate(negli):
+                    invar[i1] = self.sstate[varbar[i1]]+0.01*self.sstate[varbar[i1]]
+            ###########################################################
+            '''
             # Update ss with passed values
-            for i1,elem in enumerate(varbar):
+            for i1,elem in enumerate(varbar):            
                 clone.sstate[elem] = invar[i1]
             # Update the model's derivatives, but only numerically
             clone.init5(update=True)
@@ -747,24 +755,28 @@ class DSGEmodel(object):
             clone.modsolvers.pyklein2d.solve()
             # Get retval into right shape
             KX = clone.modsolvers.pyklein2d.KX
-            retval = [float(x) for x in KX]
+            retval = [float(x) for x in KX[nexo:]]
             KY = clone.modsolvers.pyklein2d.KY
-            for elem in KY:
-                retval.append(float(elem))
+            retval+=[float(x) for x in KY]
             retval = np.array(retval)
+            if mesg:
+                print invar
+                print '------------------------------------'
             return retval
+
         
         # Define the initial values and
         # start the non-linear solver
-        init_val = deepcopy(np.array(sstate_li))
-        outobj = optimize.root(func,init_val,method='hybr')
+        init_val = np.array([float(self.sstate[varbar[i1]])+\
+                             (scale/100.0)*float(self.sstate[varbar[i1]]) for i1 in range(len(varbar))])
+        outobj = optimize.root(func,init_val,method=rootm)
         rss_funcval1 = outobj.fun
         output = outobj.x
         mesg = outobj.message
         ier = outobj.status
         
         self.rss_funcval1 = rss_funcval1
-        
+                
         # Check the difference and do bounded minimisation (root-finding)
         diff_dic = {}
         bounds_dic = {}
@@ -801,8 +813,7 @@ class DSGEmodel(object):
                 retval.append(float(elem))
             retval = np.array(retval)
             self.rss_funcval2 = retval
-            
-            
+             
         # Now attach final results to instance
         self.rsstate = deepcopy(self.sstate)
         self.rparamdic = deepcopy(self.paramdic)

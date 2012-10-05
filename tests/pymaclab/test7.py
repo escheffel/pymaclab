@@ -11,20 +11,13 @@ betta = 1.014
 bettaa = betta*(1+g)**(-tau)
 ssidic = {}
 
-# We cheat here and use values from the steady state which was already solved for
-ssidic['k_bar']     = 36.5                                                  #1
-ssidic['y_bar']     = 3.644                                                 #2
-ssidic['inv_bar']   = 1.089                                                 #3
-ssidic['c_bar']     = 2.555                                                 #4
-ssidic['mu_bar']    = 8.0                                                   #5
-ssidic['w_bar']     = 2.332                                                 #6
-ssidic['div_bar']   = 0.222                                                 #7
-ssidic['rf_bar']    = 1.011                                                 #8
-ssidic['r_bar']     = 1.011                                                 #9
-ssidic['eqp_bar']   = 0.0                                                   #10
+ssidic['k_bar']     = 30.0                                                  #1
+ssidic['inv_bar']   = 1.0                                                   #2
+ssidic['c_bar']     = 2.0                                                   #3
+ssidic['mu_bar']    = 8.0                                                   #4
 
 # Pick first 10 FOC equations to leave out exogenous law of motion
-focs = range(10)
+focs = range(4)
 
 # Instantiate a new DSGE model instance like so
 asset = pm.newMOD(models.stable.jermann98,mesg=True,use_focs=focs,ssidic=ssidic)

@@ -26,23 +26,16 @@ class dicwrap_queued:
         self.wrapobj = wrapobj
         self.initlev = initlev
         if wrapobj_str == 'self.vardic':
-            if 'vardic' not in dir(other.updaters):
-                self.wrapdic = deepcopy(other.vardic)
-            else:
-                self.wrapdic = other.updaters.vardic
+            self.wrapdic = deepcopy(other.vardic)
         elif wrapobj_str == 'self.nlsubsdic':
-            if 'nlsubsdic' not in dir(other.updaters):
-                self.wrapdic = other.nlsubsdic.copy()
-            else:
-                self.wrapdic = other.updaters.nlsubsdic
+            self.wrapdic = deepcopy(other.nlsubsdic)
         elif wrapobj_str == 'self.paramdic':
-            if 'paramdic' not in dir(other.updaters):
-                self.wrapdic = other.paramdic.copy()
-            else:
-                self.wrapdic = other.updaters.paramdic
+            self.wrapdic = deepcopy(other.paramdic)
             
+
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
+
 
     def __setitem__(self,key,value):
         other = self.other
@@ -55,7 +48,7 @@ class dicwrap_queued:
             self.wrapdic.update(wrapobj)
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
-                    other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
+                    other.nlsubs_raw1[i1][1] = deepcopy(wrapobj[other.nlsubs_raw1[i1][0]])
                 if 'self.nlsubsdic' not in self.queue: self.queue.append('self.nlsubsdic')
             elif wrapobj_str == 'self.paramdic':
                 if 'self.paramdic' not in self.queue: self.queue.append('self.paramdic')
@@ -385,17 +378,20 @@ class Process_Queue(object):
         ##### THE INITS #####################
         other.init1()
         if 'self.vardic' in queue:
-            other.vardic = deepcopy(self.vardic)
+            for keyo in self.vardic.keys():
+                other.vardic[keyo] = deepcopy(self.vardic[keyo])
 
         other.init1a()
         if 'self.nlsubsdic' in queue:
             for i1,elem in enumerate(other.nlsubs_raw1):
                 other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
-            other.nlsubsdic = self.nlsubsdic.copy()
+            for keyo in self.nlsubsdic.keys():
+                other.nlsubsdic[keyo] = self.nlsubsdic[keyo]
 
         other.init1b()
         if 'self.paramdic' in queue:
-            other.paramdic = self.paramdic.copy()
+            for keyo in self.paramdic.keys():
+                other.paramdic[keyo] = self.paramdic[keyo]
         
         other.init1c()
         if 'self.foceqs' in queue:

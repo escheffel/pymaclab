@@ -23,23 +23,16 @@ class dicwrap:
         self.wrapobj = wrapobj
         self.initlev = initlev
         if wrapobj_str == 'self.vardic':
-            if 'vardic' not in dir(other.updaters_queued):
-                self.wrapdic = deepcopy(other.vardic)
-            else:
-                self.wrapdic = other.updaters_queued.vardic
+            self.wrapdic = deepcopy(other.vardic)
         elif wrapobj_str == 'self.nlsubsdic':
-            if 'nlsubsdic' not in dir(other.updaters_queued):
-                self.wrapdic = other.nlsubsdic.copy()
-            else:
-                self.wrapdic = other.updaters_queued.nlsubsdic
+            self.wrapdic = deepcopy(other.nlsubsdic)
         elif wrapobj_str == 'self.paramdic':
-            if 'paramdic' not in dir(other.updaters_queued):
-                self.wrapdic = other.paramdic.copy()
-            else:
-                self.wrapdic = other.updaters_queued.paramdic
+            self.wrapdic = deepcopy(other.paramdic)
+            
 
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
+
 
     def __setitem__(self,key,value):
         other = self.other

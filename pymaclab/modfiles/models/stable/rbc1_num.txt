@@ -9,7 +9,7 @@ Name = Standard RBC Model, NUM-SS;
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 rho       = 0.36;
 delta     = 0.025;
-R_bar     = 1.01;
+betta     = 1.0/1.01;
 eta	  = 2.0; 
 psi	  = 0.95;
 z_bar     = 1.0;
@@ -67,7 +67,7 @@ None
 [1]   c_bar = 1.0;
 [2]   y_bar = 1.0;
 [2]   k_bar = 1.0;
-[3]   betta = 0.9;
+[3]   R_bar = 1.01;
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

@@ -23,37 +23,31 @@ sigma_eps  = 0.01;
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  k(t):capital{endo}[log,cf]
-[2]  mu(t):mwealth{con}[log,cf]
-[3]  c(t):consumption{con}[log,cf]
-[4]  y(t):output{con}[log,cf]
-[5]  w(t):rwage{con}[log,cf]
-[6]  inv(t):investment{con}[log,cf]
-[7]  div(t):dividend{con}[log,cf]
-[8]  rf(t):rfrate{con}[log,cf]
-[9]  r(t):frate{con}[log,cf]
-[10] eqp(t):eqpremium{con}[log,cf]
-[11] z(t):eps(t):productivity{exo}[log,cf]
+[1]   k(t):capital{endo}[log,cf]
+[3]   c(t):consumption{con}[log,cf]
+[4]   inv(t):investment{con}[log,cf]
+[5]   mu(t):mwealth{con}[log,cf]
+[5]   z(t):eps(t):productivity{exo}[log,cf]
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
 
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-# Utility function
-[1]   @U(t)        = (c(t)-chi*c(t-1))**(1-tau)/(1-tau);
-[2]   @MUcg(t)     = (c(t)-chi*(1+g)**(-1)*c(t-1))**(-tau)-betta*chi*((1+g)*E(t)|c(t+1)-chi*c(t))**(-tau);
+# Utility function derivative
+[1]   @MUcg(t)     = (c(t)-chi*(1+g)**(-1)*c(t-1))**(-tau)-bettaa*chi*((1+g)*E(t)|c(t+1)-chi*c(t))**(-tau);
 # Goods production function
-[3]   @F(t)        = z(t)*k(t-1)**alpha;
 [3]   @Fg(t)       = z(t)*(1+g)**(-alpha)*k(t-1)**alpha;
-[3]   @Fkg(t)      = alpha*z(t)*(1+g)**(1-alpha)*k(t-1)**(alpha-1);
-[4]   @Fkg(t+1)    = FF_1{@Fkg(t)};
+[4]   @Fkg(t)      = alpha*z(t)*(1+g)**(1-alpha)*k(t-1)**(alpha-1);
+[5]   @Fkg(t+1)    = FF_1{@Fkg(t)};
 # Investment adjustment cost function
-[5]   @IKC(t)      = a1/(1-1/xi)*(inv(t)/k(t-1))**(1-1/xi)+a2;
-[6]   @IKCa(t)     = a1*((1+g)*inv(t)/k(t-1))**(-1/xi);
-[6]   @IKCa(t+1)   = FF_1{@IKCa(t)};
-[7]   @IKCb(t)     = a1/(1-(1/xi))*((1+g)*inv(t)/k(t-1))**(1-(1/xi))+a2;
-[7]   @IKCb(t+1)   = FF_1{@IKCb(t)};
+[6]   @IKC(t)     = a1/(1-(1/xi))*((1+g)*inv(t)/k(t-1))**(1-(1/xi))+a2;
+[7]   @IKC(t+1)   = FF_1{@IKC(t)};
+[8]   @IKCa(t)    = a1*((1+g)*inv(t)/k(t-1))**(-1/xi);
+[9]   @IKCa(t+1)  = FF_1{@IKCa(t)};
+# Rates of return
+[10]  @rf(t)      = 1/(bettaa*(E(t)|mu(t+1)/mu(t)));
+[11]  @r(t)       = @IKCa(t)*(@Fkg(t+1)+(1+@IKC(t+1)-delta)/@IKCa(t+1)-(1+g)*(E(t)|inv(t+1)/k(t)));
 
 
 
@@ -62,25 +56,13 @@ None
 
 [1]   mu(t)-@MUcg(t) = 0;
 
-[2]   mu(t)-bettaa*E(t)|mu(t+1)*@IKCa(t)*(@Fkg(t+1)+(1+@IKCb(t+1)-delta)*(@IKCa(t+1))**(-1)-((1+g)*E(t)|inv(t+1)/k(t))) = 0;
+[2]   mu(t)-bettaa*E(t)|mu(t+1)*@r(t) = 0;
 
-[3]   y(t)-c(t)-inv(t) = 0;
+[3]   @Fg(t)-c(t)-inv(t) = 0;
 
-[4]   w(t)+div(t)-c(t) = 0;
+[4]   (1+g)*k(t)-(1+@IKC(t)-delta)*k(t-1) = 0
 
-[5]   y(t)-@Fg(t) = 0;
-
-[6]   div(t)-y(t)+w(t)+inv(t) = 0;
-
-[7]   (1+g)*k(t)-(1-delta)*k(t-1)-@IKCb(t)*k(t-1) = 0
-
-[8]   rf(t)-1/(bettaa*(E(t)|mu(t+1)/mu(t))) = 0;
-
-[9]   r(t)-@IKCa(t)*(@Fkg(t+1)+(1+(@IKCb(t+1)/@IKCa(t+1))-delta)-(1+g)*(E(t)|inv(t+1)/k(t))) = 0;
-
-[10]  eqp(t)-r(t)+rf(t) = 0;
-
-[11]  LOG(E(t)|z(t+1))-rho*LOG(z(t))-eps(t) = 0;
+[5]   LOG(E(t)|z(t+1))-rho*LOG(z(t))-eps(t) = 0;
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
