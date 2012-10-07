@@ -193,7 +193,7 @@ from __future__ import division
         
     # Collect info on numerical steady state
     if any([False if 'None' in x else True for x in secs['manualss'][0]]):
-        _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
+        _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
         _mreg2 = '\[\d+]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
         mreg = re.compile(_mreg+'|'+_mreg2)
         indx = []
@@ -204,12 +204,15 @@ from __future__ import division
         counter=0
         for x in secs['manualss'][0]:
             if mreg.search(x):
+                raw_str = x.replace(';','')
                 anyssi_found = True
-                ma = mreg.search(x)
-                if ']' in ma.group(): str1 = ma.group().split('=')[0].split(']')[1].strip()
-                else: str1 = ma.group().split('=')[0].lstrip().rstrip()
+                ma = mreg.search(raw_str)
+                if ']' in ma.group(): str1 = ma.group().replace(';','').split('=')[0].split(']')[1].strip()
+                else: str1 = ma.group().replace(';','').split('=')[0].lstrip().rstrip()
                 str2 = ma.group().split('=')[1].strip()
                 ssidic[str1] = eval(str2)
+                # Expose the evaluated values for recursive smart evaluation
+                locals()[str1] = eval(str2)
                 indx.append(i1)
             elif not mreg.search(x) and '...' in x:
                 counter = counter + 1
@@ -1594,7 +1597,6 @@ def premknonlinsys(self,secs):
     This takes the raw lines of the FOCs and does some joining, splitting and stripping
     '''
     # Make the non-linear system by joining lines and stripping
-    variables = deepcopy(self.subs_vars)
     list_tmp1 = []
     i1 = 0
     linecounter = 0
@@ -1648,31 +1650,33 @@ def mknonlinsys(self, secs):
     Create Non-Linear FOC System
     """
     list_tmp1 = deepcopy(self.foceqs2)
-    variables = deepcopy(self.subs_vars)
-    list_tmp2 = deepcopy(self.nlsubs_list)
-
     self, list_tmp1 = mkaug2(self, list_tmp1)
-    list_tmp3 = [x[1] for x in list_tmp2]
-    self, outtup = mkaug1(self, list_tmp3,list_tmp1)
 
-    list_tmp3 = outtup[1]
-    list_tmp1 = outtup[0]
-    for i1,x in enumerate(list_tmp3):
-        list_tmp2[i1][1] = list_tmp3[i1]
+    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        variables = deepcopy(self.subs_vars)
+        list_tmp2 = deepcopy(self.nlsubs_list)
+        
+        list_tmp3 = [x[1] for x in list_tmp2]
+        self, outtup = mkaug1(self, list_tmp3,list_tmp1)
 
-    self.nlsubs = dict(list_tmp2)
-    nlsubs2 = {}
-    for x in [x[0] for x in self.vardic['other']['var']]:
-        nlsubs2[x] = self.nlsubs['@'+x]
-    self.nlsubs2 = nlsubs2
+        list_tmp3 = outtup[1]
+        list_tmp1 = outtup[0]
+        for i1,x in enumerate(list_tmp3):
+            list_tmp2[i1][1] = list_tmp3[i1]
 
-    # Create ordered nlsubsys
-    if self.vardic['other']['var']:
-        nlsubsys = []
-        varother = self.vardic['other']['var']
-        for vari in [x[0] for x in varother]:
-            nlsubsys.append(nlsubs2[vari])
-        self.nlsubsys = nlsubsys
+        self.nlsubs = dict(list_tmp2)
+        nlsubs2 = {}
+        for x in [x[0] for x in self.vardic['other']['var']]:
+            nlsubs2[x] = self.nlsubs['@'+x]
+        self.nlsubs2 = nlsubs2
+
+        # Create ordered nlsubsys
+        if self.vardic['other']['var']:
+            nlsubsys = []
+            varother = self.vardic['other']['var']
+            for vari in [x[0] for x in varother]:
+                nlsubsys.append(nlsubs2[vari])
+            self.nlsubsys = nlsubsys
 
     # Count the number of distinct forward expectations
     # AND the no of equations that containt them
@@ -1849,6 +1853,9 @@ def mksigmat(self, secs):
     i1=0
     for x in list_tmp1:
         i2=0
+        # Just another trap, only to be sure...
+        if ']' in x: x = x.replace(']','')
+        if '[' in x: x = x.replace('[','')
         for y in x.split():
             mat1[i1,i2] = float(eval(y))
             i2=i2+1
@@ -2013,8 +2020,11 @@ def populate_model_stage_one_bb(self, secs):
         self = premknonlinsys(self,secs)
         # Save for template instantiation
         self.template_paramdic['focs_list'] = deepcopy(self.foceqs)
-        # This takes the stripped system and does @ replacements
-        self = premknonlinsys2(self,secs)
+        if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+            # This takes the stripped system and does @ replacements
+            self = premknonlinsys2(self,secs)
+        else:
+            self.foceqs2 = deepcopy(self.foceqs)
         # Also create a steady state version
         self = mk_steady2(self)
     else:

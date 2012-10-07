@@ -357,7 +357,8 @@ class Process_Queue(object):
         # The vardic
         self.vardic = other.updaters_queued.vardic
         # The nlsubsdic
-        self.nlsubsdic = other.updaters_queued.nlsubsdic
+        if 'nlsubsdic' in dir(other):
+            self.nlsubsdic = other.updaters_queued.nlsubsdic
         # The paramdic
         self.paramdic = other.updaters_queued.paramdic
         # The foceqs

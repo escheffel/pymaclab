@@ -246,13 +246,13 @@ class DSGEmodel(object):
         self = populate_model_stage_one_b(self,secs)
         
         # Wrap the nlsubsdic
-        self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
+        if 'nlsubsdic' in dir(self): self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
         # Wrap the paramdic
         self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
         
 
         # Wrap the nlsubsdic
-        self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
+        if 'nlsubsdic' in dir(self): self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
         # Wrap the paramdic
         self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
         
