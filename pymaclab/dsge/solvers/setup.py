@@ -13,6 +13,7 @@ def configuration(parent_package='',top_path=None):
                                        libraries=['lapack'],
                                        library_dirs=lapack['library_dirs'])
     elif platform.system() == 'Darwin':
+        lapack['library_dirs'] = ['/usr/lib']
         config.add_extension('isolab', sources=['src/isolab.pyf',
                                                 'src/solab.f90',
                                                 'src/isolab.f90'],

@@ -22,9 +22,10 @@ def populate_model_stage_one(self, secs):
     """
     1st stage population of DSGE model.  Does not need Steady State.
     """
+    
+    # This is a special dictionary which can be handed over to the template engines (i.e. Jinja2)
+    if 'template_paramdic' not in dir(self): self.template_paramdic = {}
 
-#    _nreg = '^\s*None\s*$'
-#    nreg = re.compile(_nreg)
 
     # Get all information from the varvec section
     if any([False if 'None' in x else True for x in secs['varvec'][0]]):
@@ -115,14 +116,26 @@ def populate_model_stage_one(self, secs):
         self.nall = self.nstat+self.ncon
         self.vardic = vardic
         self.audic = audic
+        # Save for template instantiation
+        self.template_paramdic['vardic'] = deepcopy(vardic)
+    else:
+        self.template_paramdic['vardic'] = False
 
     # Extract the model name and description
     if any([False if 'None' in x else True for x in secs['info'][0]]):
         for x in secs['info'][0]:
             if 'Name' in x:
                 self.mod_name = x.split('=')[1].replace(';','').strip()
+                # Save for template instantiation
+                self.template_paramdic['mod_name'] = deepcopy(self.mod_name)          
             if 'Desc' in x:
                 self.mod_desc = x.split('=')[1].replace(';','').strip()
+                # Save for template instantiation
+                self.template_paramdic['mod_desc'] = deepcopy(self.mod_desc)
+        if not self.template_paramdic.has_key('mod_name'):
+            self.template_paramdic['mod_name'] = False
+        if not self.template_paramdic.has_key('mod_desc'):
+            self.template_paramdic['mod_desc'] = False
 
     # Extract parameters into dictionary
     if any([False if 'None' in x else True for x in secs['params'][0]]):
@@ -133,6 +146,7 @@ def populate_model_stage_one(self, secs):
 from __future__ import division
 """
         for x in secs['params'][0]:
+            if ']' in x: x = x.split(']')[1].lstrip()
             list_tmp = x.split(';')
             list_tmp = list_tmp[0].split('=')[:]
             str_tmp1 = list_tmp[0].strip()
@@ -142,6 +156,10 @@ from __future__ import division
             exec(safe_div + "param['"+str_tmp1+"']=" + str_tmp2, {}, locals())
             locals()[str_tmp1] = param[str_tmp1]
         self.paramdic = param
+        # Save for template instantiation
+        self.template_paramdic['paramdic'] = deepcopy(param)
+    else:
+        self.template_paramdic['paramdic'] = False
 
     # Collect information on manual (closed-form) steady state
     if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
@@ -168,7 +186,11 @@ from __future__ import division
                     counter = 0 
             i1=i1+1
         self.manss_sys = list_tmp1
-
+        # Save for template instantiation
+        self.template_paramdic['manss_sys'] = deepcopy(list_tmp1)
+    else:
+        self.template_paramdic['manss_sys'] = False
+        
     # Collect info on numerical steady state
     if any([False if 'None' in x else True for x in secs['manualss'][0]]):
         _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
@@ -203,10 +225,21 @@ from __future__ import division
             i1=i1+1
         if anyssi_found:
             self.ssidic = ssidic
+            # Save for template instantiation
+            self.template_paramdic['ssidic'] = deepcopy(ssidic)            
         else:
             #Make empty to be filled by other procedure
             self.ssidic = {}
-        self.ssys_list = list_tmp
+            # Save for template instantiation
+            self.template_paramdic['ssidic'] = False         
+        self.ssys_list = list_tmp 
+        # Save for template instantiation
+        self.template_paramdic['ssys_list'] = deepcopy(list_tmp)
+    else:
+        # Save for template instantiation
+        self.template_paramdic['ssidic'] = False       
+        self.template_paramdic['ssys_list'] = False      
+        
 
     return self
 
@@ -730,6 +763,8 @@ def mk_subs_dic(self, secs):
     # This list is used to catch the @ALL instructions and store them
     list_tmp3 = []
     list_tmp3_ind = []
+    # A list which collects all elements, to be handed to the template_paramdic for template parsing
+    list_tmp4 = []
     i1=0
     linecounter=0
     for x in secs['vsfocs'][0]:
@@ -739,11 +774,16 @@ def mk_subs_dic(self, secs):
             if linecounter == 0:
                 ################# Catch @ALL expressions and store################
                 if "@ALL" in x:
-                    raw_str = x.split('@ALL')[1].split('{')[1].split('}')[0]
+                    intor = []
+                    intor1 = x.split('@ALL')[1].replace(';','')
+                    intor.append('@ALL')
+                    intor.append(intor1)
+                    list_tmp4.append(intor)
+                    raw_str = x.split(';')[0].split('@ALL')[1].split('{')[1].split('}')[0]
                     list_tmp3.append(raw_str.split(','))
                     list_tmp3_ind.append(i1)
                     continue
-                ##################################################################                
+                ##################################################################
                 line = x.replace(';','').split(']')[1].strip()
             elif linecounter > 0: # have a multiline equation
                 str_tmp = ''
@@ -751,21 +791,31 @@ def mk_subs_dic(self, secs):
                     str_tmp += y.replace('...','').replace(';','').replace('//','').strip()
                 ################# Catch @ALL expressions and store################
                 if "@ALL" in str_tmp:
+                    intor = []
+                    intor1 = x.split('@ALL')[1].replace(';','')
+                    intor.append('@ALL')
+                    intor.append(intor1)
+                    list_tmp4.append(intor)
                     raw_str = str_tmp.split('@ALL')[1].split('{')[1].split('}')[0]
                     list_tmp3.append(raw_str.split(','))
                     list_tmp3_ind.append(i1)
                     continue
                 ##################################################################
-                if ']' in str_tmp: line = str_tmp.split(']')[1].strip()
-                else: line = str_tmp.strip()
+                if ']' in str_tmp:
+                    line = str_tmp.split(']')[1].strip()
+                else:
+                    line = str_tmp.strip()
                 linecounter = 0 
         i1 += 1
         splitline = line.split('=')
+        list_tmp4.append([splitline[0].strip(), splitline[1].strip()])
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
     self.allsubs_raw1 = deepcopy(list_tmp3)
     self.allsubs_index = deepcopy(list_tmp3_ind)
     self.nlsubs_raw1 = deepcopy(list_tmp2)
     self.nlsubsdic = dict(list_tmp2)
+    if list_tmp4 != []: self.template_paramdic['subs_list'] = deepcopy(list_tmp4)
+    else: self.template_paramdic['subs_list'] = False
     return self
 
 def subs_in_subs_all(self):
@@ -1124,6 +1174,9 @@ def ext_differ_out(self):
     for kk1,elem in enumerate(list_tmp2):
         # Skip any line in which the steady state needs to be take before DIFF
         if list_tmp2[kk1][1][:4] == 'DIFF' and 'SS{' in list_tmp2[kk1][1]: continue
+        # Also skip cases such as @r_bar = DIFF{z_bar*k_bar**(rho)*l_bar**(1-rho),k_bar}
+        if list_tmp2[kk1][1][:4] == 'DIFF' and not self.vreg(patup,list_tmp2[kk1][1],True,'max') and\
+           "_bar" in list_tmp2[kk1][1].split(',')[1]: continue        
         if mreg.search(list_tmp2[kk1][1]):
             maoutli = mreg.finditer(list_tmp2[kk1][1])
             maoutli = [elem for elem in maoutli]
@@ -1236,15 +1289,59 @@ def differ_out(self):
             if mregsh.search(evalstr): break
             evalstr = evalstr.split(',')[0]
             time_vars = False
+            var_li = self.vreg(patup,evalstr,True,'max')
+            if var_li: time_vars = True
+            #########################################################
+            # Do for steady state expressions, as is very easy, CASE1
+            #########################################################
+            if '_bar' in evalstr and not time_vars and '_bar' in differo:
+                # Now substitute out exp and log in terms of sympycore expressions
+                elog = re.compile('LOG\(')
+                while elog.search(evalstr):
+                    ma = elog.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.log('+evalstr[poe:]
+                eexp = re.compile('EXP\(')
+                while eexp.search(evalstr):
+                    ma = eexp.search(evalstr)
+                    pos = ma.span()[0]
+                    poe = ma.span()[1]
+                    evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
+                # Now populate scope with sympy symbols
+                tmp_dic={}
+                for elem in var_bar:
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                tmp_dic = {}
+                for elem in self.paramdic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                # Also expose any variables from the ssidic, just in case
+                tmp_dic = {}
+                for elem in self.ssidic.keys():
+                    tmp_dic[elem] = SP.Symbol(elem)
+                locals().update(tmp_dic)
+                # Also expose the differo variable
+                locals()[differo] = SP.Symbol(differo)
+                # Population of scope done, now do calculation and continue in loop
+                expr_bar = eval(evalstr)
+                resstr = expr_bar.diff(locals()[str(differo)])
+                list_tmp2[kk1][1] = str(resstr)
+                continue
+            ##############################################################################
+            # Do for steady state expressions, as is very easy, CASE2, needs working varli
+            ##############################################################################
+            
+            ############## Generate varli only here, as it was not needed above (it was, but only for testing) ############### 
             try:
                 var_li = list(self.vreg(patup,evalstr,True,'max'))
                 if var_li: time_vars = True
             except:
                 print "Model parsing error, problem with processing this text string:\n"+"'"+list_tmp2[kk1][0]+" = "+list_tmp2[kk1][1]+"'."
                 sys.exit()
-            ##################################################
-            # Do for steady state expressions, as is very easy
-            ##################################################
+            ###################################################################################################################
+
             if '_bar' not in evalstr and not time_vars and '_bar' in differo:
                 # First replace all chronological variables in evalstr with _bar equivalents
                 varbar_li = deepcopy(var_li)
@@ -1286,41 +1383,6 @@ def differ_out(self):
                 resstr = expr_bar.diff(locals()[str(differo)])
                 list_tmp2[kk1][1] = str(resstr)
                 continue
-            elif '_bar' in evalstr and not time_vars and '_bar' in differo:
-                # Now substitute out exp and log in terms of sympycore expressions
-                elog = re.compile('LOG\(')
-                while elog.search(evalstr):
-                    ma = elog.search(evalstr)
-                    pos = ma.span()[0]
-                    poe = ma.span()[1]
-                    evalstr = evalstr[:pos]+'SP.log('+evalstr[poe:]
-                eexp = re.compile('EXP\(')
-                while eexp.search(evalstr):
-                    ma = eexp.search(evalstr)
-                    pos = ma.span()[0]
-                    poe = ma.span()[1]
-                    evalstr = evalstr[:pos]+'SP.exp('+evalstr[poe:]
-                # Now populate scope with sympy symbols
-                tmp_dic={}
-                for elem in var_bar:
-                    tmp_dic[elem] = SP.Symbol(elem)
-                locals().update(tmp_dic)
-                tmp_dic = {}
-                for elem in self.paramdic.keys():
-                    tmp_dic[elem] = SP.Symbol(elem)
-                locals().update(tmp_dic)
-                # Also expose any variables from the ssidic, just in case
-                tmp_dic = {}
-                for elem in self.ssidic.keys():
-                    tmp_dic[elem] = SP.Symbol(elem)
-                locals().update(tmp_dic)
-                # Also expose the differo variable
-                locals()[differo] = SP.Symbol(differo)
-                # Population of scope done, now do calculation and continue in loop
-                expr_bar = eval(evalstr)
-                resstr = expr_bar.diff(locals()[str(differo)])
-                list_tmp2[kk1][1] = str(resstr)
-                continue               
             ###################################################
             # Steady State branch ends here
             ###################################################
@@ -1903,7 +1965,8 @@ def populate_model_stage_one_a(self, secs):
     # Check and calculate the substitution list and dictionary
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
         # Create the raw nlsubs list 1
-        self = mk_subs_dic(self, secs)
+        self = mk_subs_dic(self, secs)       
+        
 
 # Extra population stage factored out, which is needed before steady state calculations
 def populate_model_stage_one_b(self, secs):
@@ -1948,10 +2011,16 @@ def populate_model_stage_one_bb(self, secs):
     # Prepare the nonlinear FOC system but only stripping the raw format
     if any([False if 'None' in x else True for x in secs['focs'][0]]):
         self = premknonlinsys(self,secs)
+        # Save for template instantiation
+        self.template_paramdic['focs_list'] = deepcopy(self.foceqs)
         # This takes the stripped system and does @ replacements
         self = premknonlinsys2(self,secs)
         # Also create a steady state version
         self = mk_steady2(self)
+    else:
+        # Save for template instantiation
+        self.template_paramdic['focs_list'] = None
+        
     return self
 
 
@@ -1967,12 +2036,22 @@ def populate_model_stage_two(self, secs):
     if any([False if 'None' in x else True for x in secs['modeq'][0]]):
         llsys_list = mkloglinsys1(secs)
         self.llsys_list = mkloglinsys2(llsys_list)
+        # Save for template instantiation
+        self.template_paramdic['llsys_list'] = deepcopy(self.llsys_list)
         self = mksymsys(self) # creates symbolic and numerical system
         self = mkeqtype(self) # creates variance/covariance
+    else:
+        # Save for template instantiation
+        self.template_paramdic['llsys_list'] = False
 
     # Creates variance/covariance
     if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
        'sstate' in dir(self):
         self.sigma = mksigmat(self, secs)
+        # Save for template instantiation
+        self.template_paramdic['sigma'] = deepcopy(self.sigma)
+    else:
+        # Save for template instantiation
+        self.template_paramdic['sigma'] = False
 
     return self

@@ -1770,13 +1770,15 @@ class DSGEmodel(object):
             self.numj = numjs
             self.numjl = numjl
 
-            numhs = numh[:-lsubs*jcols,:]
-            numhl = numh[-lsubs*jcols:,:]
-            self.numhl = numhl
-            self.numh = numhs
+            if mk_hessian:
+                numhs = numh[:-lsubs*jcols,:]
+                numhl = numh[-lsubs*jcols:,:]
+                self.numhl = numhl
+                self.numh = numhs
         else:
             self.numj = numj
-            self.numh = numh
+            if mk_hessian:
+                self.numh = numh
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
@@ -2304,14 +2306,16 @@ class DSGEmodel(object):
             numjl = numj[-lsubs:,:]
             self.numj = numjs
             self.numjl = numjl
-
-            numhs = numh[:-lsubs*jcols,:]
-            numhl = numh[-lsubs*jcols:,:]
-            self.numhl = numhl
-            self.numh = numhs
+            
+            if mk_hessian:
+                numhs = numh[:-lsubs*jcols,:]
+                numhl = numh[-lsubs*jcols:,:]
+                self.numhl = numhl
+                self.numh = numhs
         else:
             self.numj = numj
-            self.numh = numh
+            if mk_hessian:
+                self.numh = numh
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]       

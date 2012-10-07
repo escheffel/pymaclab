@@ -24,9 +24,9 @@ sigma_eps  = 0.01;
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   k(t):capital{endo}[log,cf]
-[3]   c(t):consumption{con}[log,cf]
-[4]   inv(t):investment{con}[log,cf]
-[5]   mu(t):mwealth{con}[log,cf]
+[2]   c(t):consumption{con}[log,cf]
+[3]   inv(t):investment{con}[log,cf]
+[4]   mu(t):mwealth{con}[log,cf]
 [5]   z(t):eps(t):productivity{exo}[log,cf]
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -60,7 +60,7 @@ None
 
 [3]   @Fg(t)-c(t)-inv(t) = 0;
 
-[4]   (1+g)*k(t)-(1+@IKC(t)-delta)*k(t-1) = 0
+[4]   (1+g)*k(t)-(1+@IKC(t)-delta)*k(t-1) = 0;
 
 [5]   LOG(E(t)|z(t+1))-rho*LOG(z(t))-eps(t) = 0;
 

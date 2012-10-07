@@ -103,7 +103,8 @@ class Fsolve(SSsolvers):
                     poe = ma.span()[1]
                     list_tmp1[i1] = list_tmp1[i1][:pos]+'invar['+str(subdic[var][2])+']'+list_tmp1[i1][poe:]
         func_repr = list_tmp1
-        self.ssm_alt = func_repr
+        self.subdic = copy.deepcopy(subdic)
+        self.ssm_alt = copy.deepcopy(func_repr)
 
         # Define the function to be handed over
         # to fsolve
@@ -142,14 +143,12 @@ class Fsolve(SSsolvers):
 
         # Accomodate unconstrained and constrained optimisation
         if bounds_dic == None:
-            outobj =\
-                optimize.root(func,init_val,method='hybr')
+            outobj = optimize.root(func,init_val,method='hybr')
             output = outobj.x
             mesg = outobj.message
             ier = outobj.status
         else:
-            outobj =\
-                optimize.minimize(func,init_val,method='L-BFGS-B',bounds=blist)
+            outobj = optimize.minimize(func,init_val,method='L-BFGS-B',bounds=blist)
             output = outobj.x
             mesg = outobj.message
             ier = outobj.status

@@ -37,12 +37,12 @@ matplotlib_version = False
 try:
     import matplotlib
     matplotlib_version = matplotlib.__version__
-    if matplotlib_version and matplotlib_version != '1.0.1':
-        print "You need Matplotlib version 1.0.1 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install matplotlib==1.0.1") 
+    if matplotlib_version and matplotlib_version != '1.1.0':
+        print "You need Matplotlib version 1.1.0 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install matplotlib==1.1.0") 
 except:
     print "Matplotlib not detected. Fetching now using pip..."
-    os.system("pip install matplotlib==1.0.1")
+    os.system("pip install matplotlib==1.1.0")
 
 # Now check for pandas and install if needed
 pandas_version = False

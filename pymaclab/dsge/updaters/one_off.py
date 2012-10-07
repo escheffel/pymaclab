@@ -39,30 +39,42 @@ class dicwrap:
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
         wrapobj = self.wrapobj
+        mesg = other._mesg
+        # ...and assign before test of inequality
+        old_value = deepcopy(wrapobj[key])
         wrapobj[key] = value
         # Test if the dictionary has changed relative to self.wrapdic
         if self.wrapdic != wrapobj:
-            queue1 = deepcopy(other.updaters_queued.queue)
-            self.wrapdic.update(wrapobj)
-            queue2 = deepcopy(other.updaters_queued.queue)            
+            if mesg:
+                print "You have UPDATED in object "+wrapobj_str+"['"+key+"']:"
+                print str(old_value)+' --> '+str(value)           
             ##### THE INITS #####################
             other.init1()
-            # Remove from queue
-            if queue1 != queue2:
-                for elem in queue2:
-                    if elem not in queue1: other.updaters_queued.queue.remove(elem)
+
+            ######## Copy correct values into the model instance ########
+            if wrapobj_str == 'self.paramdic':
+                for keyo in wrapobj.keys():
+                    other.paramdic[keyo] = deepcopy(wrapobj[keyo])
+            elif wrapobj_str == 'self.nlsubsdic':
+                for keyo in wrapobj.keys():
+                    other.nlsubsdic[keyo] = deepcopy(wrapobj[keyo])
+            elif wrapobj_str == 'self.vardic':
+                for keyo in wrapobj.keys():
+                    other.vardic[keyo] = deepcopy(wrapobj[keyo])
+            ##############################################################
+                    
             if wrapobj_str == 'self.vardic':
-                wrapobj.update(self.wrapdic)
+                other.vardic.update(wrapobj)
 
             other.init1a()
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = self.wrapdic[other.nlsubs_raw1[i1][0]]
-                other.nlsubsdic.update(self.wrapdic)
+                other.nlsubsdic.update(wrapobj)
 
             other.init1b()
             if wrapobj_str == 'self.paramdic':
-                other.paramdic.update(self.wrapdic)
+                other.paramdic.update(wrapobj)
             
             other.init1c()
 
@@ -102,18 +114,31 @@ class dicwrap:
             self.wrapdic.update(wrapobj)
             ##### THE INITS #####################
             other.init1()
+            
+            ######## Copy correct values into the model instance ########
+            if wrapobj_str == 'self.paramdic':
+                for keyo in wrapobj.keys():
+                    other.paramdic[keyo] = deepcopy(wrapobj[keyo])
+            elif wrapobj_str == 'self.nlsubsdic':
+                for keyo in wrapobj.keys():
+                    other.nlsubsdic[keyo] = deepcopy(wrapobj[keyo])
+            elif wrapobj_str == 'self.vardic':
+                for keyo in wrapobj.keys():
+                    other.vardic[keyo] = deepcopy(wrapobj[keyo])                
+            ##############################################################            
+            
             if wrapobj_str == 'self.vardic':
-                other.vardic = deepcopy(self.wrapdic)
+                other.vardic = deepcopy(wrapobj)
 
             other.init1a()
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = self.wrapdic[other.nlsubs_raw1[i1][0]]
-                other.nlsubsdic.update(self.wrapdic)
+                other.nlsubsdic.update(wrapobj)
 
             other.init1b()
             if wrapobj_str == 'self.paramdic':
-                other.paramdic.update(self.wrapdic)
+                other.paramdic.update(wrapobj)
             
             other.init1c()
 
@@ -162,6 +187,8 @@ class listwrapk:
         if self.wrapli[ind1:ind2] != into:
             self.wrapli[ind1:ind2] = into
             wrapobj[ind1:ind2] = into
+            other.vardic.update(other.updaters.vardic)
+            other.updaters.vardic.wrapobj.update(other.updaters.vardic)            
             
             other.init1a()
         
@@ -198,6 +225,8 @@ class listwrapk:
         if self.wrapli[ind] != into:
             self.wrapli[ind] = into
             wrapobj[ind] = into
+            other.vardic.update(other.updaters.vardic)
+            other.updaters.vardic.wrapobj.update(other.updaters.vardic)
             
             other.init1a()
             
@@ -256,6 +285,7 @@ class dicwrapk:
             ##### THE INITS #####################
             #other.init1()
             other.vardic.upate(self.wrapdic)
+            other.updaters.vardic.wrapobj.update(self.wrapdic)            
 
             other.init1a()
 
@@ -299,6 +329,7 @@ class dicwrapk:
             ##### THE INITS #####################
             #other.init1()
             other.vardic = deepcopy(self.wrapdic)
+            other.updaters.vardic.wrapobj.update(self.wrapdic)            
 
             other.init1a()
 
@@ -358,7 +389,7 @@ class dicwrap_deep:
             ##### THE INITS #####################
             #other.init1()
             if wrapobj_str == 'self.vardic':
-                other.paramdic.upate(self.wrapdic)
+                other.vardic.upate(wrapobj)
 
             other.init1a()
             if wrapobj_str == 'self.nlsubsdic':
@@ -401,7 +432,7 @@ class dicwrap_deep:
             ##### THE INITS #####################
             #other.init1()
             if wrapobj_str == 'self.vardic':
-                other.paramdic.upate(self.wrapdic)
+                other.vardic.upate(self.wrapdic)
 
             other.init1a()
 

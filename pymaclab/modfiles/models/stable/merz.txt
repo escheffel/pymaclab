@@ -47,7 +47,7 @@ None
 %Variable Substitution Non-Linear System+++++++++++++
 # The utility function and its derivatives
 [1]   @MU(t)     = LOG(c(t))+em(t-1)**(1-1/ups)/(1-1/ups);
-[2]   @ALL{@MU(t),[0-1],SS}
+[2]   @ALL{@MU(t),[0-1],SS};
 # The matching function and its derivatives
 [3]   @MA(t)     = va(t)**(1-lambdar)*(si(t)*(1-em(t-1)))**lambdar;
 [3]   @MA_bar    = SS{@MA(t)};

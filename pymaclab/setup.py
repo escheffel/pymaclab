@@ -9,6 +9,7 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('stats')
     config.add_subpackage('dattrans')
     config.add_subpackage('linalg')
+    config.add_subpackage('tests')
     config.add_data_dir('modfiles')
     return config
 

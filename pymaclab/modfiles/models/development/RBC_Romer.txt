@@ -1,0 +1,131 @@
+%Model Description++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Standard RBC model taken from Chapter 5 of Advanced Macroeconommics by David
+Romer.
+
+The model is able to replicate a key stylised fact of business cycles, namely 
+the relative volatilities of consumption, output, and investment. Over the 
+business cycle investment tends to be far more volatile than output, and output 
+tends to be more volatile than consumption and this model is able to replicate 
+this feature of the data.  However, the only reason the model is able to match 
+this key feature of the data is because the exogenous productivity (and 
+government spending shocks) are assumed to be highly persistent.  Such large and
+persistent shocks to productivity/technology are hard to identify in the data.
+ 
+Model suffers from other issues common to RBC models, for examples the model has
+no room for involuntary unemployment.  In this model, workers  choose to be 
+unemployed (or under employed!): workers optimally adjust their labor supply 
+across time in response to changes in the real wage (which in turn are driven by
+exogenous productivity/technology shocks).      
+
+Note that there are two sources of growth in Romer's RBC: technology growth and 
+population growth. Thus we will need to detrend variables accordingly in order 
+to have a stationary model.  Below I work with per effective worker variables 
+unless otherwise noted.
+
+%Model Information++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Romer's RBC model;
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Definition of exogenous parameters of this RBC are as follows:
+
+# discount rate
+rho = 0.01;
+
+# weight (relative to consumption) that worker places on utility from leisure
+b = 2.5;
+
+# Household size (normalized to unity)
+H = 1;
+
+# growth rate of technology
+g = 0.005;
+
+# population growth rate 
+n = 0.0025; 
+
+# rate of capital depreciation
+delta = 0.025; 
+
+# capital's  share of output
+alpha = 1 / 3;
+
+# government spending per effective worker is chosen so that in SS government
+# spending roughly is 20% of output (which matches U.S. data)
+gov = 0.5774;
+
+# persistence of technology shocks
+rho_A = 0.95;
+
+# pesistence of government spending shocks
+rho_G = 0.95;
+
+# standard deviation of technology shocks
+sigma_A = 0.011;
+
+# standard deviation of government spending shocks
+sigma_G = 0.011;
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Per capita consumption, c, and labor_supply, l, are the control variables; the
+# two exogenous variables are technology, A, and government spending, G.  Both
+# are driven by AR(1) processes z_A and z_G, respectively. 
+
+[1] Y(t):output{endo}[log,hp]
+[2] K(t):physical_capital{endo}[log,hp]
+[3] l(t):labor{con}[log,hp]
+[4] c(t):consumption{con}[log,hp]
+[5] I(t):investment{endo}[log,hp]
+[6] W(t):real_wage{endo}[log,hp]
+[7] R(t):gross_interest_rate[log,hp]
+[8] A(t):technology{exo}[log]
+[9] G(t):gov_spending{exo}[log]
+[10] z_A(t):eps_A(t):tech_shocks{exo}[log,hp]
+[11] z_G(t):eps_G(t):gov_shocks{exo}[log,hp]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++
+# Following Romer, I work with per effective worker variables.
+
+[1] @y(t)   = Y(t) / (A(t) * L(t));
+[2] @k(t)   = K(t) / (A(t) * L(t));
+[3] @i(t)   = I(t) / (A(t) * L(t));
+[4] @w(t)   = W(t) / A(t);
+[5] @g(t)   = G(t) / (A(t) * L(t));
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++
+[1] EXP(n + g) * @k(t) - ((1 - delta) * @k(t-1) + @i(t)) = 0;
+[2] @y(t) - (c(t) + @i(t) + @g(t)) = 0;
+[3] @y(t) - @k(t-1)**alpha = 0;
+[4] @w(t) - (1 - alpha) * @k(t-1)**alpha = 0;
+[5] R(t) - (alpha * @k(t-1)**(alpha - 1) + (1 - delta)) = 0;
+[6] (1 / c(t)) - EXP(-(rho + g)) * (1 / c(t+1)) * R(t+1) = 0;
+[7] b * c(t) * l(t) - (1 - l(t)) * @w(t) = 0;
+[8] A(t) - EXP(g + z_A(t)) * A(t-1) = 0;
+[9] G(t) - EXP(n + g + z_G(t)) * G(t-1) = 0;
+[10] E(t)|z_A(t+1) - rho_A * z_A(t) = 0;
+[11] E(t)|z_G(t+1) - rho_G * z_G(t) = 0;
+
+%Steady States [Closed form]++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1] z_A_bar = 1.0;
+[2] z_G_bar = 1.0;
+[3] g_bar = gov;
+
+%Steady States [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1] EXP(n + g) * k_bar - ((1 - delta) * k_bar + i_bar) = 0;
+[2] y_bar - (c_bar + i_bar + g_bar) = 0;
+[3] y_bar - k_bar**alpha = 0;
+[4] w_bar - (1 - alpha) * k_bar**alpha = 0;
+[5] R_bar - (alpha * k_bar**(alpha - 1) + (1 - delta)) = 0;
+[6] (1 / c_bar) - EXP(-(rho + g)) * (1 / c_bar) * R_bar = 0;
+[7] b * c_bar * l_bar - (1 - l_bar) * w_bar = 0;
+
+%Log-Linearized Model Equations+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+%Variance-Covariance Matrix+++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_A**2    0;
+         0    sigma_G**2]; 
+
+%End Of Model File++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

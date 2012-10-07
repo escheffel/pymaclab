@@ -19,6 +19,7 @@ from stats import favar
 import linalg
 import sys
 import pp
+import nose
 
 # Expose the version number into library root
 from version import version as __version__
@@ -286,6 +287,9 @@ def texedit(model):
 
 def explain(model):
 	model.pdf()
+	
+def test():
+	nose.run(defaultTest='pymaclab.tests')
 
 
 # Import this late because cascading imports need newMOD() function

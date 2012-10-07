@@ -42,9 +42,15 @@ class dicwrap_queued:
         initlev = self.initlev
         wrapobj_str = self.wrapobj_str
         wrapobj = self.wrapobj
+        mesg = other._mesg
         # ...and assign before test of inequality
+        old_value = deepcopy(wrapobj[key])
         wrapobj[key] = value
         if self.wrapdic != wrapobj:
+            if mesg:
+                print "You have UPDATED in object "+wrapobj_str+"['"+key+"']:"
+                print str(old_value)+' --> '+str(value)
+            # Update the wrapdic to be identical with wrapobj
             self.wrapdic.update(wrapobj)
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
@@ -358,18 +364,19 @@ class Process_Queue(object):
         self.foceqs = other.updaters_queued.foceqs
         # The manss_sys
         if 'manss_sys' in dir(other.updaters_queued):
-            self.manss_sys = other.updaters_queued.manss_sys
+            self.manss_sys = deepcopy(other.updaters_queued.manss_sys)
         # The ssys_list
         if 'ssys_list' in dir(other.updaters_queued):
-            self.ssys_list = other.updaters_queued.ssys_list
+            self.ssys_list = deepcopy(other.updaters_queued.ssys_list)
         # The sigma
-        self.sigma = other.updaters_queued.sigma
+        self.sigma = deepcopy(other.updaters_queued.sigma)
         
     def __call__(self):
         queue = self.queue
         other = self.other
         initlev = self.initlev
         mesg = other._mesg
+        
         if mesg:
             print "You have UPDATED the following items which are now PROCESSED:"
             for elem in queue:
@@ -377,21 +384,32 @@ class Process_Queue(object):
             print '================================================================'
         ##### THE INITS #####################
         other.init1()
+        ######## Copy correct values into the model instance ########
+        if 'self.paramdic' in queue:
+            for keyo in self.paramdic.keys():
+                other.paramdic[keyo] = deepcopy(self.paramdic[keyo])               
+        if 'self.nlsubsdic' in queue:
+            for keyo in self.nlsubsdic.keys():
+                other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
         if 'self.vardic' in queue:
             for keyo in self.vardic.keys():
-                other.vardic[keyo] = deepcopy(self.vardic[keyo])
+                other.vardic[keyo] = deepcopy(self.vardic[keyo])                
+        ##############################################################
+            
+        if 'self.vardic' in queue:
+            other.vardic = deepcopy(self.vardic)
 
         other.init1a()
         if 'self.nlsubsdic' in queue:
             for i1,elem in enumerate(other.nlsubs_raw1):
                 other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
             for keyo in self.nlsubsdic.keys():
-                other.nlsubsdic[keyo] = self.nlsubsdic[keyo]
+                other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
 
         other.init1b()
         if 'self.paramdic' in queue:
             for keyo in self.paramdic.keys():
-                other.paramdic[keyo] = self.paramdic[keyo]
+                other.paramdic[keyo] = deepcopy(self.paramdic[keyo])
         
         other.init1c()
         if 'self.foceqs' in queue:
@@ -418,6 +436,5 @@ class Process_Queue(object):
         # Solve model dynamically            
         other.init5()
         if initlev == 2:
-            other.init_out()
-            
+            other.init_out() 
         return
