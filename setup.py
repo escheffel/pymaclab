@@ -68,6 +68,7 @@ except:
     print "IPython not detected but is fun to use with PyMacLab. Fetching now using pip..."
     os.system("pip install ipython==0.13")
 
+'''
 # Now check for pp and install if needed
 pp_version = False
 try:
@@ -78,7 +79,15 @@ try:
         os.system("pip install pp==1.6.2")
 except:
     print "PP not detected but makes PyMacLab much faster. Fetching now using pip..."
-    os.system("pip install pp==1.6.2") 
+    os.system("pip install pp==1.6.2")
+'''
+
+# Now check for wheezy.template and install if needed, but cannot check version so just install any latest
+try:
+    import wheezy.template
+except:
+    print "Wheezy.template not detected but used in PyMacLab. Fetching now using pip..."
+    os.system("pip install wheezy.template")
 ##########################################################################
 # Done checking for dependencies
 ##########################################################################
@@ -200,7 +209,8 @@ if __name__ == '__main__':
     for elem in sys.path:
         if 'site-packages' in elem: pathos = os.path.join(elem.split('site-packages')[0],'site-packages','pymaclab')
     '''
-    # Install sympycore, but first remove old stuff
+    # Install pp and sympycore, but first remove old stuff
+    # Delete old sympycore stuff
     try:
         # We don't want to import the package in the current working directory!
         sys.path.pop(0)
@@ -214,7 +224,35 @@ if __name__ == '__main__':
                 shutil.rmtree(elem)
     except:
         pass
+    # Delete old pp stuff
+    try:
+        # We don't want to import the package in the current working directory!
+        sys.path.pop(0)
+        import pp as ppp
+        filo = ppp.__file__
+        nameos = ['pptransport.py','pptransport.pyc',
+                  'ppauto.py','ppauto.pyc',
+                  'ppcommon.py','ppcommon.pyc',
+                  'pp.py','pp.pyc',
+                  'ppworker.py','ppworker.pyc',
+                  'pp-*.egg-info']
+        diro = filo.split('pp.')[0]
+        for elem in nameos:
+            if '*' not in nameos:
+                if elem in os.listdir(diro):
+                    shutil.rmtree(os.path.join(diro,elem))
+            else:
+                globo = glob.glob(os.path.join(diro,elem))
+                for elem2 in globo:
+                    lasto = elem2.split(r'/')[-1]
+                    if lasto in os.listdir(elem2.split(lasto)[0]):
+                        shutil.rmtree(elem2)
+        shutil.rmtree(patho[0])
+    except:
+        pass
     
     # Now insert the current directory back in
     sys.path[0] = ''    
+    os.system("python setup_pp.py install")
     os.system("python setup_sympycore.py install")
+    

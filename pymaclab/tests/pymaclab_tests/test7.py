@@ -28,6 +28,6 @@ def test7():
     focs = range(4)
 
     # Instantiate a new DSGE model instance like so
-    asset = pm.newMOD(models.stable.jermann98,mesg=True,use_focs=focs,ssidic=ssidic)
+    asset = pm.newMOD(models.stable.jermann98_ext,mesg=True,use_focs=focs,ssidic=ssidic)
     
     return asset

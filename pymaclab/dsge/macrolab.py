@@ -111,6 +111,8 @@ class DSGEmodel(object):
     :type use_focs:           tuple
     :param ssidic:            A Python ssidic with the initial starting values for solving for the SS numerically
     :type ssidic:             dic
+    :param sstate:            A Python ssidic with the externally computed steady state values of the model
+    :type sstate:             dic
         
     :return self:             *(dsge_inst)* - A populated DSGE model instance with fields and methods
 
@@ -121,9 +123,11 @@ class DSGEmodel(object):
     jobserver = pp.Server(ppservers=ppservers)
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
-                 use_focs=False,ssidic=None):
+                 use_focs=False,ssidic=None,sstate=None):
         # Make sure the jobserver has done his global jobs each time you instantiate a new instance
         jobserver.wait()
+        if sstate != None:
+            self._sstate = deepcopy(sstate)
         self._initlev = initlev #TODO: remove this as an option
         self._mesg = mesg
         self._ncpus = ncpus
@@ -349,14 +353,16 @@ class DSGEmodel(object):
         
         .. note::
         
-           There are 5 different ways a DSGE model can obtain its steady state solution depending on what information has
+           There are 7 different ways a DSGE model can obtain its steady state solution depending on what information has
            been provided:
            
-             1) Information has been provided using the "use_focs" parameter to use FOCs directly
-             2) Information has only been provided in the numerical SS section
-             3) Information has only been provided in the closed form SS section
-             4) Both CF-SS and NUM-SS info are present and NUM-SS is subset if CF-SS
-             5) Both CF-SS and NUM-SS info are present and CF is residual
+             1) The steady state values dictionary has been passed as argument, then init3() will NEVER be called
+             2) Information has been provided using the "use_focs" parameter to use FOCs directly, externally passed using use_focs
+             3) Information has been provided using the "use_focs" parameter to use FOCs directly, but inside model file
+             4) Information has only been provided in the numerical SS section
+             5) Information has only been provided in the closed form SS section
+             6) Both CF-SS and NUM-SS info are present and NUM-SS is subset if CF-SS
+             7) Both CF-SS and NUM-SS info are present and CF is residual
              
            These options are better explained in the documentation to PyMacLab in the steady state solver section.
            
@@ -372,11 +378,12 @@ class DSGEmodel(object):
         # ONLY NOW try to solve !
         ##### OPTION 1: There is only information externally provided and we are using FOCs
         if self._use_focs and self._ssidic != None:
-            if 'internal_focs_used' not in dir(self):
+            if '_internal_focs_used' not in dir(self):
                 if self._mesg: print "SS: Using FOCs and EXTERNALLY supplied information...attempting to solve SS..."
             else:
+                ##### OPTION 1b: There is only information internally provided and we are using FOCs
                 if self._mesg: print "SS: Using FOCs and INTERNALLY supplied information...attempting to solve SS..."
-                del self.internal_focs_used
+                del self._internal_focs_used
             self.sssolvers.fsolve.solve()
             if self.sssolvers.fsolve.ier == 1:
                 self.sstate = deepcopy(self.sssolvers.fsolve.fsout)

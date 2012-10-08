@@ -28,7 +28,7 @@ def populate_model_stage_one(self, secs):
 
 
     # Get all information from the varvec section
-    if any([False if 'None' in x else True for x in secs['varvec'][0]]):
+    if all([False if 'None' in x else True for x in secs['varvec'][0]]):
         # match something like [1]  z(t):eps_z(t):techshock{exo}[log,hp]
         vtexp =  re.compile('^.*?\[.*?\]\s*(?P<vari>.+?)\s*:\s*(?P<varn>.+?)\s*\{(?P<vtype>[^\[]+)}\s*(?P<mod>\[.*?\]){0,1}')
         # match something like [15] x2(t):wrec2{con}[log,hp] OR [1] z(t):eps_z(t):techshock{exo}[log,hp]
@@ -122,7 +122,7 @@ def populate_model_stage_one(self, secs):
         self.template_paramdic['vardic'] = False
 
     # Extract the model name and description
-    if any([False if 'None' in x else True for x in secs['info'][0]]):
+    if all([False if 'None' in x else True for x in secs['info'][0]]):
         for x in secs['info'][0]:
             if 'Name' in x:
                 self.mod_name = x.split('=')[1].replace(';','').strip()
@@ -138,7 +138,7 @@ def populate_model_stage_one(self, secs):
             self.template_paramdic['mod_desc'] = False
 
     # Extract parameters into dictionary
-    if any([False if 'None' in x else True for x in secs['params'][0]]):
+    if all([False if 'None' in x else True for x in secs['params'][0]]):
         param = {}
         # need to do this so users don't have to worry about integer division
         # but preserves integer division for sympycore stuff
@@ -162,7 +162,7 @@ from __future__ import division
         self.template_paramdic['paramdic'] = False
 
     # Collect information on manual (closed-form) steady state
-    if any([False if 'None' in x else True for x in secs['closedformss'][0]]):
+    if all([False if 'None' in x else True for x in secs['closedformss'][0]]):
         # Join multiline steady state definitions
         mansys = secs['closedformss'][0]
         list_tmp1 = []
@@ -192,9 +192,10 @@ from __future__ import division
         self.template_paramdic['manss_sys'] = False
         
     # Collect info on numerical steady state
-    if any([False if 'None' in x else True for x in secs['manualss'][0]]):
-        _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
-        _mreg2 = '\[\d+]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
+    if all([False if 'None' in x else True for x in secs['manualss'][0]]):
+        _mreg_alt = '^\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
+        _mreg = '\[\d+\]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
+        _mreg2 = '\[\d+\]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
         _mregfocs = 'USE_FOCS=\[.*?\]'
         mregfocs = re.compile(_mregfocs)
         use_focs = False
@@ -202,8 +203,8 @@ from __future__ import division
             if mregfocs.search(lino):
                 # Save as the list of equations the be used
                 use_focs = eval(lino.split('=')[1].replace(';','').strip())
-                self.internal_focs_used = True
-        mreg = re.compile(_mreg+'|'+_mreg2)
+                self._internal_focs_used = True
+        mreg = re.compile(_mreg_alt+'|'+_mreg+'|'+_mreg2)
         indx = []
         ssidic={}
         list_tmp = []
@@ -227,16 +228,18 @@ from __future__ import division
                 counter = counter + 1
             elif not mreg.search(x) and '...' not in x:
                 if counter == 0:
-                    list_tmp.append(x.replace(';','').split(']')[1].split('=')[0].strip())
+                    if ']' in x: list_tmp.append(x.replace(';','').split(']')[1].split('=')[0].strip())
+                    else: list_tmp.append(x.replace(';','').split('=')[0].strip())
                 elif counter > 0:
                     str_tmp = ''
                     for y in secs['manualss'][0][i1-counter:i1+1]:
                         str_tmp = str_tmp + y.replace('...','').strip()
-                    list_tmp.append(str_tmp.split(']')[1].split('=')[0].replace(';','').strip())
+                    if ']' in str_tmp: list_tmp.append(str_tmp.split(']')[1].split('=')[0].replace(';','').strip())
+                    else: list_tmp.append(str_tmp.split('=')[0].replace(';','').strip())
                     counter = 0 
             i1=i1+1
         if anyssi_found:
-            self.ssidic = ssidic
+            self.ssidic = deepcopy(ssidic)
             # Save for template instantiation
             self.template_paramdic['ssidic'] = deepcopy(ssidic)            
         else:
@@ -244,17 +247,29 @@ from __future__ import division
             self.ssidic = {}
             # Save for template instantiation
             self.template_paramdic['ssidic'] = False
+
         if not use_focs:
-            self.ssys_list = list_tmp 
+            self.ssys_list = deepcopy(list_tmp) 
             # Save for template instantiation
             self.template_paramdic['ssys_list'] = deepcopy(list_tmp)
+            self.template_paramdic['use_focs'] = False
         elif use_focs and anyssi_found:
             self._use_focs = deepcopy(use_focs)
             self._ssidic = deepcopy(ssidic)
+            # Save for template instantiation
+            self.template_paramdic['ssys_list'] = False
+            self.template_paramdic['use_focs'] = deepcopy(use_focs)
+        elif use_focs and not anyssi_found:
+            self._use_focs = deepcopy(use_focs)
+            # Save for template instantiation
+            self.template_paramdic['ssys_list'] = False
+            self.template_paramdic['use_focs'] = use_focs
+            
     else:
         # Save for template instantiation
         self.template_paramdic['ssidic'] = False       
-        self.template_paramdic['ssys_list'] = False      
+        self.template_paramdic['ssys_list'] = False
+        self.template_paramdic['use_focs'] = False
         
 
     return self
@@ -2020,20 +2035,21 @@ def populate_model_stage_one_b(self, secs):
 def populate_model_stage_one_bb(self, secs):
     # Do substitutions inside the numerical steady state list
     # Check and do substitutions
-    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
-       any([False if 'None' in x else True for x in secs['manualss'][0]]):
-        self = mk_msstate_subs(self)
+    if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
+       all([False if 'None' in x else True for x in secs['manualss'][0]]):
+        # Do this only if USE_FOCS has not been used, otherwise ssys_list would be missing
+        if '_internal_focs_used' not in dir(self): self = mk_msstate_subs(self)
     # Do substitutions inside the closed form steady state list
     # Check and do substitutions
-    if any([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
-       any([False if 'None' in x else True for x in secs['closedformss'][0]]):
+    if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
+       all([False if 'None' in x else True for x in secs['closedformss'][0]]):
         self = mk_cfstate_subs(self)
     # Prepare the nonlinear FOC system but only stripping the raw format
-    if any([False if 'None' in x else True for x in secs['focs'][0]]):
+    if all([False if 'None' in x else True for x in secs['focs'][0]]):
         self = premknonlinsys(self,secs)
         # Save for template instantiation
         self.template_paramdic['focs_list'] = deepcopy(self.foceqs)
-        if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        if all([False if 'None' in x else True for x in secs['vsfocs'][0]]):
             # This takes the stripped system and does @ replacements
             self = premknonlinsys2(self,secs)
         else:
@@ -2042,7 +2058,7 @@ def populate_model_stage_one_bb(self, secs):
         self = mk_steady2(self)
     else:
         # Save for template instantiation
-        self.template_paramdic['focs_list'] = None
+        self.template_paramdic['focs_list'] = False
         
     return self
 

@@ -8,9 +8,9 @@ Release History
 ==========================
     
     * Eliminated some small bugs in parser module as well as in other sections of code. This version is a significant step up from 0.90.1 !
-
-    * Implemented some work-around for PyMacLab to install/compile correctly under Enthought EPD on Macintosh.
     
+    * Implemented some work-around for PyMacLab to install/compile correctly under Enthought EPD on Macintosh.
+
     * Eliminated some bug in model.updaters methods which did not update model.vardic at all when new item was assigned.
     
     * When the PyMacLab library gets loaded, the correct number of CPU cores is now auto-detected and used automatically throughout.

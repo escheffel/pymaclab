@@ -4,7 +4,7 @@ from wheezy.template.loader import DictLoader as wheezyDictLoader
 
 
 template = """\
-@require(vardic,sigma,mod_desc,subs_list,focs_list,manss_sys,mod_name,mod_desc,llsys_list,paramdic,ssidic,ssys_list)
+@require(vardic,sigma,mod_desc,subs_list,focs_list,manss_sys,mod_name,mod_desc,llsys_list,paramdic,ssidic,ssys_list,use_focs)
 %Model Description++++++++++++++++++++++++++++++++++
 @if mod_desc:
 @mod_desc;
@@ -123,17 +123,20 @@ None
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++
+@if use_focs:
+USE_FOCS=@str(use_focs);
+@end
 @if ssys_list:
 @for x,y in zip(ssys_list,[str(z+1) for z in range(len(ssys_list))]):
 [@y]   @x = 0;
 @end
 @end
-@if not ssys_list:
+@if not ssys_list and not use_focs:
 None
 @end
 
 @if ssidic:
-@for x,y in zip([[p1,str(p2)] for p1,p2 in ssidic.items()],[str(z+1) for z in range(len(ssys_list))]):
+@for x,y in zip([[p1,str(p2)] for p1,p2 in ssidic.items()],[str(z+1) for z in range(len(ssidic.items()))]):
 [@y]   @x[0] = @x[1];
 @end
 @end

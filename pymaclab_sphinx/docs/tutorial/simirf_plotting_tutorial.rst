@@ -91,7 +91,7 @@ Simulating the model
   to the argument passed to each variable in the model file. So the key "hp" produces hp-filtered data, the key "bk" results in
   Baxter-King-filtered data while the key "cf" leads to cycles extraced using the Christiano-Fitzgerald filter.
 
-  .. plot:: ../../pymaclab/tests/pymaclab/test4.py
+  .. plot:: ../make_graphs/test4.py
 
 
 Cross-correlation tables
@@ -235,7 +235,7 @@ Simulating while keeping random shocks fixed
     In [24]: plt.show()
 
 
-  .. plot:: ../../pymaclab/tests/pymaclab/test6.py
+  .. plot:: ../make_graphs/test6.py
 
   As is apparent from the three plots produced above, the simulated data is first filtered using the Baxter-King filter, then the more
   commonly used Hodrick-Prescott filter and finally the Christian-Fitzgerald asymmetric filter. Notice that the BK filter by default
@@ -272,7 +272,7 @@ Generating impulse-response functions
 
   This produces the following nice graph. Notice that here the shock to total productivity has been normalized to 100%.
 
-  .. plot:: ../../pymaclab/tests/pymaclab/test5.py
+  .. plot:: ../make_graphs/test5.py
 
 .. rubric:: Footnotes
 

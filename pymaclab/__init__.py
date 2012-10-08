@@ -20,6 +20,7 @@ import linalg
 import sys
 import pp
 import nose
+from copy import deepcopy
 
 # Expose the version number into library root
 from version import version as __version__
@@ -46,7 +47,7 @@ def db_graph(dbase,tseries):
 	P.show()
 
 def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
-           mk_hessian=True,use_focs=False,ssidic=None):
+           mk_hessian=True,use_focs=False,ssidic=None,sstate=None):
 	'''
 	Model's second intialisation method called by newMOD() function call. The model's
 	__init__() method only creates the instance and adds information, but does no
@@ -59,7 +60,7 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
 	'''
 	modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,\
 	                            mk_hessian=mk_hessian,use_focs=use_focs,\
-	                            ssidic=ssidic)
+	                            ssidic=ssidic,sstate=sstate)
 	modobj.init1()
 	modobj.init1a()
 	modobj.init1b()
@@ -69,12 +70,16 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
 	if initlev == 0:
 		modobj.init_out()
 		return modobj
-	# SS solved automatically
-	modobj.init3()
+	# SS solved automatically, but only if SS has not been handed over entirely externally
+	if sstate == None:
+		modobj.init3()
+	else:
+		if mesg: print "SS: Using entirely EXTERNALLY supplied steady state values dictionary..."
+		modobj.sstate = deepcopy(modobj._sstate)
 	if initlev == 1:
 		modobj.init_out()
 		return modobj
-	# Dynamic system prepared and solved
+	# Dynamic system prepared and prepared for solving
 	modobj.init4()
 	modobj.init5()
 	if initlev == 2:

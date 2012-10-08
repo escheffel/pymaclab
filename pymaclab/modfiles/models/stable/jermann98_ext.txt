@@ -70,12 +70,7 @@ None
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-USE_FOCS=[0,1,2,3];
-
-k_bar   = 35.0;
-inv_bar = delta*k_bar;
-mu_bar  = 8.0;
-c_bar   = 2.5;
+None
 
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
