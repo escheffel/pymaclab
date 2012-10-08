@@ -4,6 +4,18 @@ import sys
 import shutil
 import glob
 
+# Read the requirements file
+filo = open('./requirements.txt','r')
+lines = filo.readlines()
+filo.close()
+reqli = []
+for lino in lines:
+    if '=' in lino:
+        packname = lino.split('=')[0].strip()
+        version = lino.split('=')[1].strip()
+        reqli.append([packname,version])
+    else:
+        reqli.append([lino.strip(),''])
 
 ######################################################################
 # Check dependencies and install using pip
@@ -49,12 +61,12 @@ pandas_version = False
 try:
     import pandas
     pandas_version = pandas.__version__
-    if pandas_version and pandas_version != '0.8.1':
-        print "You need Pandas version 0.8.1 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install pandas==0.8.1") 
+    if pandas_version and pandas_version != '0.9.0':
+        print "You need Pandas version 0.9.0 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pandas==0.9.0") 
 except:
     print "Pandas not detected. Fetching now using pip..."
-    os.system("pip install pandas==0.8.1")
+    os.system("pip install pandas==0.9.0")
     
 # Now check for ipython and install if needed
 ipython_version = False
