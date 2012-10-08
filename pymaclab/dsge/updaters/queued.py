@@ -398,7 +398,7 @@ class Process_Queue(object):
                 print elem
             print '================================================================'
         ##### THE INITS #####################
-        other.init1(nowrap=True) 
+        other.init1(no_wrap=True) 
         if 'self.vardic' in queue:
             other.vardic = deepcopy(self.vardic)
 
@@ -409,12 +409,12 @@ class Process_Queue(object):
             for keyo in self.nlsubsdic.keys():
                 other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
 
-        other.init1b(nowrap=True)
+        other.init1b(no_wrap=True)
         if 'self.paramdic' in queue:
             for keyo in self.paramdic.keys():
                 other.paramdic[keyo] = deepcopy(self.paramdic[keyo])
         
-        other.init1c(nowrap=True)
+        other.init1c(no_wrap=True)
         if 'self.foceqs' in queue:
             other.foceqs = deepcopy(self.foceqs)
         if 'self.manss_sys' in queue:
@@ -432,7 +432,7 @@ class Process_Queue(object):
         if initlev == 1:
             other.init_out() 
 
-        other.init4(nowrap=True)
+        other.init4(no_wrap=True)
         if 'self.sigma' in queue:
             other.sigma = deepcopy(self.sigma)
 

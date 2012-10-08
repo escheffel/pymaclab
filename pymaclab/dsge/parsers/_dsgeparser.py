@@ -202,6 +202,7 @@ from __future__ import division
             if mregfocs.search(lino):
                 # Save as the list of equations the be used
                 use_focs = eval(lino.split('=')[1].replace(';','').strip())
+                self.internal_focs_used = True
         mreg = re.compile(_mreg+'|'+_mreg2)
         indx = []
         ssidic={}
