@@ -144,7 +144,7 @@ class DSGEmodel(object):
         self.dbase = dbase
 
     # Initializes all of the rest, errors can occur here ! (steady state, jacobian, hessian)
-    def init1(self):
+    def init1(self,nowrap=False):
         '''
         The init1 method. Model population proceeds from the __init__function here. In particular the data gets read in
         (not implemented at the moment) and the model parsing begins.
@@ -190,16 +190,17 @@ class DSGEmodel(object):
         # Initial population method of model, does NOT need steady states
         self = populate_model_stage_one(self, secs)
 
-        # Open updaters path
-        self.updaters = Updaters()        
-        # Open the updaters_queued path
-        self.updaters_queued = Updaters_Queued()
-        # Add the empty queue
-        self.updaters_queued.queue = queue
-
-        # Wrap the vardic
-        self.updaters.vardic = dicwrap_deep(self,'self.vardic',initlev)
-        self.updaters_queued.vardic = dicwrap_deep_queued(self,'self.vardic',initlev)
+        if not nowrap:
+            # Open updaters path
+            self.updaters = Updaters()        
+            # Open the updaters_queued path
+            self.updaters_queued = Updaters_Queued()
+            # Add the empty queue
+            self.updaters_queued.queue = queue
+    
+            # Wrap the vardic
+            self.updaters.vardic = dicwrap_deep(self,'self.vardic',initlev)
+            self.updaters_queued.vardic = dicwrap_deep_queued(self,'self.vardic',initlev)
         
     def init1a(self):
         '''
@@ -224,7 +225,7 @@ class DSGEmodel(object):
         # This function only creates the raw substitution dictionary and list from modfile
         self = populate_model_stage_one_a(self,secs)
         
-    def init1b(self):
+    def init1b(self,nowrap=False):
         '''
         The init1b method. Model population proceeds from the init1a method here.
 
@@ -245,18 +246,19 @@ class DSGEmodel(object):
         secs = self.txtpars.secs
         self = populate_model_stage_one_b(self,secs)
         
-        # Wrap the nlsubsdic
-        if 'nlsubsdic' in dir(self): self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
-        # Wrap the paramdic
-        self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
+        if not nowrap:
+            # Wrap the nlsubsdic
+            if 'nlsubsdic' in dir(self): self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
+            # Wrap the paramdic
+            self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
+            
+    
+            # Wrap the nlsubsdic
+            if 'nlsubsdic' in dir(self): self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
+            # Wrap the paramdic
+            self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
         
-
-        # Wrap the nlsubsdic
-        if 'nlsubsdic' in dir(self): self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
-        # Wrap the paramdic
-        self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
-        
-    def init1c(self):
+    def init1c(self,nowrap=False):
         '''
         The init1c method. Model population proceeds from the init1b method here. We call populate_model_stage_one_bb() which does quite
         a bit of substitution/replacement of the @-prefixed variables. It does this in the numerical and closed form steady state
@@ -283,10 +285,11 @@ class DSGEmodel(object):
         if mesg: print "INIT: Substituting out @ variables in steady state sections..."
         self = populate_model_stage_one_bb(self,secs)
         
-        # Wrap foceqs
-        self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
-        # Wrap foceqs
-        self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
+        if not nowrap:
+            # Wrap foceqs
+            self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
+            # Wrap foceqs
+            self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
         
         # Allow for numerical SS to be calculated using only FOCs
         if self._use_focs and self._ssidic != None:
@@ -295,15 +298,16 @@ class DSGEmodel(object):
                 list_tmp.append(self.foceqss[elem])
             self.ssys_list = deepcopy(list_tmp)
             self.ssidic = copy.deepcopy(self._ssidic)
-            
-        # Wrap manss_sys
-        if 'manss_sys' in dir(self):
-            self.updaters.manss_sys = listwrap(self,'self.manss_sys',initlev)
-            self.updaters_queued.manss_sys = listwrap_queued(self,'self.manss_sys',initlev)
-        # Wrap ssys_list
-        if 'ssys_list' in dir(self):
-            self.updaters.ssys_list = listwrap(self,'self.ssys_list',initlev)
-            self.updaters_queued.ssys_list = listwrap_queued(self,'self.ssys_list',initlev)
+        
+        if not nowrap:   
+            # Wrap manss_sys
+            if 'manss_sys' in dir(self):
+                self.updaters.manss_sys = listwrap(self,'self.manss_sys',initlev)
+                self.updaters_queued.manss_sys = listwrap_queued(self,'self.manss_sys',initlev)
+            # Wrap ssys_list
+            if 'ssys_list' in dir(self):
+                self.updaters.ssys_list = listwrap(self,'self.ssys_list',initlev)
+                self.updaters_queued.ssys_list = listwrap_queued(self,'self.ssys_list',initlev)
 
 
     def init2(self):
@@ -490,7 +494,7 @@ class DSGEmodel(object):
                     print "This is very likely going to either error out or produce strange results"
                     print "Re-check your model declarations carefully!"
 ######################################### STEADY STATE CALCULATION SECTION DONE ##################################
-    def init4(self):
+    def init4(self,nowrap=False):
         '''
         This model instance sub-initializor only calls the section which use the computed steady state
         in order to compute derivatives and open dynamic solver branches on the instance. But Jacobian and Hessian
@@ -520,14 +524,15 @@ class DSGEmodel(object):
         # Now populate more with stuff that needs steady state
         self = populate_model_stage_two(self, secs)
 
-        # Need to wrap variance covariance matrix here
-        self.updaters.sigma = matwrap(self,'self.sigma',initlev)
-        # Need to wrap variance covariance matrix here
-        self.updaters_queued.sigma = matwrap_queued(self,'self.sigma',initlev)
+        if not nowrap:
+            # Need to wrap variance covariance matrix here
+            self.updaters.sigma = matwrap(self,'self.sigma',initlev)
+            # Need to wrap variance covariance matrix here
+            self.updaters_queued.sigma = matwrap_queued(self,'self.sigma',initlev)
 
-        ####### All queued updaters initialized, no add processing instance
-        # Add the queue process instance
-        self.updaters_queued.process_queue = Process_Queue(other=self)
+            ####### All queued updaters initialized, no add processing instance
+            # Add the queue process instance
+            self.updaters_queued.process_queue = Process_Queue(other=self)
 
     def init5(self,update=False):
         '''

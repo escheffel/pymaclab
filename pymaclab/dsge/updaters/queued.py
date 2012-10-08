@@ -114,10 +114,11 @@ class listwrapk:
         if ind2 >= lengo:
             print "ERROR: Assignment out of bounds of original list"
             return
-        ##### THE INITS #####################
-        #other.init1()
-        if self.wrapli[ind1:ind2] != into:
+        wrapobj[ind1:ind2] = into
+        if self.wrapli[ind1:ind2] != wrapobj[ind1:ind2]:
             self.wrapli[ind1:ind2] = into
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             self.queue.append('self.vardic')
     
     def __setitem__(self,ind,into):
@@ -128,14 +129,13 @@ class listwrapk:
         if ind >= lengo:
             print "ERROR: Assignment out of bounds of original list"
             return
-        ##### THE INITS #####################
-        #other.init1()
-        if self.wrapli[ind] != into:
+        wrapobj[ind] = into
+        if self.wrapli[ind] != wrapobj[ind]:
             self.wrapli[ind] = into
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
             
-                  
-
     def __getitem__(self,ind):
         lengo = len(self.wrapli)
         if ind >= lengo:
@@ -168,10 +168,9 @@ class dicwrapk:
         # Test if the dictionary has changed relative to self.wrapdic
         if self.wrapdic != wrapobj:
             self.wrapdic[key] = deepcopy(wrapobj[key])
-            ##### THE INITS #####################
-            #other.init1()
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
-
 
     def __getitem__(self,key):
         return self.wrapdic[key]
@@ -190,8 +189,8 @@ class dicwrapk:
         # Check if any key's value has been updated relative to wrapdic
         if self.wrapdic != wrapobj:
             self.wrapdic.update(wrapobj)
-            ##### THE INITS #####################
-            #other.init1()
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
 
 
@@ -219,6 +218,9 @@ class dicwrap_deep_queued:
 
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
+    
+    def all_update(self):
+        self.wrapobj.update(self.wrapdic)
                        
     def __setitem__(self,key,value):
         other = self.other
@@ -229,20 +231,10 @@ class dicwrap_deep_queued:
         # Test if the dictionary has changed relative to self.wrapdic
         if self.wrapdic != wrapobj:
             self.wrapdic[key] = value
-            ##### THE INITS #####################
-            #other.init1()
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             if wrapobj_str == 'self.vardic':
                 if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
-
-            other.init1a()
-            if wrapobj_str == 'self.nlsubsdic':
-                # not a deep dic
-                pass
-
-            other.init1b()
-            if wrapobj_str == 'self.paramdic':
-                # not a deep dic
-                pass
 
 
     def __update__(self,dico):
@@ -254,11 +246,10 @@ class dicwrap_deep_queued:
         # Test if the dictionary has changed relative to self.wrapdic
         if self.wrapdic != wrapobj:
             self.wrapdic.update(dico)
-            ##### THE INITS #####################
-            #other.init1()
+            # Also update the wrapobj at the top level of the deepwrapdic
+            self.other.updaters_queued.vardic.all_update()
             if wrapobj_str == 'self.vardic':
                 if 'self.vardic' not in self.queue: self.queue.append('self.vardic')
-
 
 
 class listwrap_queued:
@@ -330,6 +321,7 @@ class matwrap_queued:
         self.other = other
         self.queue = other.updaters_queued.queue
         self.wrapobj_str = wrapobj_str
+        self.wrapobj = eval('other.'+wrapobj_str.split('.')[1])
         self.initlev = initlev
         if wrapobj_str == 'self.sigma':
             self.wrapmat = deepcopy(other.sigma)
@@ -355,24 +347,46 @@ class Process_Queue(object):
         self.queue = other.updaters_queued.queue
         self.initlev = other._initlev
         # The vardic
-        self.vardic = other.updaters_queued.vardic
+        self.vardic = deepcopy(other.updaters_queued.vardic.wrapobj)
         # The nlsubsdic
         if 'nlsubsdic' in dir(other):
-            self.nlsubsdic = other.updaters_queued.nlsubsdic
+            self.nlsubsdic = deepcopy(other.updaters_queued.nlsubsdic.wrapobj)
         # The paramdic
-        self.paramdic = other.updaters_queued.paramdic
+        self.paramdic = deepcopy(other.updaters_queued.paramdic.wrapobj)
         # The foceqs
-        self.foceqs = other.updaters_queued.foceqs
+        self.foceqs = deepcopy(other.updaters_queued.foceqs.wrapobj)
         # The manss_sys
         if 'manss_sys' in dir(other.updaters_queued):
-            self.manss_sys = deepcopy(other.updaters_queued.manss_sys)
+            self.manss_sys = deepcopy(other.updaters_queued.manss_sys.wrapobj)
         # The ssys_list
         if 'ssys_list' in dir(other.updaters_queued):
-            self.ssys_list = deepcopy(other.updaters_queued.ssys_list)
+            self.ssys_list = deepcopy(other.updaters_queued.ssys_list.wrapobj)
         # The sigma
-        self.sigma = deepcopy(other.updaters_queued.sigma)
+        self.sigma = deepcopy(other.updaters_queued.sigma.wrapobj)
+        
+    def reinit(self):
+        other = self.other
+        # The vardic
+        self.vardic = deepcopy(other.updaters_queued.vardic.wrapobj)
+        # The nlsubsdic
+        if 'nlsubsdic' in dir(other):
+            self.nlsubsdic = deepcopy(other.updaters_queued.nlsubsdic.wrapobj)
+        # The paramdic
+        self.paramdic = deepcopy(other.updaters_queued.paramdic.wrapobj)
+        # The foceqs
+        self.foceqs = deepcopy(other.updaters_queued.foceqs.wrapobj)
+        # The manss_sys
+        if 'manss_sys' in dir(other.updaters_queued):
+            self.manss_sys = deepcopy(other.updaters_queued.manss_sys.wrapobj)
+        # The ssys_list
+        if 'ssys_list' in dir(other.updaters_queued):
+            self.ssys_list = deepcopy(other.updaters_queued.ssys_list.wrapobj)
+        # The sigma
+        self.sigma = deepcopy(other.updaters_queued.sigma.wrapobj)
+        
         
     def __call__(self):
+        self.reinit()
         queue = self.queue
         other = self.other
         initlev = self.initlev
@@ -384,19 +398,7 @@ class Process_Queue(object):
                 print elem
             print '================================================================'
         ##### THE INITS #####################
-        other.init1()
-        ######## Copy correct values into the model instance ########
-        if 'self.paramdic' in queue:
-            for keyo in self.paramdic.keys():
-                other.paramdic[keyo] = deepcopy(self.paramdic[keyo])               
-        if 'self.nlsubsdic' in queue:
-            for keyo in self.nlsubsdic.keys():
-                other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
-        if 'self.vardic' in queue:
-            for keyo in self.vardic.keys():
-                other.vardic[keyo] = deepcopy(self.vardic[keyo])                
-        ##############################################################
-            
+        other.init1(nowrap=True) 
         if 'self.vardic' in queue:
             other.vardic = deepcopy(self.vardic)
 
@@ -407,12 +409,12 @@ class Process_Queue(object):
             for keyo in self.nlsubsdic.keys():
                 other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
 
-        other.init1b()
+        other.init1b(nowrap=True)
         if 'self.paramdic' in queue:
             for keyo in self.paramdic.keys():
                 other.paramdic[keyo] = deepcopy(self.paramdic[keyo])
         
-        other.init1c()
+        other.init1c(nowrap=True)
         if 'self.foceqs' in queue:
             other.foceqs = deepcopy(self.foceqs)
         if 'self.manss_sys' in queue:
@@ -430,7 +432,7 @@ class Process_Queue(object):
         if initlev == 1:
             other.init_out() 
 
-        other.init4()
+        other.init4(nowrap=True)
         if 'self.sigma' in queue:
             other.sigma = deepcopy(self.sigma)
 

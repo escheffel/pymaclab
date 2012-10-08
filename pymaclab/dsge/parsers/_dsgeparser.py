@@ -212,6 +212,7 @@ from __future__ import division
                 str2 = ma.group().split('=')[1].strip()
                 ssidic[str1] = eval(str2)
                 # Expose the evaluated values for recursive smart evaluation
+                locals().update(self.paramdic)
                 locals()[str1] = eval(str2)
                 indx.append(i1)
             elif not mreg.search(x) and '...' in x:
