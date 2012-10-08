@@ -115,15 +115,7 @@ None
 
 
 %Steady State Non-Linear System [Manual]++++++++++++++++++++++++++++++++++++++++
-[1]   EXP(n + g) * k_bar - ((1 - delta) * k_bar + i_bar) = 0;
-[2]   y_bar - (c_bar + i_bar + g_bar) = 0;
-[3]   y_bar - k_bar**alpha = 0;
-[4]   1 - L_bar - N_bar = 0;
-[5]   w_bar - (1 - alpha) * k_bar**alpha = 0;
-[6]   R_bar - (alpha * k_bar**(alpha - 1) + (1 - delta)) = 0;
-[7]   (1 / c_bar) - EXP(-(rho + g)) * (1 / c_bar) * R_bar = 0;
-[8]   b * c_bar * L_bar - (1 - L_bar) * w_bar = 0;
-
+USE_FOCS=[0,1,2,3,4,5,6,7];
 
 [1]   k_bar = 35.0;
 [2]   y_bar = k_bar**alpha;

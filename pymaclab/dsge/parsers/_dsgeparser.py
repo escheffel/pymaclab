@@ -195,6 +195,13 @@ from __future__ import division
     if any([False if 'None' in x else True for x in secs['manualss'][0]]):
         _mreg = '\[\d+]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
         _mreg2 = '\[\d+]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
+        _mregfocs = 'USE_FOCS=\[.*?\]'
+        mregfocs = re.compile(_mregfocs)
+        use_focs = False
+        for lino in secs['manualss'][0]:
+            if mregfocs.search(lino):
+                # Save as the list of equations the be used
+                use_focs = eval(lino.split('=')[1].replace(';','').strip())
         mreg = re.compile(_mreg+'|'+_mreg2)
         indx = []
         ssidic={}
@@ -235,10 +242,14 @@ from __future__ import division
             #Make empty to be filled by other procedure
             self.ssidic = {}
             # Save for template instantiation
-            self.template_paramdic['ssidic'] = False         
-        self.ssys_list = list_tmp 
-        # Save for template instantiation
-        self.template_paramdic['ssys_list'] = deepcopy(list_tmp)
+            self.template_paramdic['ssidic'] = False
+        if not use_focs:
+            self.ssys_list = list_tmp 
+            # Save for template instantiation
+            self.template_paramdic['ssys_list'] = deepcopy(list_tmp)
+        elif use_focs and anyssi_found:
+            self._use_focs = deepcopy(use_focs)
+            self._ssidic = deepcopy(ssidic)
     else:
         # Save for template instantiation
         self.template_paramdic['ssidic'] = False       
