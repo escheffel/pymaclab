@@ -27,5 +27,5 @@ def test_filters():
 
     for datar in datli:
         cons_cycle = filters.hpfilter(data=datar)[0]
-        cons_cycle2 = filters.bkfilter(data=datar)
+        cons_cycle2 = filters.bkfilter(data=datar)[0]
         cons_cycle3 = filters.cffilter(data=datar)[0]
