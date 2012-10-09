@@ -4,7 +4,7 @@
 
    \newpage
 
-Tutorial 2 - The PyMacLab DSGE instance
+Tutorial 3 - The PyMacLab DSGE instance
 =======================================
 
 Introduction

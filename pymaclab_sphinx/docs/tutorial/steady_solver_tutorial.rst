@@ -4,7 +4,7 @@
 
    \newpage
 
-Tutorial 4 - Steady State Solution Methods
+Tutorial 5 - Steady State Solution Methods
 ==========================================
 
 Introduction
@@ -562,9 +562,37 @@ Option 7: Finding the steady state by only supplying information in the Closed F
   greater depth here. In this variant, the `Manual` section is marked as unused employing the "None" keyword and only information in the
   `Closed Form` section is provided. Since only the most simple DSGE models afford this option of finding the steady state, we will not discuss
   this option any further.
+  
+More about the steady state and its relevance to perturbation methods - A Detour
+--------------------------------------------------------------------------------
+
+  Perturbation methods discussed in the literature relevant to the discussion of solution methods for dynamic stochastic general equilibrium (DSGE) models
+  are similar in spirit to Taylor series approximations of non-linear functions which are being taught to students in introductory/intermediate quantitative
+  methods courses. Based on a functions derivatives, approximations are taken around *a specific point* or value of the parameter domain in order to
+  approximate the fuction's corresponding value when these values are perturbed away by small degrees from that point around which the approximation was
+  taken.
+  
+  This approach lends itself very well to the approximation of the exact solution of non-linear systems of expectatonal difference equations (i.e. DSGE
+  models) chiefly because of two reasons. First of all, the assumption that shocks (perturbations) are not too large in some some in a real-world economic
+  system is a reasonable one for most of the times. Secondly, while the general discussion of perturbation methods does not prescribe a preferred point
+  around which the approximation should be taken, dynamic economic systems exhibting a steady state (equilibrium fixed point in the absence of any shocks)
+  exhibit a perfect candidate value around which the approximation should be taken.
+  
+  .. image:: ../images/riskyss.jpg
+     :align: center
+  
+  In the most recent literature :cite:`CoeReyWin:2011` this point has however been given additional attention in that researchers typically consider *two*
+  possible candidate steady state equilibrium points [#f2]_ around which to form the approximation. One of them is the traditional *deterministic* steady state to
+  which the economic system gravitates when (all moments of) future shocks are assumed to be zero, while the other steady state, suitably called the
+  *risky* or *stochastic* steady state is the one the system comes to rest to when agents populating the system know that future shocks will continue to
+  occur based on some known (non-Knightian, if you like) distribution of those shocks.
 
 .. rubric:: Footnotes
 
 .. [#f1] In other more complicated cases the law of motion of some exogenous shock process may depend on other endogenous states of the system.
          In this case we would probably want to pass the line to the non-linear root finder as its specification would influence the steady
          state value of other steady state variables.
+         
+.. [#f2] Actually, there are more than 2 possible definitions of suitable steady state points. Here we want to draw attention to a stochastic point which
+         has been defined as follows: "The risky steady-state is the point where agents choose to stay at a given date if they expect future risk and if
+         the realization of shocks is 0 at this date." (Coeurdacier, Rey and Winant, 2011)

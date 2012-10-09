@@ -1196,6 +1196,9 @@ class PyKlein2D:
         self.solab2()
 
     def sim(self,tlen,sntup=None):
+        # Deals with 0-tuples
+        if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
+            sntup = (sntup,)
         # Add 1000 observations, as they will be thrown away
         # Add one more observation to start first-order vector
         exoli = [x[1] for x in self.vardic['exo']['var']]
@@ -2440,6 +2443,9 @@ class ForKleinD(PyKlein2D):
             self.F = np.matrix(F)
 
     def sim(self,tlen,sntup=None,shockvec=None):
+        # Deals with 0-tuples
+        if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
+            sntup = (sntup,)
         # Add 1000 observations, as they will be thrown away
         # Add one more observation to start first-order vector
         exoli = [x[1] for x in self.vardic['exo']['var']]

@@ -4,7 +4,7 @@
 
    \newpage
 
-Tutorial 3 - The Python DSGE instance updater methods
+Tutorial 4 - The Python DSGE instance updater methods
 =====================================================
 
 Introduction

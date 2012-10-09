@@ -5,6 +5,7 @@ def configuration(parent_package='',top_path=None):
     config = Configuration('pymaclab_tests', parent_package, top_path)
     config.add_subpackage('dsge_tests')
     config.add_subpackage('modfiles_tests')
+    config.add_subpackage('filters_tests')
     return config
 
 if __name__ == '__main__':

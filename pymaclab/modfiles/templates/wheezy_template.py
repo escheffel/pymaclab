@@ -161,7 +161,7 @@ None
 @if type(sigma) != type(True):
 Sigma = [@sigma.__str__().replace('[','').replace(']',';')[:-2] ];
 @end
-@else:
+@if type(sigma) == type(False):
 None
 @end
 

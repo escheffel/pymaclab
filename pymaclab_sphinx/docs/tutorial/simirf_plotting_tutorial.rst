@@ -4,7 +4,7 @@
 
    \newpage
 
-Tutorial 6 - Simulating DSGE models
+Tutorial 7 - Simulating DSGE models
 ===================================
 
 Introduction

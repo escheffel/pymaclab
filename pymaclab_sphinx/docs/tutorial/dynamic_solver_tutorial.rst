@@ -4,7 +4,7 @@
 
    \newpage
 
-Tutorial 5 - Dynamic Solution Methods
+Tutorial 6 - Dynamic Solution Methods
 =====================================
 
 Introduction
