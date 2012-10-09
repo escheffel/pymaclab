@@ -39,7 +39,7 @@ Release History
     
     * TODO: May write additional model templates using Jinja2 and Cheetah, instead of using only Wheezy.
     
-    * TODO: Use new templating funcionality to implement method which produces Dynare-compatible model files.
+    * TODO: Use new templating functionality to implement method which produces Dynare-compatible model files.
 
 
 **0.90.1** (2012-9-27)

@@ -30,12 +30,12 @@ Description
 First things first
 ------------------
 
+  * Download this online documentation as a PDF document `here <./PyMacLab.pdf>`_.
   * Documentation at `http://www.pymaclab.com <http://www.pymaclab.com>`_ or `http://packages.python.org/pymaclab/ <http://packages.python.org/pymaclab/>`_
   * Latest development documentation at `http://www.development.pymaclab.com <http://www.development.pymaclab.com>`_
   * Latest source tar ball at `http://pypi.python.org/pypi/pymaclab/ <http://pypi.python.org/pypi/pymaclab/>`_
   * Latest bleeding-edge source via git at `http://github.com/escheffel/pymaclab <http://github.com/escheffel/pymaclab>`_
   * Source code issues tracker at `http://github.com/escheffel/pymaclab/issues/ <http://github.com/escheffel/pymaclab/issues/>`_
-  * Download this online documentation as a PDF document :download:`here <PyMacLab.pdf>`.
   
 .. note::
 
@@ -158,8 +158,8 @@ Introduction
   In particular, using Windows, users are best advised to employ the `MinGW32 <http://mingw.org/>`_ Linux system clone and
   to set up a scientific Python environment there. Again, the Numpy/Scipy website contains `help pages <http://scipy.github.com/building/windows.html>`_
   which describe how to do this. Macintosh users are encouraged to take a look at `Scipy Superpack <http://fonnesbeck.github.com/ScipySuperpack/>`_
-  which appears to be the better choice over the alternative `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_,
-  which is also available for Windows (EPD).
+  or the possibly better choice of the alternative `Enthought Python Distribution <http://www.enthought.com/products/epd.php>`_,
+  which is also available for Windows (EPD). As of version 0.95.1 PyMacLab is known to install flawlessly using Enthought's distribution.
   
   No matter which route users choose to install PyMacLab, the rule of thumb is that so long as they manage to *compile* both
   Numpy and Scipy from their *source files* without problems, installing PyMacLab should also pose no further difficulties. The
@@ -180,6 +180,7 @@ Dependencies
   * `Parallel Python <http://www.parallelpython.com/>`_
   * `Matplotlib <http://matplotlib.sourceforge.net/>`_
   * `Pandas <http://pandas.pydata.org/>`_
+  * `Wheezy.template <http://pypi.python.org/pypi/wheezy.template/>`_
 
   Sympycore and Parallel Python come distributed with PyMacLab and will be installed along with the main library; the other
   required Python libraries need to be installed separately before an installation of PyMacLab is attempted. All of the
@@ -189,6 +190,11 @@ Dependencies
   The Pandas data library is *not* needed by the DSGE-modelling features of PyMacLab itself, but is instead required in the experimentally
   made available modules used to estimated and work with VAR and FAVAR models. These modules are in the ``pymaclab.stats.`` branch and
   some test files are included in the test/stats directory.
+  
+  The Wheezy.template libary is - similar to the more popular Jinja2 - a templating library which can be used to generate PyMacLab
+  model files on-the-fly inside your Python scripts based on a Python dictionary with DSGE model attributes conforming to a specific format.
+  This can make transfering certain model properties to other models less painful. Also in the long-run the template library will be used
+  to generate Dynare-compatible model files.
 
   If you want to enjoy a Matlab-style interactive environment in which to execute and inspect DSGE and other data structures,
   you'd be hard-pressed to pass over the brilliant and now extra features-ladden `IPython <http://ipython.org/>`_. When downloading
@@ -216,7 +222,7 @@ Option 2
 
   Otherwise get the latest source code compressed as a tarball here:
 
-    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.90.1.tar.gz>`_
+    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.95.1.tar.gz>`_
 
   And install it in the usual way by running in a Linux shell the command::
 
@@ -250,9 +256,11 @@ Credit & Thanks
 
   I would also like to give a special mention to `Skipper Seabold <http://github.com/jseabold>`_, lead coder of another
   unique and outstanding Python library, `Statsmodels <http://statsmodels.sourceforge.net/>`_, who has kindly helped me
-  clean up some of the rough edges of my code. I would also like to thank colleagues at Nottingham University Business
-  School China, especially `Gus Hooke <http://www.nottingham.edu.cn/en/business/staff/staffprofile/angushooke.aspx>`_
-  and `Carl Fey <http://www.nottingham.edu.cn/en/business/people/staffprofile/carlfey.aspx>`_ for their kind support.
+  clean up some of the rough edges of my code. Further, I would like to thank David Pugh, a PhD student in Edinburgh, Scotland,
+  for his kind support provided in testing the library and creating some example model files. I would also like to thank
+  colleagues at Nottingham University Business School China, especially
+  `Gus Hooke <http://www.nottingham.edu.cn/en/business/staff/staffprofile/angushooke.aspx>`_
+  and `Carl Fey <http://www.nottingham.edu.cn/en/business/people/staffprofile/carlfey.aspx>`_ for their continued support.
 
   Last but most certainly not least, my expression of thanks go to my former PhD supervisor `Max Gillman <http://www.maxgillman.com>`_
   who has introduced me to the world of general equilibrium macroeconomics and to monetary macroeconomics more deeply.

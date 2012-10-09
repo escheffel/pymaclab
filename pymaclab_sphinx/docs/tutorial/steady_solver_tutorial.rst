@@ -16,7 +16,7 @@ Introduction
   options available for solving models' steady state solution. The great number of possible avenues to take here is quite deliberate; it would
   be reasonable to argue that for medium- to large-sized models the most difficult part to finding the general dynamic solution based on
   the approximation method of perturbations is to first obtain the steady state solution around which the approximations are computed. In total
-  we are going to explore 5 different variants suitable for seeking to compute the steady state. So let's get started.
+  we are going to explore 7 different variants suitable for seeking to compute the steady state. So let's get started.
 
 .. raw:: latex
 
@@ -25,7 +25,7 @@ Introduction
 Option 1: Using the model's declared FOCs and passing arguments at model instantiation
 --------------------------------------------------------------------------------------
 
-  Choosing option one allows users to leave the numerical as well as closed form steady state sections in the model template files entirely
+  Choosing option 1 allows users to leave the numerical as well as closed form steady state sections in the model template files entirely
   empty or unused indicated by the "None" keyword inserted into any line in these sections. In this case, the library has to rely on the time-
   subscripted non-linear first-order conditions of optimality, convert them to steady state equivalents and somehow discover the required set
   of initial guesses for the variables' steady states to be searched for using the non-linear root-finding algorithm. This is accomplised in the
@@ -140,7 +140,100 @@ Option 1: Using the model's declared FOCs and passing arguments at model instant
 
    \newpage
 
-Option 2: Supplying the non-linear steady state system in the model file
+Option 2: Using the model's declared FOCs and passing arguments inside the model file
+--------------------------------------------------------------------------------------
+
+  Choosing option 2 is essentially mimicking the same method used in option 1, with the only difference that everything happens inside
+  the model file itself and nothing has to be passed using arguments to the DSGE model instance at instantiation time externally. Instead, the list
+  of FOC equations to be used in the calculation of the steady states is passed inside the numerical steady states section, as shown in model
+  files ``rbc1_focs.txt``, as follows:
+  
+  ::
+   
+    %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    This is just a standard RBC model, as you can see.
+
+
+    %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Name = Standard RBC Model, USE_FOCS;
+
+
+    %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    rho       = 0.36;
+    delta     = 0.025;
+    betta     = 1.0/1.01;
+    eta	  = 2.0; 
+    psi	  = 0.95;
+    z_bar     = 1.0;
+    sigma_eps = 0.052; 
+
+
+    %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]  k(t):capital{endo}[log,bk]
+    [2]  c(t):consumption{con}[log,bk]
+    [3]  y(t):output{con}[log,bk]
+    [4]  R(t):rrate{con}[log,bk]
+    [5]  z(t):eps(t):productivity{exo}[log,bk]
+    [6]  @inv(t):investment[log,bk]
+
+    %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    None
+
+
+    %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+    [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
+    [2]   @inv_bar  = SS{@inv(t)};
+    [2]   @F(t)     = z(t)*k(t-1)**rho;
+    [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
+    [2]   @Fk_bar   = SS{@Fk(t)};
+    [2]   @F_bar    = SS{@F(t)};
+    [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
+    [4]   @R_bar    = SS{@R(t)};
+    [3]   @R(t+1)   = FF_1{@R(t)};
+    [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+    [5]   @MU(t)    = DIFF{@U(t),c(t)};
+    [5]   @MU_bar   = SS{@U(t)};
+    [6]   @MU(t+1)  = FF_1{@MU(t)};
+
+
+
+    %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    # Insert here the non-linear FOCs in format g(x)=0
+
+    [1]   y(t) - @inv(t) - c(t) = 0;
+    [2]   betta * (@MU(t+1)/@MU(t)) * E(t)|R(t+1) - 1 = 0;
+    [3]   R(t) - @R(t) = 0;
+    [4]   y(t) - @F(t) = 0;
+    [5]   LOG(E(t)|z(t+1)) - psi*LOG(z(t)) = 0;
+
+
+    %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    None
+
+
+    %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+    USE_FOCS=[0,1,2,3];
+
+    [1]   c_bar = 2.0;
+    [2]   k_bar = 30.0;
+    [3]   k_bar = k_bar**alpha;
+    [4]   R_bar = 1.01;
+
+    %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    None
+
+
+    %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    Sigma = [sigma_eps**2];
+
+
+    %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.. raw:: latex
+
+   \newpage
+
+Option 3: Supplying the non-linear steady state system in the model file
 ------------------------------------------------------------------------
 
   Yet another way available for finding the model's steady state is similar to the one in option one in that it uses a system of non-linear
@@ -239,13 +332,13 @@ Option 2: Supplying the non-linear steady state system in the model file
 
    \newpage
 
-Option 3: Use the numerical root finder to solve for some steady states and get remaining ones residually
+Option 4: Use the numerical root finder to solve for some steady states and get remaining ones residually
 ---------------------------------------------------------------------------------------------------------
 
-  Option 3 perhaps one of the most useful ways one can employ in order to obtain a DSGE model's steady state solution as it focuses the numerical
+  Option 4 is perhaps one of the most useful ways one can employ in order to obtain a DSGE model's steady state solution as it focuses the numerical
   non-linear root-finding algorithm on a very small set of equations and unknown steady state variables, leaving the computation of the
   remaining steady state variables to be done separately and residually after the small set of steady state variables have been solved for. So
-  using again a slightly tweaked version of the model file given in option 2 we could write this as:
+  using again a slightly tweaked version of the model file given in option 3 we could write this as:
 
   ::
 
@@ -345,7 +438,7 @@ Option 3: Use the numerical root finder to solve for some steady states and get 
 
    \newpage
 
-Option 4: Use the numerical root finder to solve for steady states with pre-computed starting values
+Option 5: Use the numerical root finder to solve for steady states with pre-computed starting values
 ----------------------------------------------------------------------------------------------------
 
   It is often useful and sometimes even outright necessary to supply the root-finding algorithm with pre-computed "intelligently" chosen
@@ -453,7 +546,16 @@ Option 4: Use the numerical root finder to solve for steady states with pre-comp
 
    \newpage
 
-Option 5: Finding the steady state by only supplying information in the Closed Form section
+Option 6: Computing the steady state values dictionary entirely outside of PyMacLab and passing it
+--------------------------------------------------------------------------------------------------
+
+  This is the most straightforward but at the same time possibly less "encapsulated" method of obtining the steady state of a model.
+  In this case, we ignore everything inside the model file for the purpose of computing the steady state and instead do everything outside'
+  of the DSGE instance externally. When done we plug the values into a dictionary and pass it to the DSGE instance at instantiation time using
+  the keyword ``pm.newMOD(modelfile,sstate=sstatedic)``. This method may only be necessary for extremely large models in which obtaining the
+  steady state is a task so difficult that it may have to be dealt with in a separate programming block.
+
+Option 7: Finding the steady state by only supplying information in the Closed Form section
 -------------------------------------------------------------------------------------------
 
   This is the most straightforward but at the same time possibly also least-used method for finding a steady state and will not be explained in

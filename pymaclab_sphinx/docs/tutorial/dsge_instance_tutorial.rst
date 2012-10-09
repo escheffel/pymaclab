@@ -124,6 +124,8 @@ Instantiation options for DSGE model instances
   +------------------------------------+----------------------------------------------------------------------------------------------------+
   |``pm.newMOD(mpath,ssidic=None)``    | Use in conjunction with previous argument to specify initial starting values as Python dictionary  |
   +------------------------------------+----------------------------------------------------------------------------------------------------+
+  |``pm.newMOD(mpath,sstate=None)``    | Specify steady state values as Python dictionary and supply here. No SS computation in instance    |
+  +------------------------------------+----------------------------------------------------------------------------------------------------+
 
   Needless to say, all of the options can be and usually are called in combination, they are only shown separately here for sake of expositional
   clarity. Medium-sized to large-sized models can take considerable time to compute the Jacobian alone, let alone the Hessian. On the other hand

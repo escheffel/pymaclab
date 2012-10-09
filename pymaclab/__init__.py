@@ -19,7 +19,6 @@ from stats import favar
 import linalg
 import sys
 import pp
-import nose
 from copy import deepcopy
 
 # Expose the version number into library root
@@ -293,8 +292,17 @@ def texedit(model):
 def explain(model):
 	model.pdf()
 	
+############ Make nost tests available###############
 def test():
+    try:
+	import nose
 	nose.run(defaultTest='pymaclab.tests')
+    except:
+	print "You need to install nose to run the tests."
+	print 'Run "sudo pip install nose" to install it.'
+    
+#####################################################
+
 
 
 # Import this late because cascading imports need newMOD() function

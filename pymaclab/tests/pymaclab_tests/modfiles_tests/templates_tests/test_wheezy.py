@@ -52,6 +52,9 @@ def test_others():
             elif keyo == 'paramdic':
                 for keyo2 in eval(modelo+".template_paramdic[keyo].keys()"):
                     assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
+            elif keyo == 'ssidic' and eval(modelo+".template_paramdic[keyo]") != False:
+                for keyo2 in eval(modelo+".template_paramdic[keyo].keys()"):
+                    assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
             else:
                 assert eval(modelo+".template_paramdic[keyo]") == eval(modelo+"_alt"+".template_paramdic[keyo]")    
 
