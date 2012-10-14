@@ -193,8 +193,8 @@ from __future__ import division
         
     # Collect info on numerical steady state
     if all([False if 'None' in x else True for x in secs['manualss'][0]]):
-        _mreg_alt = '^\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
-        _mreg = '\[\d+\]\s*[a-zA-Z]*_bar(?!=\+|-|\*|/])\s*=\s*.*'
+        _mreg_alt = '^\s*[a-zA-Z]*\d*_bar(?!=\+|-|\*|/])\s*=\s*.*'
+        _mreg = '\[\d+\]\s*[a-zA-Z]*\d*_bar(?!=\+|-|\*|/])\s*=\s*.*'
         _mreg2 = '\[\d+\]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
         _mregfocs = 'USE_FOCS=\[.*?\]'
         mregfocs = re.compile(_mregfocs)
@@ -207,6 +207,7 @@ from __future__ import division
         mreg = re.compile(_mreg_alt+'|'+_mreg+'|'+_mreg2)
         indx = []
         ssidic={}
+        ssili = []
         list_tmp = []
         anyssi_found = False
         i1=0
@@ -219,10 +220,9 @@ from __future__ import division
                 if ']' in ma.group(): str1 = ma.group().replace(';','').split('=')[0].split(']')[1].strip()
                 else: str1 = ma.group().replace(';','').split('=')[0].lstrip().rstrip()
                 str2 = ma.group().split('=')[1].strip()
-                ssidic[str1] = eval(str2)
-                # Expose the evaluated values for recursive smart evaluation
-                locals().update(self.paramdic)
-                locals()[str1] = eval(str2)
+                # Save the result as a string here, later in mk_mssidic_subs() method we do substitutions and evaluate then
+                ssidic[str1] = str2
+                ssili.append([str1,str2])
                 indx.append(i1)
             elif not mreg.search(x) and '...' in x:
                 counter = counter + 1
@@ -240,6 +240,7 @@ from __future__ import division
             i1=i1+1
         if anyssi_found:
             self.ssidic = deepcopy(ssidic)
+            self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssidic'] = deepcopy(ssidic)            
         else:
@@ -256,6 +257,7 @@ from __future__ import division
         elif use_focs and anyssi_found:
             self._use_focs = deepcopy(use_focs)
             self._ssidic = deepcopy(ssidic)
+            self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssys_list'] = False
             self.template_paramdic['use_focs'] = deepcopy(use_focs)
@@ -1977,6 +1979,30 @@ def mk_msstate_subs(self):
     self.ssys_list = deepcopy(tmp_list)
     return self
 
+def mk_mssidic_subs(self):
+    """
+    This function takes the manually defined numerical sstate's ssidic and then replaces
+    any @terms with the corresponding substitutions and evaluates as it goes along
+    """
+    _mreg = '@[a-zA-Z]*\d*_bar'
+    mreg = re.compile(_mreg)
+    tmp_list = deepcopy(self.ssili)
+    sub_dic = deepcopy(self.nlsubs)
+    for i1,x in enumerate(tmp_list):
+        while mreg.search(tmp_list[i1][1]):
+            ma = mreg.search(tmp_list[i1][1])
+            str_tmp = ma.group()
+            tmp_list[i1][1] = tmp_list[i1][1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
+        tmp_dic = {}
+        tmp_dic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
+        locals().update(self.paramdic)
+        locals().update(tmp_dic)
+        self.ssidic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
+    self.ssili = deepcopy(tmp_list)
+    # At the end delete ssili from model instance
+    del self.ssili
+    return self
+
 #This function is needed in population stage 1, at the end
 def mk_cfstate_subs(self):
     """
@@ -2039,6 +2065,11 @@ def populate_model_stage_one_bb(self, secs):
        all([False if 'None' in x else True for x in secs['manualss'][0]]):
         # Do this only if USE_FOCS has not been used, otherwise ssys_list would be missing
         if '_internal_focs_used' not in dir(self): self = mk_msstate_subs(self)
+    # Do substitutions inside the numerical steady state list, but the ssidic
+    # Check and do substitutions
+    if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
+       all([False if 'None' in x else True for x in secs['manualss'][0]]):
+        self = mk_mssidic_subs(self)
     # Do substitutions inside the closed form steady state list
     # Check and do substitutions
     if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\

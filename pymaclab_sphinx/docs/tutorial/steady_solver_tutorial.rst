@@ -108,8 +108,8 @@ Option 1: Using the model's declared FOCs and passing arguments at model instant
   Notice how we have left the usual sections employed to supply information useful for finding the steady state unused indicated by inserting
   the keyword "None". As you can see by inspecting the system of non-linear first order conditions, a steady state could be obtained by
   passing a steady state version of the FOCs to the non-linear root-finding algorithm, with the additional qualifier that in this particular case
-  we would ideally like to omit passing the last line which is just a declaration of the own-lagged law of motion of the exogenous state
-  productivity shock [#f1]_. This would lead to a 3 equation system in `c_bar`, `k_bar` and `y_bar`. Further more, we would
+  we would ideally like to omit passing the last line which is just a declaration of the own-lagged law of motion of the exogenous state [#f1]_
+  productivity shock. This would lead to a 3 equation system in `c_bar`, `k_bar` and `y_bar`. Further more, we would
   have to let the model somehow know the set of intial guesses for these three variables, which we often tend to set to some generic values, such
   as 1.0 for all three of them. How is all of this accomplished? By passing the relevant variables directly to the DSGE model at instantiation
   time like so:

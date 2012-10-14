@@ -1530,6 +1530,9 @@ class PyKlein2D:
             print vari+(vnmax-len(vari))*' '+'  |'+str(actm[i1,:])[2:-2]
 
     def show_sim(self,intup,filtup=None,insim='insim'):
+        # Deals with 0-tuples
+        if type(intup) != type((1,2,3)) and type(intup) == type('abc'):
+            intup = (intup,)
         # Check if simulations have been carried out
         if insim not in dir(self):
             return 'Error: You have not produced any simulations yet! Nothing to graph!'
@@ -1972,6 +1975,9 @@ class PyKlein2D:
 
 
     def irf(self,tlen,sntup):
+        # Deals with 0-tuples
+        if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
+            sntup = (sntup,)
         tlen = tlen + 1
         ncon = self.ncon
         nexo = self.nexo
@@ -2539,6 +2545,9 @@ class ForKleinD(PyKlein2D):
             self.insim = self.insim + [self.sim_o_one,]
 
     def irf(self,tlen,sntup):
+        # Deals with 0-tuples
+        if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
+            sntup = (sntup,)
         tlen = tlen + 1
         ncon = self.ncon
         nexo = self.nexo

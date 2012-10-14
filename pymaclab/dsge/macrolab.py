@@ -1627,7 +1627,11 @@ class DSGEmodel(object):
                 pos = ma.span()[0]
                 poe = ma.span()[1]
                 str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
-            func.append(eval(str_tmp))
+            try:
+                func.append(eval(str_tmp))
+            except:
+                print "ERROR at: "+str_tmp
+                sys.exit()
         self.func1 = func
 
         # Only exp() when variable needs to be put into ln !

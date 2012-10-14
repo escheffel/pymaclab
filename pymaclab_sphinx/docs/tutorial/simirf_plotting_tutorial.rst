@@ -274,6 +274,7 @@ Generating impulse-response functions
 
   .. plot:: ../make_graphs/test5.py
 
+
 .. rubric:: Footnotes
 
 .. [#f1] The simulated time series data contained within ``rbc1.modsolvers.forkleind.insim`` is `NOT` filtered yet. In designing the library I

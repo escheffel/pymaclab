@@ -33,7 +33,7 @@ Name = Romer's RBC model;
 rho = 0.01;
 
 # Calibrated steady state labour, in the SS solver the parameter b now gets determined
-l_bar = 2.0 / 3.0;
+l_bar = 2.0/3.0;
 
 # Household size (normalized to unity)
 H = 1.0;
@@ -48,7 +48,7 @@ n = 0.0025;
 delta = 0.025; 
 
 # capital's  share of output
-alpha = 1.0 / 3.0;
+alpha = 1.0/3.0;
 
 # government spending per effective worker is chosen so that in SS government
 # spending roughly is 20% of output (which matches U.S. data)
@@ -91,37 +91,37 @@ z_G_bar = 1.0;
 None
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++
-[0]  @U(t)       = LOG(c(t)) + b*LOG(1-l(t));
-[1]  @Uc(t)      = DIFF{@U(t),c(t)};
-[2]  @Uc(t+1)    = FF_1{@Uc(t)};
-[10] @F(t)       = k(t-1)**alpha;
-[11] @Fk(t)      = alpha * k(t-1)**(alpha - 1);
-[12] @Fl(t)      = z_A(t) * (1 - alpha) * k(t-1)**alpha;
+[10] @F(t)       = z_A(t)*k(t-1)**alpha*l(t)**(1-alpha);
+[10] @F_bar      = SS{@F(t)};
+[11] @Fk(t)      = DIFF{@F(t),k(t-1)};
+[12] @Fl(t)      = DIFF{@F(t),l(t)};
+[13] @Fk_bar     = SS{@Fk(t)};
+[14] @Fl_bar     = SS{@Fl(t)};
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++
 # Evolution of physical capital
-[0] (E(t)|z_A(t+1) * E(t)|l(t+1))*k(t) * EXP(n + g) - (z_A(t) * l(t))*((1 - delta) * k(t-1) + i(t)) = 0;
+[0] k(t) * EXP(n + g) - ((1 - delta) * k(t-1) + i(t)) = 0;
         
 # Aggregate resource constraint
-[1] (z_A(t) * l(t))*(y(t) - c(t) - i(t) - g(t)) = 0;
+[1] y(t) - c(t) - i(t) - g(t) = 0;
 
 # production process
-[2] y(t)*(z_A(t) * l(t)) - w(t)*l(t) - (R(t)-1.0)*k(t-1)*(z_A(t) * l(t)) = 0;
+[2] y(t) - @F(t) = 0;
 
 # labor is paid its marginal product
-[3] w(t)/(z_A(t) * l(t)) - @Fl(t) = 0;
+[3] w(t) - @Fl(t) = 0;
 
 # capital is paid its marginal product
 [4] R(t) - (1 + @Fk(t) - delta) = 0;
 
 # consumption Euler equation
-[5] 1 - EXP(-(rho + g)) * ((z_A(t)*l(t)*c(t)) / (E(t)|z_A(t+1)*E(t)|l(t+1)*E(t)|c(t+1))) * E(t)|R(t+1) = 0;
+[5] 1 - EXP(-(rho + g)) * (c(t) / E(t)|c(t+1)) * E(t)|R(t+1) = 0;
 
 # intra-temporal consumption/labor supply trade-off
-[6] b * c(t) * (z_A(t) * l(t)) - w(t)*(1 - l(t)) = 0;
+[6] b * c(t) - (1-l(t)) * w(t) = 0;
 
 # evolution of government spending (per effective worker!)
-[7] LOG((E(t)|g(t+1)* (E(t)|z_A(t+1) * E(t)|l(t+1)))/(g(t)* (z_A(t) * l(t)))) - (n+g) - (E(t)|z_G(t+1)/z_G(t)) = 0;
+[7] LOG((E(t)|g(t+1))/(g(t))) - (n+g) - (E(t)|z_G(t+1)/z_G(t)) = 0;
 
 # technology shocks
 [8] LOG(E(t)|z_A(t+1)) - rho_A * LOG(z_A(t)) = 0;
@@ -131,25 +131,24 @@ None
 
 %Steady States [Closed form]++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
-
  
 %Steady State Non-Linear System [Manual]++++++++++++++++++++++++++++++++++++++++
-[0] (EXP(n + g) - 1 + delta) * k_bar - i_bar = 0;
+[0] (EXP(n + g) - 1.0 + delta) * k_bar - i_bar = 0;
 [1] y_bar - c_bar - i_bar - g_bar = 0;
-[2] y_bar - k_bar**alpha = 0;
-[3] w_bar - (1 - alpha) * k_bar**alpha = 0;
-[4] R_bar - (1 + alpha * k_bar**(alpha - 1) - delta) = 0;
-[5] 1 - EXP(-(rho + g)) * R_bar = 0;
-[6] b * c_bar * l_bar - (1 - l_bar) * w_bar = 0;
-[7] g_bar - y_bar * gov_share = 0;
+[2] y_bar - @F_bar = 0;
+[3] w_bar - @Fl_bar = 0;
+[4] R_bar - (1 + @Fk_bar - delta) = 0;
+[5] R_bar - (1.0/EXP(-(rho + g))) = 0;
+[6] b*c_bar - (1 - l_bar)*w_bar = 0;
+[7] g_bar - y_bar*gov_share = 0;
 
 # initial values for numerical steady-state computation
-[0] k_bar = 20.0;
-[1] y_bar = k_bar**alpha;
-[2] w_bar = (1 - alpha) * k_bar**alpha;
-[3] R_bar = 1 + alpha * k_bar**(alpha - 1) - delta;
-[4] b = 1.0;
-[5] c_bar = 2.0;
+[0] k_bar = 5.0;
+[1] y_bar = @F_bar;
+[2] w_bar = @Fl_bar;
+[3] R_bar = 1 + @Fk_bar - delta;
+[4] b = 2.0;
+[5] c_bar = 1.0;
 [6] g_bar = y_bar * gov_share;
 [7] i_bar = y_bar - c_bar - g_bar;
 
