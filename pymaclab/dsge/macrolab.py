@@ -666,7 +666,7 @@ class DSGEmodel(object):
                      self.jAA,self.jBB,
                      self.vardic,self.vdic,
                      self.mod_name,self.audic)
-            self.modsolvers.forkleind = ForKleinD(intup)
+            self.modsolvers.forkleind = ForKleinD(intup,other=self)
             # Make the AA and BB matrices as references available instead
             self.modsolvers.forkleind.A = self.jAA
             self.modsolvers.forkleind.B = self.jBB
@@ -699,7 +699,7 @@ class DSGEmodel(object):
 
             # Open the PyKlein2D object, but don't pass mlabwrap session
             intup = intup[:-1]
-            self.modsolvers.pyklein2d = PyKlein2D(intup)
+            self.modsolvers.pyklein2d = PyKlein2D(intup,other=self)
             # Make the AA and BB matrices as references available instead
             self.modsolvers.pyklein2d.A = self.jAA
             self.modsolvers.pyklein2d.B = self.jBB

@@ -1999,8 +1999,6 @@ def mk_mssidic_subs(self):
         locals().update(tmp_dic)
         self.ssidic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
     self.ssili = deepcopy(tmp_list)
-    # At the end delete ssili from model instance
-    del self.ssili
     return self
 
 #This function is needed in population stage 1, at the end
@@ -2070,6 +2068,10 @@ def populate_model_stage_one_bb(self, secs):
     if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
        all([False if 'None' in x else True for x in secs['manualss'][0]]):
         self = mk_mssidic_subs(self)
+        # Also save a copy of substituted and evaluated ssili with starting values
+        self.template_paramdic['ssili'] = deepcopy(self.ssidic.items())        
+        # At the end delete ssili from model instance
+        del self.ssili        
     # Do substitutions inside the closed form steady state list
     # Check and do substitutions
     if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
@@ -2091,6 +2093,8 @@ def populate_model_stage_one_bb(self, secs):
         # Save for template instantiation
         self.template_paramdic['focs_list'] = False
         
+    # Also save a copy of the focs with replaced substitutions
+    self.template_paramdic['focs_list2'] = deepcopy(self.foceqs2)
     return self
 
 

@@ -1,6 +1,6 @@
 try:
     import wheezy
-    from wheezy_template import wheezy_template
+    from wheezy_dynare_template import wheezy_dynare_template
 except:
     pass
 
@@ -13,5 +13,11 @@ except:
 try:
     import cheetah
     from cheetah_template import cheetah_template
+except:
+    pass
+  
+try:
+    import mako
+    from mako_dynare_template import mako_dynare_template
 except:
     pass
