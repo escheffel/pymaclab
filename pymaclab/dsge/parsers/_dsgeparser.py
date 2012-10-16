@@ -278,6 +278,17 @@ from __future__ import division
 
 
 ############# BELOW HERE IS ALL FOR 2ND STAGE ###########
+def def_timing(self,endo=[-1,0],exo=[-1,0],con=[0,1]):
+    '''
+    A small method which can be used in order to set the timings in stone.
+    This will then be used in other parts of the code, also in macrolab package
+    '''
+    self.vtiming = {}
+    self.vtiming['endo'] = deepcopy(endo)
+    self.vtiming['exo'] = deepcopy(exo)
+    self.vtiming['con'] = deepcopy(con)
+    
+    return self
 
 def mkaug1(self, insys,othersys):         
     # Determine the lengths of augmented vars
@@ -285,22 +296,19 @@ def mkaug1(self, insys,othersys):
     list_tmp2 = deepcopy(insys)
     list_tmp1 = deepcopy(othersys)
 
-    #### WARNING #######
-    # If timing assumptions are changed here then we also need to modify them in
-    # ALL macrolab mkjahe method variants  !!!!
-    ####################
+    # Timing definitions
+    endotime = self.vtiming['endo']
+    exotime = self.vtiming['exo']
+    contime = self.vtiming['con']
     endosp = []
-    endotime = [-1,0]
     for x in self.vardic['endo']['var']:
-        endosp = endosp + [[x,endotime]]
+        endosp = endosp + [[x,deepcopy(endotime)]]
     exosp = []
-    exotime = [-1,0]
     for x in self.vardic['exo']['var']:
-        exosp = exosp + [[x,exotime]]
+        exosp = exosp + [[x,deepcopy(exotime)]]
     consp = []
-    contime = [0,1]
     for x in self.vardic['con']['var']:
-        consp = consp + [[x,contime]]
+        consp = consp + [[x,deepcopy(contime)]]
 
     alldic = {}
     alldic.update(self.paramdic)
@@ -390,7 +398,7 @@ def mkaug1(self, insys,othersys):
                 newvar = vari+'_F'+tind+'(t)'
                 newname =  vari+'_F'+str(abs(int(vartime)-1))
                 list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t)'+list_tmp2[i1][poe:]
-                for i2 in range(int(vartime)):
+                for i2 in range(int(vartime)+1):
                     tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
                     newvar = vari+'_F'+tind+'(t)'
                     newname =  vari+'_F'+str(abs(i2+1))
@@ -489,7 +497,7 @@ def mkaug1(self, insys,othersys):
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
-        exo_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in exo_r ]
+        exo_r = [[x[0],[abs(x[1][0])-1,x[1][1]]] for x in exo_r ]
         # Create lags and forwards equations
         for vari in exo_r:
             for lag in range(abs(vari[1][0])):
@@ -543,22 +551,19 @@ def mkaug2(self, insys):
 
     list_tmp1 = deepcopy(insys)
 
-    #### WARNING #######
-    # If timing assumptions are changed here then we also need to modify them in
-    # ALL macrolab mkjahe method variants  !!!!
-    ####################
+    # Timing definitions
+    endotime = self.vtiming['endo']
+    exotime = self.vtiming['exo']
+    contime = self.vtiming['con']
     endosp = []
-    endotime = [-1,0]
     for x in self.vardic['endo']['var']:
-        endosp = endosp + [[x,endotime]]
+        endosp = endosp + [[x,deepcopy(endotime)]]
     exosp = []
-    exotime = [-1,0]
     for x in self.vardic['exo']['var']:
-        exosp = exosp + [[x,exotime]]
+        exosp = exosp + [[x,deepcopy(exotime)]]
     consp = []
-    contime = [0,1]
     for x in self.vardic['con']['var']:
-        consp = consp + [[x,contime]]
+        consp = consp + [[x,deepcopy(contime)]]
 
     alldic = {}
     alldic.update(self.paramdic)
@@ -649,7 +654,7 @@ def mkaug2(self, insys):
                 newvar = vari+'_F'+tind+'(t)'
                 newname =  vari+'_F'+str(abs(int(vartime)-1))
                 list_tmp1[i1] = list_tmp1[i1][:pos]+newvar.split('(')[0]+'(t)'+list_tmp1[i1][poe:]
-                for i2 in range(int(vartime)):
+                for i2 in range(int(vartime)+1):
                     tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
                     newvar = vari+'_F'+tind+'(t)'
                     newname =  vari+'_F'+str(abs(i2+1))
@@ -725,7 +730,6 @@ def mkaug2(self, insys):
                             self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
                     continue
 
-
     # Now change the system to include possible augmented variables
     endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo']) 
     if endo_r:
@@ -752,7 +756,7 @@ def mkaug2(self, insys):
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
-        exo_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in exo_r ]
+        exo_r = [[x[0],[abs(x[1][0])-1,x[1][1]]] for x in exo_r ]
         # Create lags and forwards equations
         for vari in exo_r:
             for lag in range(abs(vari[1][0])):
@@ -1692,6 +1696,8 @@ def mknonlinsys(self, secs):
     Create Non-Linear FOC System
     """
     list_tmp1 = deepcopy(self.foceqs2)
+    # Establish the timing convention of variables in the model file
+    self = def_timing(self)
     self, list_tmp1 = mkaug2(self, list_tmp1)
 
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):

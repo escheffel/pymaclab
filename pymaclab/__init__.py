@@ -80,8 +80,11 @@ def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
         return modobj
     # Dynamic system prepared and prepared for solving
     modobj.init4()
-    modobj.init5()
     if initlev == 2:
+        modobj.init_out()
+        return modobj
+    modobj.init5()
+    if initlev == 3:
         modobj.init_out()
         return modobj
 
