@@ -1269,12 +1269,28 @@ class DSGEmodel(object):
         :return self.jBB:  *(arr2d)* - attaches numerical BB matrix used in Forkleind solution method
         '''
         mk_hessian = self._mk_hessian
+        
+        
+        #### WARNING #######
+        # If timing assumptions are changed here then we also need to modify them in
+        # dsge_parser in methods mkaug1 and mkaug2 !!!!
+        ####################
+        '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
         exo_0 = [x[0] for x in self.vardic['exo']['var']]
         endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
         con_0 = [x[0] for x in self.vardic['con']['var']]
+        '''
+        
+        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
+        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
+        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        con_0 = [x[0] for x in self.vardic['con']['var']]         
+        
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -1558,13 +1574,27 @@ class DSGEmodel(object):
         mesg = copy.deepcopy(self._mesg)
         
         import sympycore
-
+        
+        #### WARNING #######
+        # If timing assumptions are changed here then we also need to modify them in
+        # dsge_parser in methods mkaug1 and mkaug2 !!!!
+        ####################
+        '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
         exo_0 = [x[0] for x in self.vardic['exo']['var']]
         endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
         con_0 = [x[0] for x in self.vardic['con']['var']]
+        '''
+        
+        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
+        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
+        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        con_0 = [x[0] for x in self.vardic['con']['var']]        
+        
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -1578,6 +1608,7 @@ class DSGEmodel(object):
             jrows = jrows + lsubs
             nlsys = nlsys + copy.deepcopy(self.nlsubsys)
 
+
         # Create substitution var list and dictionary
         tmpli = []
         for i,x in enumerate(intup):
@@ -1586,6 +1617,10 @@ class DSGEmodel(object):
             tmpli.append([x,'SUB'+inds])
             dicli = dict(tmpli)
             dicli2 = dict([[x[1],x[0]] for x in tmpli])
+        self.subs_li = deepcopy(tmpli)
+        self.var_li = [x[0] for x in tmpli]
+        self.subs_dic = deepcopy(dicli)
+        self.subs_dic2 = deepcopy(dicli2)
 
         func = []
         subli = []
@@ -1606,6 +1641,7 @@ class DSGEmodel(object):
                 poe = y[3][1]
                 vari = y[0]
                 str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
+            # Take out the IID variables as they don't matter for computation of derivative matrices
             list2 = self.vreg(('{-10,10}|None','iid','{-10,10}'),str_tmp,True,'max')
             if list2:
                 list2.reverse()
@@ -1697,13 +1733,20 @@ class DSGEmodel(object):
             evaldic[x[1]] = evalli[i]
 
         # Now make the 2D and 3D symbolic and numeric Jacobian and Hessian
-        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,mk_hessian):
-
+        def mkjaheseq(lcount,func2,jcols,symdic,tmpli,paramdic,sstate,evaldic,suba_dic,mk_hessian):
+            ### Needed for jdicc and hdicc ###
+            _mreg = 'SUB\d{5,5}'
+            mreg = re.compile(_mreg)
+            ##################################
+            
             jdic = dict([[x,'0'] for x in range(jcols)])
+            jdicc = copy.deepcopy(jdic)
+            carry_over_dic = {}
             numj = numpy.matlib.zeros((1,jcols))
             if mk_hessian:
                 rdic = dict([[x,'0'] for x in range(jcols)])
                 hdic = dict([[x,rdic.copy()] for x in range(jcols)])
+                hdicc = copy.deepcopy(hdic)
                 numh = numpy.matlib.zeros((jcols,jcols))
 
             alldic = {}
@@ -1717,16 +1760,45 @@ class DSGEmodel(object):
             count = 0
             for y in range(jcols):
                 jdic[y] = func2[lcount].diff(symdic[tmpli[y][1]])
+                
+                #### For symbolic jdicc ###
+                differo_var = str(symdic[tmpli[y][1]])
+                differo_var = suba_dic[differo_var]
+                if y not in carry_over_dic.keys(): carry_over_dic[y] = differo_var
+                jdicc[differo_var] = str(jdic[y])
+                if mreg.search(jdicc[differo_var]):
+                    for keyo in suba_dic.keys():
+                        jdicc[differo_var] = jdicc[differo_var].replace(keyo,suba_dic[keyo])
+                else:
+                    jdicc[differo_var] = jdicc[differo_var]
+                ###### Done ########
+                
                 numj[0,y] = eval(str(jdic[y].evalf()))
                 if mk_hessian:
                     for z in range(jcols):
                         hdic[y][z] = jdic[y].diff(symdic[tmpli[z][1]])
+                        
+                        #### For symbolic hdicc ###
+                        differo_var = str(symdic[tmpli[z][1]])
+                        differo_var = suba_dic[differo_var]
+                        if hdicc.has_key(carry_over_dic[y]):
+                            hdicc[carry_over_dic[y]][differo_var] = str(hdic[y][z])
+                        else:
+                            hdicc[carry_over_dic[y]] = {}
+                            hdicc[carry_over_dic[y]][differo_var] = str(hdic[y][z])
+                        if mreg.search(hdicc[carry_over_dic[y]][differo_var]):
+                            for keyo in suba_dic.keys():
+                                hdicc[carry_over_dic[y]][differo_var] = hdicc[carry_over_dic[y]][differo_var].replace(keyo,suba_dic[keyo])
+                        else:
+                            hdicc[carry_over_dic[y]][differo_var] = hdicc[carry_over_dic[y]][differo_var]
+                        ###### Done ########
+                        
                         numh[count,z] = eval(str(hdic[y][z].evalf()))
                     count = count + 1
             if mk_hessian:
-                return (numj,jdic,numh,hdic)
+                return (numj,jdic,jdicc,numh,hdic,hdicc)
             else:
-                return (numj,jdic)
+                return (numj,jdic,jdicc)
 
         inputs = [x for x in xrange(len(self.func2))]
         # Support auto-detection of CPU cores
@@ -1735,7 +1807,7 @@ class DSGEmodel(object):
         else:
             if mesg: print "INIT: Parallel execution started with "+str(jobserver.get_ncpus())+ " CPU cores..."
 
-        imports = ('numpy','numpy.matlib',)
+        imports = ('numpy','numpy.matlib','copy','re',)
         
         #job_server.submit(self, func, args=(), depfuncs=(), modules=(), callback=None, callbackargs=(), group='default', globals=None)
         # Submits function to the execution queue
@@ -1755,34 +1827,45 @@ class DSGEmodel(object):
 
         # Make sure the jobserver has done his jobs
         jobserver.wait()        
-        jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,mk_hessian),(),imports) for inputo in inputs]
+        jobs = [jobserver.submit(mkjaheseq,(inputo,self.func2,jcols,symdic,tmpli,self.paramdic,self.sstate,evaldic,self.subs_dic2,mk_hessian),(),imports) for inputo in inputs]
         if mk_hessian:
             jdic = {}
+            jdicc = {}
             hdic = {}
+            hdicc = {}
             job_0 = jobs[0]
             numj = job_0()[0]
             jdic[0] = job_0()[1]
-            numh = job_0()[2]
-            hdic[0] = job_0()[3]
+            jdicc[0] = job_0()[2]
+            numh = job_0()[3]
+            hdic[0] = job_0()[4]
+            hdicc[0] = job_0()[5]
             for i1,job in enumerate(jobs[1:len(jobs)]):
                 numj = mat.vstack((numj,job()[0]))
                 jdic[i1+1] = job()[1]
-                numh = mat.vstack((numh,job()[2]))
-                hdic[i1+1] = job()[3]
+                jdicc[i1+1] = job()[2]
+                numh = mat.vstack((numh,job()[3]))
+                hdic[i1+1] = job()[4]
+                hdicc[i1+1] = job()[5]
             self.numj = numj
             self.jdic = jdic
+            self.jdicc = jdicc
             self.numh = numh
             self.hdic = hdic
+            self.hdicc = hdicc
         else:
             jdic = {}
             job_0 = jobs[0]
             numj = job_0()[0]
             jdic[0] = job_0()[1]
+            jdicc[0] = job_0()[2]
             for i1,job in enumerate(jobs[1:len(jobs)]):
                 numj = mat.vstack((numj,job()[0]))
                 jdic[i1+1] = job()[1]
+                jdicc[i1+1] = job()[2]
             self.numj = numj
             self.jdic = jdic
+            self.jdicc = jdicc
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
@@ -1822,12 +1905,27 @@ class DSGEmodel(object):
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         mk_hessian = self._mk_hessian
+        
+        #### WARNING #######
+        # If timing assumptions are changed here then we also need to modify them in
+        # dsge_parser in methods mkaug1 and mkaug2 !!!!
+        ####################
+        '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
         exo_0 = [x[0] for x in self.vardic['exo']['var']]
         endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
         con_0 = [x[0] for x in self.vardic['con']['var']]
+        '''
+        
+        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
+        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
+        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        con_0 = [x[0] for x in self.vardic['con']['var']]         
+        
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -2035,11 +2133,26 @@ class DSGEmodel(object):
         self.jBB: attaches numerical BB matrix used in Forkleind solution method
         '''
         mk_hessian = self._mk_hessian
+        
+        #### WARNING #######
+        # If timing assumptions are changed here then we also need to modify them in
+        # dsge_parser in methods mkaug1 and mkaug2 !!!!
+        ####################        
+        '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
         exo_0 = [x[0] for x in self.vardic['exo']['var']]
         endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        '''
+        
+        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
+        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
+        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        con_0 = [x[0] for x in self.vardic['con']['var']]        
+        
         con_0 = [x[0] for x in self.vardic['con']['var']]
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
@@ -2192,13 +2305,27 @@ class DSGEmodel(object):
         mk_hessian = self._mk_hessian
         # import local sympycore
         import sympycore
-
+        
+        #### WARNING #######
+        # If timing assumptions are changed here then we also need to modify them in
+        # dsge_parser in methods mkaug1 and mkaug2 !!!!
+        ####################
+        '''
         exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
         endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
         exo_0 = [x[0] for x in self.vardic['exo']['var']]
         endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
         con_0 = [x[0] for x in self.vardic['con']['var']]
+        '''
+        
+        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
+        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
+        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
+        con_0 = [x[0] for x in self.vardic['con']['var']]         
+        
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 

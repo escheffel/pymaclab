@@ -19,10 +19,9 @@ sigma_eps = 0.052;
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]  k(t):capital{endo}[log,bk]
 [2]  c(t):consumption{con}[log,bk]
-[4]  y(t):output{con}[log,bk]      
+[4]  y(t):output{con}[log,bk]
+[4]  R(t):rrate{con}[log,bk]
 [5]  z(t):eps(t):productivity{exo}[log,bk]
-[6]  @inv(t):investment[log,bk]
-[7]  @R(t):rrate
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
@@ -35,9 +34,6 @@ None
 [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
 [2]   @Fk_bar   = SS{@Fk(t)};
 [2]   @F_bar    = SS{@F(t)};
-[3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
-[4]   @R_bar    = SS{@R(t)};
-[3]   @R(t+1)   = FF_1{@R(t)};
 [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
 [5]   @MU_bar   = SS{@U(t)};
@@ -48,10 +44,11 @@ None
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 
-[1]   @F(t)-@inv(t)-c(t) = 0;
-[2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
+[1]   y(t)-@inv(t)-c(t) = 0;
+[2]   betta*(@MU(t+1)/@MU(t))*E(t)|R(t+1)-1 = 0;
 [3]   @F(t)-y(t) = 0;
-[4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+[4]   R(t) - (1+@Fk(t)-delta) = 0;
+[5]   LOG(z(t))-psi*LOG(z(t-1)) = 0;
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -59,10 +56,10 @@ None
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   @F_bar-@inv_bar-c_bar = 0;
+[1]   y_bar-@inv_bar-c_bar = 0;
 [2]   y_bar-@F_bar = 0;
-[3]   betta*@R_bar-1 = 0;
-[4]   betta*R_bar-1 = 0;
+[3]   betta*R_bar-1 = 0;
+[4]   R_bar-(1+@Fk_bar-delta) = 0;
 
 [1]   c_bar = 1.0;
 [2]   y_bar = 1.0;

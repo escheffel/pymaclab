@@ -285,15 +285,22 @@ def mkaug1(self, insys,othersys):
     list_tmp2 = deepcopy(insys)
     list_tmp1 = deepcopy(othersys)
 
+    #### WARNING #######
+    # If timing assumptions are changed here then we also need to modify them in
+    # ALL macrolab mkjahe method variants  !!!!
+    ####################
     endosp = []
+    endotime = [-1,0]
     for x in self.vardic['endo']['var']:
-        endosp = endosp + [[x,[-1,0]]]
+        endosp = endosp + [[x,endotime]]
     exosp = []
+    exotime = [-1,0]
     for x in self.vardic['exo']['var']:
-        exosp = exosp + [[x,[0,1]]]
+        exosp = exosp + [[x,exotime]]
     consp = []
+    contime = [0,1]
     for x in self.vardic['con']['var']:
-        consp = consp + [[x,[0,1]]]
+        consp = consp + [[x,contime]]
 
     alldic = {}
     alldic.update(self.paramdic)
@@ -457,7 +464,7 @@ def mkaug1(self, insys,othersys):
                     continue
 
     # Now change the system to include possible augmented variables
-    endo_r = filter(lambda x: x[1] != [-1,0], spvdic2['endo']) 
+    endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo']) 
     if endo_r:
         endo_r = [[x[0],[abs(x[1][0]+1),x[1][1]]] for x in endo_r ]
         # Create lags and forwards equations
@@ -480,7 +487,7 @@ def mkaug1(self, insys,othersys):
                     tind1 = (5-len(str(lead-1)))*'0'+str(lead-1)
                     if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-    exo_r = filter(lambda x: x[1] != [0,1], spvdic2['exo'])
+    exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
         exo_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in exo_r ]
         # Create lags and forwards equations
@@ -504,7 +511,7 @@ def mkaug1(self, insys,othersys):
                         tind1 = (5-len(str(lead)))*'0'+str(lead)
                         if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-    con_r = filter(lambda x: x[1] != [0,1], spvdic2['con']) 
+    con_r = filter(lambda x: x[1] != contime, spvdic2['con']) 
     if con_r:
         con_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in con_r ]
         # Create lags and forwards equations
@@ -529,8 +536,6 @@ def mkaug1(self, insys,othersys):
                         if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
 
-
-
     return self, (list_tmp1,list_tmp2)
 
 def mkaug2(self, insys):
@@ -538,15 +543,22 @@ def mkaug2(self, insys):
 
     list_tmp1 = deepcopy(insys)
 
+    #### WARNING #######
+    # If timing assumptions are changed here then we also need to modify them in
+    # ALL macrolab mkjahe method variants  !!!!
+    ####################
     endosp = []
+    endotime = [-1,0]
     for x in self.vardic['endo']['var']:
-        endosp = endosp + [[x,[-1,0]]]
+        endosp = endosp + [[x,endotime]]
     exosp = []
+    exotime = [-1,0]
     for x in self.vardic['exo']['var']:
-        exosp = exosp + [[x,[0,1]]]
+        exosp = exosp + [[x,exotime]]
     consp = []
+    contime = [0,1]
     for x in self.vardic['con']['var']:
-        consp = consp + [[x,[0,1]]]
+        consp = consp + [[x,contime]]
 
     alldic = {}
     alldic.update(self.paramdic)
@@ -715,7 +727,7 @@ def mkaug2(self, insys):
 
 
     # Now change the system to include possible augmented variables
-    endo_r = filter(lambda x: x[1] != [-1,0], spvdic2['endo']) 
+    endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo']) 
     if endo_r:
         endo_r = [[x[0],[abs(x[1][0]+1),x[1][1]]] for x in endo_r ]
         # Create lags and forwards equations
@@ -738,7 +750,7 @@ def mkaug2(self, insys):
                     tind1 = (5-len(str(lead-1)))*'0'+str(lead-1)
                     if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-    exo_r = filter(lambda x: x[1] != [0,1], spvdic2['exo'])
+    exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
         exo_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in exo_r ]
         # Create lags and forwards equations
@@ -762,7 +774,7 @@ def mkaug2(self, insys):
                         tind1 = (5-len(str(lead)))*'0'+str(lead)
                         if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-    con_r = filter(lambda x: x[1] != [0,1], spvdic2['con']) 
+    con_r = filter(lambda x: x[1] != contime, spvdic2['con']) 
     if con_r:
         con_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in con_r ]
         # Create lags and forwards equations
