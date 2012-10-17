@@ -1,6 +1,7 @@
 try:
     import wheezy
     from wheezy_dynare_template import wheezy_dynare_template
+    from wheezy_template import wheezy_template
 except:
     pass
 

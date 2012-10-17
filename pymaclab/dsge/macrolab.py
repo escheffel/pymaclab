@@ -301,7 +301,8 @@ class DSGEmodel(object):
             for elem in self._use_focs:
                 list_tmp.append(self.foceqss[elem])
             self.ssys_list = deepcopy(list_tmp)
-            self.ssidic = copy.deepcopy(self._ssidic)
+            # Check if this has not already been produced in populate_model_stage_one_bb, chances are it has
+            if 'ssidic' not in dir(self): self.ssidic = copy.deepcopy(self._ssidic)
         
         if not no_wrap:   
             # Wrap manss_sys
@@ -337,14 +338,14 @@ class DSGEmodel(object):
         # check if the Steady-State Non-Linear system .mod section has an entry
         if all([False if 'None' in x else True for x in secs['manualss'][0]]) or self._use_focs:
             intup = (self.ssys_list,self.ssidic,self.paramdic)
-            self.sssolvers.fsolve = Fsolve(intup)
+            self.sssolvers.fsolve = Fsolve(intup,other=self)
         # check if the Steady-State Non-Linear system closed form has an entry
         #  we do this here with ELIF because we only want to set this up for solving if manualss does not exist
         elif all([False if 'None' in x else True for x in secs['closedformss'][0]]):
             alldic = {}
             alldic.update(self.paramdic)
             intup = (self.manss_sys,alldic)
-            self.sssolvers.manss = ManualSteadyState(intup)
+            self.sssolvers.manss = ManualSteadyState(intup,other=self)
 
     def init3(self):
         '''
@@ -719,7 +720,43 @@ class DSGEmodel(object):
         if 'jAA' in dir(self):
             self.mkeigv()
         # Make sure the jobserver has done his jobs
-        jobserver.wait()        
+        jobserver.wait()
+        
+    def mk_dynare(self,order=1,centralize=False):
+        # Import the template and other stuff
+        from pymaclab.modfiles.templates import mako_dynare_template
+        from scipy import io
+        from solvers.modsolvers import Dynare
+        import tempfile
+        import os
+        import glob
+        filo = tempfile.NamedTemporaryFile()
+        fname = filo.name
+        fname2 = fname.split('/')[-1]
+        filo2 = open(os.path.join(os.getcwd(),'test.mod'),'w')
+        # Render the template to be passed to dynare++
+        modstr = mako_dynare_template.render(**self.template_paramdic)
+        filo2.write(modstr)
+        filo2.flush()
+        filo2.close()
+        filo.file.write(modstr)
+        filo.file.flush()
+        self.modsolvers.dynare = Dynare({})
+        self.modsolvers.dynare.__setattr__('modfile',modstr)
+        if not centralize:
+            os.system('dynare++ --no-centralize --order '+str(order)+' '+filo.name)
+        else:
+            os.system('dynare++ --order '+str(order)+' '+filo.name)
+        dynret = io.loadmat(os.path.join(os.getcwd(),filo.name.split('/')[-1]+'.mat'))
+        # Check if solution has been computed and attache all solution matrices to dynare instance
+        if dynret.has_key('dyn_g_1'):
+            self.modsolvers.dynare.__init__(dynret)
+        else:
+            print "FAIL: Dynare could not determine solution."
+        filo.close()
+        # Delete all of the files
+        for filor in glob.glob(fname2+'*.*'):
+            os.remove(filor)
             
     def find_rss(self,mesg=False,rootm='hybr',scale=0.0):
         '''
@@ -1891,6 +1928,7 @@ class DSGEmodel(object):
             self.hdicc = hdicc
         else:
             jdic = {}
+            jdicc = {}
             job_0 = jobs[0]
             numj = job_0()[0]
             jdic[0] = job_0()[1]

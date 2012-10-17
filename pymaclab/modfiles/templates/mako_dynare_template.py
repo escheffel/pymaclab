@@ -19,17 +19,23 @@ model;
 % endfor
 end;
 
-
+<%
+initvli = []
+allvar = [x[0].split('(')[0] for x in vardic['endo']['var']+vardic['exo']['var']+vardic['con']['var']]
+%>
 initval;
 % for item in ssili:
 % if item[0] in [x[0].split('(')[0]+'_bar' for x in vardic['con']['var']] or item[0] in [x[0].split('(')[0]+'_bar' for x in vardic['endo']['var']] or item[0] in [x[0].split('(')[0]+'_bar' for x in vardic['exo']['var']]:
-${item[0].replace('_bar','')} = ${item[1]};
+${item[0].replace('_bar','')} = ${item[1]}; <% initvli.append(item[0].replace('_bar','')) %>
 % endif
 % endfor
 % for keyo in [x for x in paramdic.keys() if '_bar' in x]:
 % if keyo in [x[0].split('(')[0]+'_bar' for x in vardic['con']['var']] or keyo in [x[0].split('(')[0]+'_bar' for x in vardic['endo']['var']] or keyo in [x[0].split('(')[0]+'_bar' for x in vardic['exo']['var']]:
-${keyo.replace('_bar','')} = ${paramdic[keyo]};
+${keyo.replace('_bar','')} = ${paramdic[keyo]}; <% initvli.append(item[0].replace('_bar','')) %>
 % endif
+% endfor
+% for varo in [x for x in [y for y in allvar if y not in initvli]]:
+${varo} = 1.0;
 % endfor
 end;
 

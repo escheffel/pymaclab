@@ -25,9 +25,10 @@ class ManualSteadyState(SSsolvers):
     """
     Solve for the steady state manually
     """
-    def __init__(self, intup):
+    def __init__(self,intup,other=None):
         self.manss_sys = intup[0]
         self.paramdic = intup[1]
+        self.other = other
 
     def solve(self):
         list_tmp1 = copy.deepcopy(self.manss_sys)
@@ -55,10 +56,11 @@ class ManualSteadyState(SSsolvers):
         self.sstate = manss
 
 class Fsolve(SSsolvers):
-    def __init__(self,intup):
+    def __init__(self,intup,other=None):
         self.ssm = intup[0]
         self.ssi = intup[1]
         self.paramdic = intup[2]
+        self.other = other
         # create a dic holding non _bar values in ssi
         tmp_dic = {}
         for keyo in self.ssi.keys():

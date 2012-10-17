@@ -221,7 +221,13 @@ from __future__ import division
                 else: str1 = ma.group().replace(';','').split('=')[0].lstrip().rstrip()
                 str2 = ma.group().split('=')[1].strip()
                 # Save the result as a string here, later in mk_mssidic_subs() method we do substitutions and evaluate then
-                ssidic[str1] = str2
+                locals().update(self.paramdic)
+                # This captures the case where we have only variables from parameters, but no substitutions
+                if '@' not in str2:
+                    ssidic[str1] = str(eval(str2))
+                    locals()[str1] = eval(str2)
+                else:
+                    ssidic[str1] = str2
                 ssili.append([str1,str2])
                 indx.append(i1)
             elif not mreg.search(x) and '...' in x:
@@ -246,6 +252,7 @@ from __future__ import division
         else:
             #Make empty to be filled by other procedure
             self.ssidic = {}
+            self.ssili = []
             # Save for template instantiation
             self.template_paramdic['ssidic'] = False
 
@@ -265,7 +272,7 @@ from __future__ import division
             self._use_focs = deepcopy(use_focs)
             # Save for template instantiation
             self.template_paramdic['ssys_list'] = False
-            self.template_paramdic['use_focs'] = use_focs
+            self.template_paramdic['use_focs'] = deepcopy(use_focs)
             
     else:
         # Save for template instantiation
@@ -273,7 +280,6 @@ from __future__ import division
         self.template_paramdic['ssys_list'] = False
         self.template_paramdic['use_focs'] = False
         
-
     return self
 
 
@@ -2011,11 +2017,12 @@ def mk_mssidic_subs(self):
             ma = mreg.search(tmp_list[i1][1])
             str_tmp = ma.group()
             tmp_list[i1][1] = tmp_list[i1][1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
+        locals().update(self.paramdic)
         tmp_dic = {}
         tmp_dic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
-        locals().update(self.paramdic)
         locals().update(tmp_dic)
-        self.ssidic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
+        # Update ssidic
+        self.ssidic.update(tmp_dic)
     self.ssili = deepcopy(tmp_list)
     return self
 
@@ -2087,9 +2094,7 @@ def populate_model_stage_one_bb(self, secs):
        all([False if 'None' in x else True for x in secs['manualss'][0]]):
         self = mk_mssidic_subs(self)
         # Also save a copy of substituted and evaluated ssili with starting values
-        self.template_paramdic['ssili'] = deepcopy(self.ssidic.items())        
-        # At the end delete ssili from model instance
-        del self.ssili        
+        self.template_paramdic['ssili'] = deepcopy(self.ssidic.items())
     # Do substitutions inside the closed form steady state list
     # Check and do substitutions
     if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\

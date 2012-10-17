@@ -53,10 +53,22 @@ def test_others():
                 for keyo2 in eval(modelo+".template_paramdic[keyo].keys()"):
                     assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
             elif keyo == 'ssidic' and eval(modelo+".template_paramdic[keyo]") != False:
+	        #assert eval(modelo+".template_paramdic[keyo].keys()") == eval(modelo+"_alt"+".template_paramdic[keyo].keys()")
                 for keyo2 in eval(modelo+".template_paramdic[keyo].keys()"):
-                    assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
-            else:
-                assert eval(modelo+".template_paramdic[keyo]") == eval(modelo+"_alt"+".template_paramdic[keyo]")    
+		    try:
+		        float(eval(modelo+".template_paramdic[keyo][keyo2]"))
+		        assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
+		    except:
+		        eval(modelo+".template_paramdic[keyo][keyo2]") == eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]")
+            elif keyo == 'paramdic':
+	        #assert eval(modelo+".template_paramdic[keyo].keys()") == eval(modelo+"_alt"+".template_paramdic[keyo].keys()")
+	        for keyo2 in eval(modelo+".template_paramdic[keyo].keys()"):
+		    try:
+		        float(eval(modelo+".template_paramdic[keyo][keyo2]"))
+		        assert round(eval(modelo+".template_paramdic[keyo][keyo2]"),6) == round(eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]"),6)
+		    except:
+		        eval(modelo+".template_paramdic[keyo][keyo2]") == eval(modelo+"_alt"+".template_paramdic[keyo][keyo2]")
+		    
 
 
      

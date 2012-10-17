@@ -45,7 +45,7 @@ def db_graph(dbase,tseries):
     fsp.legend()
     P.show()
 
-def newMOD(txtfile=None,dbase=None,initlev=2,mesg=False,ncpus=ncpus,\
+def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
            mk_hessian=True,use_focs=False,ssidic=None,sstate=None):
     '''
     Model's second intialisation method called by newMOD() function call. The model's
@@ -299,7 +299,8 @@ def explain(model):
 def test():
     try:
         import nose
-        nose.run(defaultTest='pymaclab.tests')
+        retv = nose.run(defaultTest='pymaclab.tests')
+        return retv
     except:
         print "You need to install nose to run the tests."
         print 'Run "sudo pip install nose" to install it.'

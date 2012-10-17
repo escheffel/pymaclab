@@ -3,9 +3,11 @@ import os
 import sys
 import shutil
 import glob
+loco = sys.argv[0]
+loco = loco.split('setup.py')[0]
 
 # Read the requirements file
-filo = open('./requirements.txt','r')
+filo = open(os.path.join(loco,'requirements.txt'),'r')
 lines = filo.readlines()
 filo.close()
 reqli = []

@@ -15,7 +15,6 @@ from numpy import linalg as LIN
 from numpy.linalg import matrix_rank
 from .. import helpers as HLP
 from scipy.linalg import qz
-from scipy import io
 import numpy as np
 import pylab as P
 from matplotlib import pyplot as PLT
@@ -34,6 +33,13 @@ class MODsolvers(object):
     def __init__(self):
         pass
 
+class Dynare(object):
+    
+    def __init__(self,attdic):
+        self.attdic = attdic
+        for keyo in attdic.keys():
+            self.__setattr__(keyo,COP.deepcopy(attdic[keyo]))
+    
 
 class PyUhlig(MODsolvers):
     def __init__(self,intup):
@@ -2076,29 +2082,6 @@ class PyKlein2D(object):
             self.irf_o_one = o_one[:,2:]
             self.irf_o_two = o_two[:,2:]
             self.inirf = self.inirf + [self.irf_o_two,]
-            
-    def mk_dynare(self,order=2,centralize=False):
-        # Import the template and other stuff
-        from pymaclab.modfiles.templates import mako_dynare_template
-        import tempfile
-        import os
-        filo = tempfile.NamedTemporaryFile()
-        filo2 = open(os.path.join(os.getcwd(),'test.mod'),'w')
-        modstr = mako_dynare_template.render(**self.other.template_paramdic)
-        filo2.write(modstr)
-        filo2.flush()
-        filo2.close()
-        filo.file.write(modstr)
-        filo.file.flush()
-        if not centralize:
-            os.system('dynare++ --no-centralize --order '+str(order)+' '+filo.name)
-        else:
-            os.system('dynare++ --order '+str(order)+' '+filo.name)
-        dynret = io.loadmat(os.path.join(os.getcwd(),filo.name.split('/')[-1]+'.mat'))
-        self.XXX = COP.deepcopy(dynret['dyn_g_1'])
-        filo.close()
-        filo.delete()
-        
         
 
     def show_irf(self,intup,inirf='inirf'):
@@ -2476,9 +2459,6 @@ class ForKleinD(PyKlein2D):
         else:
             self.P = np.matrix(P)
             self.F = np.matrix(F)
-            
-    def mk_dynare(self,order=1):
-        super(ForKleinD, self).mk_dynare(order=order)
 
 
     def sim(self,tlen,sntup=None,shockvec=None):

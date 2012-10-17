@@ -32,6 +32,7 @@ None
 [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
 [2]   @inv_bar  = SS{@inv(t)};
 [2]   @F(t)     = z(t)*k(t-1)**rho;
+[3]   @F_bar    = SS{@F(t)};
 [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
 [2]   @Fk_bar   = SS{@Fk(t)};
 [2]   @F_bar    = SS{@F(t)};
@@ -63,7 +64,7 @@ None
 USE_FOCS=[0,1,2,3];
 
 [1]   k_bar = 30.0;
-[2]   y_bar = k_bar**rho;
+[2]   y_bar = @F_bar;
 [3]   c_bar = 2.0;
 [4]   R_bar = 1.01;
 
