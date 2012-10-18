@@ -46,7 +46,7 @@ def db_graph(dbase,tseries):
     P.show()
 
 def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
-           mk_hessian=True,use_focs=False,ssidic=None,sstate=None):
+           mk_hessian=True,use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
     '''
     Model's second intialisation method called by newMOD() function call. The model's
     __init__() method only creates the instance and adds information, but does no
@@ -59,7 +59,7 @@ def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
     '''
     modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,\
                                 mk_hessian=mk_hessian,use_focs=use_focs,\
-                                ssidic=ssidic,sstate=sstate)
+                                ssidic=ssidic,sstate=sstate,vtiming=vtiming)
     modobj.init1()
     modobj.init1a()
     modobj.init1b()

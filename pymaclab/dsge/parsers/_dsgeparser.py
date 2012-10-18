@@ -11,6 +11,7 @@
 import re
 from copy import deepcopy
 import numpy.matlib as mat
+import numpy as np
 import sys
 import os
 # This used to import sympycore, but should now also work with sympy
@@ -22,6 +23,9 @@ def populate_model_stage_one(self, secs):
     """
     1st stage population of DSGE model.  Does not need Steady State.
     """
+    
+    # Establish the timing convention of variables in the model file
+    self = def_timing(self,**self._vtiming)    
     
     # This is a special dictionary which can be handed over to the template engines (i.e. Jinja2)
     if 'template_paramdic' not in dir(self): self.template_paramdic = {}
@@ -284,7 +288,7 @@ from __future__ import division
 
 
 ############# BELOW HERE IS ALL FOR 2ND STAGE ###########
-def def_timing(self,endo=[-1,0],exo=[-1,0],con=[0,1]):
+def def_timing(self,exo=[-1,0],endo=[-1,0],con=[0,1]):
     '''
     A small method which can be used in order to set the timings in stone.
     This will then be used in other parts of the code, also in macrolab package
@@ -480,7 +484,7 @@ def mkaug1(self, insys,othersys):
     # Now change the system to include possible augmented variables
     endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo']) 
     if endo_r:
-        endo_r = [[x[0],[abs(x[1][0]+1),x[1][1]]] for x in endo_r ]
+        endo_r = [[x[0],[abs(x[1][0])-abs(endotime[0]),x[1][1]-abs(endotime[1])]] for x in endo_r ]
         # Create lags and forwards equations
         for vari in endo_r:
             for lag in range(abs(vari[1][0])):
@@ -503,7 +507,7 @@ def mkaug1(self, insys,othersys):
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
-        exo_r = [[x[0],[abs(x[1][0])-1,x[1][1]]] for x in exo_r ]
+        exo_r = [[x[0],[abs(x[1][0])-abs(exotime[0]),x[1][1]-abs(exotime[1])]] for x in exo_r ]
         # Create lags and forwards equations
         for vari in exo_r:
             for lag in range(abs(vari[1][0])):
@@ -527,7 +531,7 @@ def mkaug1(self, insys,othersys):
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     con_r = filter(lambda x: x[1] != contime, spvdic2['con']) 
     if con_r:
-        con_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in con_r ]
+        con_r = [[x[0],[abs(x[1][0])-abs(contime[0]),x[1][1]-abs(contime[1])]] for x in con_r ]
         # Create lags and forwards equations
         for vari in con_r:
             for lag in range(abs(vari[1][0])):
@@ -739,7 +743,7 @@ def mkaug2(self, insys):
     # Now change the system to include possible augmented variables
     endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo']) 
     if endo_r:
-        endo_r = [[x[0],[abs(x[1][0]+1),x[1][1]]] for x in endo_r ]
+        endo_r = [[x[0],[abs(x[1][0])-abs(endotime[0]),x[1][1]-abs(endotime[1])]] for x in endo_r ]
         # Create lags and forwards equations
         for vari in endo_r:
             for lag in range(abs(vari[1][0])):
@@ -762,7 +766,7 @@ def mkaug2(self, insys):
                         list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
-        exo_r = [[x[0],[abs(x[1][0])-1,x[1][1]]] for x in exo_r ]
+        exo_r = [[x[0],[abs(x[1][0])-abs(exotime[0]),x[1][1]-abs(exotime[1])]] for x in exo_r ]
         # Create lags and forwards equations
         for vari in exo_r:
             for lag in range(abs(vari[1][0])):
@@ -786,7 +790,7 @@ def mkaug2(self, insys):
                             list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
     con_r = filter(lambda x: x[1] != contime, spvdic2['con']) 
     if con_r:
-        con_r = [[x[0],[abs(x[1][0]),x[1][1]-1]] for x in con_r ]
+        con_r = [[x[0],[abs(x[1][0])-abs(contime[0]),x[1][1]-abs(contime[1])]] for x in con_r ]
         # Create lags and forwards equations
         for vari in con_r:
             for lag in range(abs(vari[1][0])):
@@ -1702,8 +1706,6 @@ def mknonlinsys(self, secs):
     Create Non-Linear FOC System
     """
     list_tmp1 = deepcopy(self.foceqs2)
-    # Establish the timing convention of variables in the model file
-    self = def_timing(self)
     self, list_tmp1 = mkaug2(self, list_tmp1)
 
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
@@ -1763,7 +1765,7 @@ def mknonlinsys(self, secs):
     self.nlsys_list = list_tmp1
     return self
 
-def mkloglinsys2(inlist):
+def mkloglinsys2(self, inlist):
     """
     This function simply takes the left-hand side
     of each equation and takes it over to the
@@ -1866,6 +1868,14 @@ def mkloglinsys2(inlist):
     self.nlsys_list = deepcopy(list_tmp1)
     return list_tmp1
 
+def subs_in_loglinsys(self):
+    list_tmp1 = deepcopy(self.llsys_list)
+    subsdic = deepcopy(self.nlsubs)
+    for i1,eqo in enumerate(list_tmp1):
+        while "@" in list_tmp1[i1]:
+            for keyo in subsdic.keys():
+                if keyo in list_tmp1[i1]: list_tmp1[i1] = list_tmp1[i1].replace(keyo,subsdic[keyo])
+    return list_tmp1
 
 # Creates the log-linear system
 def mkloglinsys1(secs):
@@ -1944,6 +1954,8 @@ def mkeqtype(self):
 
 # Make symbolic system and numeric as well
 def mksymsys(self):
+    _mreg = 'E{1,1}[^(]'
+    mreg = re.compile(_mreg)
     func = []
     subli = []
     patup = ('{-10,10}|None','all','{-10,10}')
@@ -1951,6 +1963,10 @@ def mksymsys(self):
         locals()[x] = eval("SP.Symbol('"+x+"')")
     for y in self.llsys_list:
         str_tmp = y[:]
+        while 'EXP(' in str_tmp:
+            str_tmp = str_tmp.replace('EXP(','SP.exp(')
+        while 'LOG(' in str_tmp:
+            str_tmp = str_tmp.replace('LOG(','SP.log(')
         vali = [x[0] for x in self.vreg(patup,y,True,'min')]
         vali2 = [[x,'sub'+str(u)] for x,u in zip(vali,range(0,len(vali),1))]
         vali3 = [(x[0],x[3]) for x in self.vreg(patup,str_tmp,True,'max')]
@@ -1978,7 +1994,16 @@ def mksymsys(self):
         tmpdic={}
         for y in x.keys():
 #            tmpdic[y] = eval(x[y].tostr())
-            tmpdic[y] = eval(str(x[y]))
+            str_tmp2 = str(x[y])
+            while mreg.search(str_tmp2):
+                maout = [por for por in mreg.finditer(str_tmp2)]
+                maout.reverse()
+                for mato in maout:
+                    starts = mato.span()[0]
+                    ends = mato.span()[1]
+                    expo = mato.group()
+                    str_tmp2 = str_tmp2[:starts]+'np.exp(1)'+str_tmp2[ends-1:]
+            tmpdic[y] = eval(str_tmp2)
 
         diffli2.append(tmpdic) 
     self.diffli2 = diffli2
@@ -2112,12 +2137,11 @@ def populate_model_stage_one_bb(self, secs):
             self.foceqs2 = deepcopy(self.foceqs)
         # Also create a steady state version
         self = mk_steady2(self)
+        # Also save a copy of the focs with replaced substitutions
+        self.template_paramdic['focs_list2'] = deepcopy(self.foceqs2)        
     else:
         # Save for template instantiation
         self.template_paramdic['focs_list'] = False
-        
-    # Also save a copy of the focs with replaced substitutions
-    self.template_paramdic['focs_list2'] = deepcopy(self.foceqs2)
     return self
 
 
@@ -2126,13 +2150,14 @@ def populate_model_stage_two(self, secs):
     2nd stage population of DSGE model.  Needs Steady State.
     """
     # Creates nonlinear foc system
-    if any([False if 'None' in x else True for x in secs['focs'][0]]):
+    if all([False if 'None' in x else True for x in secs['focs'][0]]):
         self = mknonlinsys(self, secs)
 
     # Creates loglinear system
-    if any([False if 'None' in x else True for x in secs['modeq'][0]]):
+    if all([False if 'None' in x else True for x in secs['modeq'][0]]):
         llsys_list = mkloglinsys1(secs)
-        self.llsys_list = mkloglinsys2(llsys_list)
+        self.llsys_list = mkloglinsys2(self,llsys_list)
+        self.llsys_list = subs_in_loglinsys(self)
         # Save for template instantiation
         self.template_paramdic['llsys_list'] = deepcopy(self.llsys_list)
         self = mksymsys(self) # creates symbolic and numerical system
@@ -2142,7 +2167,7 @@ def populate_model_stage_two(self, secs):
         self.template_paramdic['llsys_list'] = False
 
     # Creates variance/covariance
-    if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
+    if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
        'sstate' in dir(self):
         self.sigma = mksigmat(self, secs)
         # Save for template instantiation

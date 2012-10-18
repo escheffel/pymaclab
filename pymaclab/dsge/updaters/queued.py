@@ -354,7 +354,8 @@ class Process_Queue(object):
         # The paramdic
         self.paramdic = deepcopy(other.updaters_queued.paramdic.wrapobj)
         # The foceqs
-        self.foceqs = deepcopy(other.updaters_queued.foceqs.wrapobj)
+        if 'foceqs' in  dir(other):
+            self.foceqs = deepcopy(other.updaters_queued.foceqs.wrapobj)
         # The manss_sys
         if 'manss_sys' in dir(other.updaters_queued):
             self.manss_sys = deepcopy(other.updaters_queued.manss_sys.wrapobj)

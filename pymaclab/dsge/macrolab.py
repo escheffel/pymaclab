@@ -123,12 +123,13 @@ class DSGEmodel(object):
     jobserver = pp.Server(ppservers=ppservers)
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
-                 use_focs=False,ssidic=None,sstate=None):
+                 use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
         # Make sure the jobserver has done his global jobs each time you instantiate a new instance
         jobserver.wait()
         if sstate != None:
             self._sstate = deepcopy(sstate)
         self._initlev = initlev #TODO: remove this as an option
+        self._vtiming = vtiming
         self._mesg = mesg
         self._ncpus = ncpus
         self._mk_hessian = mk_hessian
@@ -290,10 +291,11 @@ class DSGEmodel(object):
         self = populate_model_stage_one_bb(self,secs)
         
         if not no_wrap:
-            # Wrap foceqs
-            self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
-            # Wrap foceqs
-            self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
+            if 'foceqs' in dir(self):
+                # Wrap foceqs
+                self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
+                # Wrap foceqs
+                self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
         
         # Allow for numerical SS to be calculated using only FOCs
         if self._use_focs and self._ssidic != None:
@@ -568,7 +570,7 @@ class DSGEmodel(object):
         self.modsolvers = MODsolvers()
         ######################## LINEAR METHODS !!! ############################
         # see if there are any log-linearized equations
-        if any([False if 'None' in x else True for x in secs['modeq'][0]]):
+        if all([False if 'None' in x else True for x in secs['modeq'][0]]):
             from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein
             if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
 
@@ -613,7 +615,7 @@ class DSGEmodel(object):
                  sess1)
             self.modsolvers.forklein = ForKlein(intup)
     ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-        if any([False if 'None' in x else True for x in secs['focs'][0]]):
+        if all([False if 'None' in x else True for x in secs['focs'][0]]):
             from solvers.modsolvers import (MatWood, ForKleinD)
             
             if not update:
@@ -673,7 +675,7 @@ class DSGEmodel(object):
             self.modsolvers.forkleind.B = self.jBB
 
     ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-        if any([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
+        if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
             from solvers.modsolvers import (PyKlein2D, MatKlein2D)
             # Open the MatKlein2D object
             if 'nlsubsys' in dir(self):
@@ -1597,6 +1599,38 @@ class DSGEmodel(object):
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
+        
+        # Get rid of pointless keys in jdicc (and hdicc)
+        jdicc_copy = deepcopy(jdicc)
+        for keyo in jdicc_copy:
+            for keyo2 in jdicc_copy[keyo]:
+                if type(keyo2) == type(1): jdicc[keyo].pop(keyo2)
+        if mk_hessian:
+            hdicc_copy = deepcopy(hdicc)
+            if 'hdicc' in dir():
+                for keyo in hdicc_copy:
+                    for keyo2 in hdicc_copy[keyo]:
+                        if type(keyo2) == type(1): hdicc[keyo].pop(keyo2)
+                    
+        # Build string As and Bs
+        sAA = deepcopy(self.jAA.astype(str))
+        sBB = deepcopy(self.jBB.astype(str))
+        sAA = np.matrix(sAA,dtype=np.object_)
+        sBB = np.matrix(sBB,dtype=np.object_)
+        for elem in range(self.jAA.shape[0]):
+            for i1,elem2 in enumerate(exo_1+endo_1+con_1):
+                sAA[elem,i1] = jdicc[elem][elem2]
+            for i2,elem2 in enumerate(exo_0+endo_0+con_0):
+                if jdicc != '0':
+                    sBB[elem,i2] = '-('+jdicc[elem][elem2]+')'
+                else:
+                    sBB[elem,i2] = jdicc[elem][elem2]     
+        self.sAA = deepcopy(sAA)
+        self.sBB = deepcopy(sBB)
+        self.iA = deepcopy(exo_1+endo_1+con_1)
+        self.iB = deepcopy(exo_0+endo_0+con_0)
+        
+
     # The parallelized mkjahe version using parallel python
 
     def mkjahepp(self):
@@ -1959,6 +1993,36 @@ class DSGEmodel(object):
 
         self.jAA = self.numj[:,:int(len(intup)/2)]
         self.jBB = -self.numj[:,int(len(intup)/2):]
+        
+        # Get rid of pointless keys in jdicc (and hdicc)
+        jdicc_copy = deepcopy(jdicc)
+        for keyo in jdicc_copy:
+            for keyo2 in jdicc_copy[keyo]:
+                if type(keyo2) == type(1): jdicc[keyo].pop(keyo2)
+        if mk_hessian:
+            hdicc_copy = deepcopy(hdicc)
+            if 'hdicc' in dir():
+                for keyo in hdicc_copy:
+                    for keyo2 in hdicc_copy[keyo]:
+                        if type(keyo2) == type(1): hdicc[keyo].pop(keyo2)
+        
+        # Build string As and Bs
+        sAA = deepcopy(self.jAA.astype(str))
+        sBB = deepcopy(self.jBB.astype(str))
+        sAA = np.matrix(sAA,dtype=np.object_)
+        sBB = np.matrix(sBB,dtype=np.object_)
+        for elem in range(self.jAA.shape[0]):
+            for i1,elem2 in enumerate(exo_1+endo_1+con_1):
+                sAA[elem,i1] = jdicc[elem][elem2]
+            for i2,elem2 in enumerate(exo_0+endo_0+con_0):
+                if jdicc != '0':
+                    sBB[elem,i2] = '-('+jdicc[elem][elem2]+')'
+                else:
+                    sBB[elem,i2] = jdicc[elem][elem2]     
+        self.sAA = deepcopy(sAA)
+        self.sBB = deepcopy(sBB)
+        self.iA = deepcopy(exo_1+endo_1+con_1)
+        self.iB = deepcopy(exo_0+endo_0+con_0)        
     
     # The numerical (Paul Klein) Jacobian and Hessian computation method (uses matlab)
     def mkjahenmat(self,msess=sess1):
