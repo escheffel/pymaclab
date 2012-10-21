@@ -1292,6 +1292,59 @@ class DSGEmodel(object):
         else:
             return False
 ###########ANALYTIC AND NUMERICAL JACOBIAN AND HESSIAN METHODS############
+
+    def def_differ_periods(self):
+        vtiming = deepcopy(self.vtiming)
+        # Timing assumptions, first for exogenous variables
+        # For past
+        if vtiming['exo'][0] < 0:
+            exo_0 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['exo'][0]))+')' for x in self.vardic['exo']['var']]
+        elif vtiming['exo'][0] == 0:
+            exo_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        elif vtiming['exo'][0] > 0:
+            exo_0 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['exo'][0])+')' for x in self.vardic['exo']['var']]
+        # For future
+        if vtiming['exo'][1] < 0:
+            exo_1 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['exo'][1]))+')' for x in self.vardic['exo']['var']]
+        elif vtiming['exo'][1] == 0:
+            exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
+        elif vtiming['exo'][1] > 0:
+            exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['exo'][1])+')' for x in self.vardic['exo']['var']]
+            
+        # Timing assumptions, endogenous variables
+        # For past
+        if vtiming['endo'][0] < 0:
+            endo_0 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['endo'][0]))+')' for x in self.vardic['endo']['var']]
+        elif vtiming['endo'][0] == 0:
+            endo_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        elif vtiming['endo'][0] > 0:
+            endo_0 = [x[0].split('(')[0]+'(t+'+str(vtiming['endo'][0])+')' for x in self.vardic['endo']['var']]
+        # For future, BE CAREFUL, no expectations term on variables with (t+1) for endo
+        if vtiming['endo'][1] < 0:
+            endo_1 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['endo'][1]))+')' for x in self.vardic['endo']['var']]
+        elif vtiming['endo'][1] == 0:
+            endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
+        elif vtiming['endo'][1] > 0:
+            endo_1 = [x[0].split('(')[0]+'(t+'+str(vtiming['endo'][1])+')' for x in self.vardic['endo']['var']]
+            
+        # Timing assumptions, control variables
+        # For past
+        if vtiming['con'][0] < 0:
+            con_0 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['con'][0]))+')' for x in self.vardic['con']['var']]
+        elif vtiming['con'][0] == 0:
+            con_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['con']['var']]
+        if vtiming['con'][0] > 0:
+            con_0 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['con'][0])+')' for x in self.vardic['con']['var']]        
+        # For future
+        if vtiming['con'][1] < 0:
+            con_1 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['con'][1]))+')' for x in self.vardic['con']['var']]
+        elif vtiming['con'][1] == 0:
+            con_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['con']['var']]
+        elif vtiming['con'][1] > 0:
+            con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['con'][1])+')' for x in self.vardic['con']['var']]
+
+        return exo_0,exo_1,endo_0,endo_1,con_0,con_1
+
     def mkjahe(self):
         '''
         An unparallelized method using native Python and Sympycore in oder
@@ -1308,28 +1361,9 @@ class DSGEmodel(object):
         :return self.jBB:  *(arr2d)* - attaches numerical BB matrix used in Forkleind solution method
         '''
         mk_hessian = self._mk_hessian
-        
-        
-        #### WARNING #######
-        # If timing assumptions are changed here then we also need to modify them in
-        # dsge_parser in methods mkaug1 and mkaug2 !!!!
-        ####################
-        '''
-        exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0] for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        con_0 = [x[0] for x in self.vardic['con']['var']]
-        '''
-        
-        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        con_0 = [x[0] for x in self.vardic['con']['var']]         
-        
+               
+        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
+
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -1380,8 +1414,6 @@ class DSGEmodel(object):
             locals()[x] = sympycore.Symbol(x)
         for x in self.sstate.keys():
             locals()[x] = sympycore.Symbol(x)
-        # This is for the superfluous variables we don't want to differentiate for
-        locals()['XXXXXXXXXX'] = sympycore.Symbol('XXXXXXXXXX')
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1390,10 +1422,7 @@ class DSGEmodel(object):
                 pos = y[3][0]
                 poe = y[3][1]
                 vari = y[0]
-                # We test for key because some variables will not matter in differentiation
-                # This is the case with vars like E(t)|z(t+1) which are F00001
-                if dicli.has_key(vari): str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
-                else: str_tmp = str_tmp[:pos] + 'XXXXXXXXXX' +str_tmp[poe:]
+                str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
             list2 = self.vreg(('{-10,10}|None','iid','{-10,10}'),str_tmp,True,'max')
             if list2:
                 list2.reverse()
@@ -1401,7 +1430,7 @@ class DSGEmodel(object):
                     pos = y[3][0]
                     poe = y[3][1]
                     vari = y[0]
-                    str_tmp = str_tmp[:pos]+'0'+str_tmp[poe:]
+                    str_tmp = str_tmp[:pos]+'0.0'+str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
             elog = re.compile('LOG\(')
             while elog.search(str_tmp):
@@ -1659,44 +1688,7 @@ class DSGEmodel(object):
         
         import sympycore
         
-        ###################### TIMING DEFINITIONS #########################
-        vtiming = deepcopy(self.vtiming)
-        # Timing assumptions, first for exogenous variables
-        # For past
-        if vtiming['exo'][0] == -1:
-            exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
-        elif vtiming['exo'][0] == 0:
-            exo_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
-        # For future
-        if vtiming['exo'][1] == 0:
-            exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
-        elif vtiming['exo'][1] == 1:
-            exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
-            
-        # Timing assumptions, endogenous variables
-        # For past
-        if vtiming['endo'][0] == -1:
-            endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        elif vtiming['endo'][0] == 0:
-            endo_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        # For future
-        if vtiming['endo'][1] == 0:
-            endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        elif vtiming['endo'][1] == 1:
-            endo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['endo']['var']]
-            
-        # Timing assumptions, control variables
-        # For past
-        if vtiming['con'][0] == -1:
-            con_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['con']['var']]
-        elif vtiming['con'][0] == 0:
-            con_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['con']['var']]
-        # For future
-        if vtiming['con'][1] == 0:
-            con_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['con']['var']]
-        elif vtiming['con'][1] == 1:
-            con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        ########################## DONE ##############################
+        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
         
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
@@ -1734,8 +1726,6 @@ class DSGEmodel(object):
             locals()[x] = sympycore.Symbol(x)
         for x in self.sstate.keys():
             locals()[x] = sympycore.Symbol(x)
-        # This is for the superfluous variables we don't want to differentiate for
-        locals()['XXXXXXXXXX'] = sympycore.Symbol('XXXXXXXXXX')
         for x in nlsys:
             str_tmp = x[:]
             list1 = self.vreg(patup,x,True,'max')
@@ -1744,10 +1734,7 @@ class DSGEmodel(object):
                 pos = y[3][0]
                 poe = y[3][1]
                 vari = y[0]
-                # We test for key because some variables will not matter in differentiation
-                # This is the case with vars like E(t)|z(t+1) which are F00001
-                if dicli.has_key(vari): str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
-                else: str_tmp = str_tmp[:pos] + 'XXXXXXXXXX' +str_tmp[poe:]
+                str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
             # Take out the IID variables as they don't matter for computation of derivative matrices
             list2 = self.vreg(('{-10,10}|None','iid','{-10,10}'),str_tmp,True,'max')
             if list2:
@@ -1756,7 +1743,7 @@ class DSGEmodel(object):
                     pos = y[3][0]
                     poe = y[3][1]
                     vari = y[0]
-                    str_tmp = str_tmp[:pos]+'0'+str_tmp[poe:]
+                    str_tmp = str_tmp[:pos] + '0.0' +str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
             elog = re.compile('LOG\(')
             while elog.search(str_tmp):
@@ -1879,7 +1866,6 @@ class DSGEmodel(object):
                 else:
                     jdicc[differo_var] = jdicc[differo_var]
                 ###### Done ########
-                
                 numj[0,y] = eval(str(jdic[y].evalf()))
                 if mk_hessian:
                     for z in range(jcols):

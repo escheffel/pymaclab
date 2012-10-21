@@ -48,7 +48,7 @@ None
 [1]   @inv(t) = k(t)-(1-delta)*k(t-1);
 [2]   @inv_bar = SS{@inv(t)};
 # Production Function
-[2]   @F(t) = z(t)*k(t-1)**(rho)*l(t)**(1-rho);
+[2]   @F(t) = z(t-1)*k(t-1)**(rho)*l(t)**(1-rho);
 [2]   @F_bar = SS{@F(t)};
 # Utility Function
 [3]   @U(t) = c(t)**(1-eta)*(1-l(t))**(A*(1-eta))/(1-eta);
@@ -83,7 +83,7 @@ None
 # Consumption Euler
 [4]   betta*E(t)|lam(t+1)*@R(t+1)-lam(t) = 0;
 # Shock Process
-[5]   LOG(E(t)|z(t+1))-psi*z(t) = 0;
+[5]   LOG(z(t))-psi*z(t-1) = 0;
 
 
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

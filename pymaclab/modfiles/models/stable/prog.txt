@@ -197,7 +197,7 @@ None
       (@MUp(t+1)*@Css(t+1)*(1-n(t))/@MAsi(t+1))*((1-psi)+@MAn(t+1))) = 0;
 
 # Evolution of exogenous productivity shock
-[14]  (E(t)|z(t+1)/z(t)**rho_z)-epsz(t) = 0;
+[14]  (z(t)/z(t-1)**rho_z)-epsz(t) = 0;
 
 
 %Manual entry of sstate non-linear system++++++++++++

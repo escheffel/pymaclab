@@ -61,7 +61,7 @@ None
 [5]   @MAsi(t+1) = FF_1{@MAsi(t)};
 [4]   @MAsi_bar  = SS{@MAsi(t)};
 # The production function and its derivatives
-[6]   @F(t)      = z(t)*A_g*em(t-1)**(1-alpha)*k(t-1)**alpha;
+[6]   @F(t)      = z(t-1)*A_g*em(t-1)**(1-alpha)*k(t-1)**alpha;
 [6]   @F_bar     = SS{@F(t)};
 [6]   @Fn(t)     = DIFF{@F(t),em(t-1)};
 [7]   @Fn(t+1)   = FF_1{@Fn(t)};
@@ -95,7 +95,7 @@ None
 # Defintion of aggregate output, y(t)
 [7]   y(t)-@F(t) = 0;
 # Law of motion of productivity shock, z(t)
-[8]   (E(t)|z(t+1)/z(t)**rho_z)-epsz(t) = 0;
+[8]   (z(t)/z(t-1)**rho_z)-epsz(t) = 0;
 # Definition of the real rate of return on capital, r(t)
 [9]   r(t)-1-@Fk(t)+delta = 0;
 # Definition of the return on labour (i.e. wage rate), w(t)

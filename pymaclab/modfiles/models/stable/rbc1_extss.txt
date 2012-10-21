@@ -31,7 +31,7 @@ None
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
 [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
 [2]   @inv_bar  = SS{@inv(t)};
-[2]   @F(t)     = z(t)*k(t-1)**rho;
+[2]   @F(t)     = z(t-1)*k(t-1)**rho;
 [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
 [2]   @Fk_bar   = SS{@Fk(t)};
 [2]   @F_bar    = SS{@F(t)};
@@ -52,7 +52,7 @@ None
 [2]   betta * (@MU(t+1)/@MU(t)) * E(t)|R(t+1) - 1 = 0;
 [3]   R(t) - @R(t) = 0;
 [4]   y(t) - @F(t) = 0;
-[5]   LOG(E(t)|z(t+1)) - psi*LOG(z(t)) = 0;
+[5]   LOG(z(t)) - psi*LOG(z(t-1)) = 0;
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

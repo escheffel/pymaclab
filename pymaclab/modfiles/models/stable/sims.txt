@@ -28,17 +28,17 @@ None
 
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  @y(t)   = z(t)*k(t-1)**alpha;
-[2]  @F(t)   = z(t)*k(t-1)**alpha;
+[1]  @y(t)   = z(t-1)*k(t-1)**alpha;
+[2]  @F(t)   = z(t-1)*k(t-1)**alpha;
 [3]  @inv(t) = k(t)-delta*k(t-1);
 
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the non-linear FOCs in format g(x)=0
 [1]  c(t)**(-gamma)-betta*E(t)|c(t+1)**(-gamma)*...
-     (alpha*E(t)|z(t+1)*k(t)**(alpha-1)+delta) = 0;
+     (alpha*z(t)*k(t)**(alpha-1)+delta) = 0;
 [2]  c(t)+@inv(t)-@F(t) = 0;
-[3]  LOG(E(t)|z(t+1))-rho*LOG(z(t)) = 0;
+[3]  LOG(z(t))-rho*LOG(z(t-1)) = 0;
 
 
 %Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++
