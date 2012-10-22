@@ -57,35 +57,44 @@ def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
     init_lev = 1: parsing and steady state calculations
     init_lev = 2: parsing, steady state calculations and dynamic solution computation
     '''
+    # Do error handling for vtiming
+    for keyo in vtiming.keys():
+        if abs(vtiming[keyo][0]-vtiming[keyo][1]) != 1:
+            print "ERROR: Periods defined in vtiming have to be adjacent, check ", keyo
+            sys.exit()
+    # Create a new vtiming so that users can pass only one or two keys at instantiation of model
+    # Clearly then vtiming2 represents the standard values which can get updated using vtiming
+    vtiming2={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}
+    vtiming2.update(vtiming)
     modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,\
                                 mk_hessian=mk_hessian,use_focs=use_focs,\
-                                ssidic=ssidic,sstate=sstate,vtiming=vtiming)
-    modobj.init1()
-    modobj.init1a()
-    modobj.init1b()
-    modobj.init1c()
-    modobj.init2()
+                                ssidic=ssidic,sstate=sstate,vtiming=vtiming2)
+    modobj.inits.init1()
+    modobj.inits.init1a()
+    modobj.inits.init1b()
+    modobj.inits.init1c()
+    modobj.inits.init2()
     # Ready to solve for SS manually at command prompt
     if initlev == 0:
-        modobj.init_out()
+        modobj.inits.init_out()
         return modobj
     # SS solved automatically, but only if SS has not been handed over entirely externally
     if sstate == None:
-        modobj.init3()
+        modobj.inits.init3()
     else:
         if mesg: print "SS: Using entirely EXTERNALLY supplied steady state values dictionary..."
         modobj.sstate = deepcopy(modobj._sstate)
     if initlev == 1:
-        modobj.init_out()
+        modobj.inits.init_out()
         return modobj
     # Dynamic system prepared and prepared for solving
-    modobj.init4()
+    modobj.inits.init4()
     if initlev == 2:
-        modobj.init_out()
+        modobj.inits.init_out()
         return modobj
-    modobj.init5()
+    modobj.inits.init5()
     if initlev == 3:
-        modobj.init_out()
+        modobj.inits.init_out()
         return modobj
 
 def newDB():

@@ -49,7 +49,7 @@ class dicwrap:
                 print "You have UPDATED in object "+wrapobj_str+"['"+key+"']:"
                 print str(old_value)+' --> '+str(value)           
             ##### THE INITS #####################
-            other.init1()
+            other.inits.init1()
 
             ######## Copy correct values into the model instance ########
             if wrapobj_str == 'self.paramdic':
@@ -66,33 +66,33 @@ class dicwrap:
             if wrapobj_str == 'self.vardic':
                 other.vardic.update(wrapobj)
 
-            other.init1a()
+            other.inits.init1a()
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = self.wrapdic[other.nlsubs_raw1[i1][0]]
                 other.nlsubsdic.update(wrapobj)
 
-            other.init1b()
+            other.inits.init1b()
             if wrapobj_str == 'self.paramdic':
                 other.paramdic.update(wrapobj)
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
 
     def __getitem__(self,key):
         return self.wrapdic[key]
@@ -113,7 +113,7 @@ class dicwrap:
         if self.wrapdic != wrapobj:
             self.wrapdic.update(wrapobj)
             ##### THE INITS #####################
-            other.init1()
+            other.inits.init1()
             
             ######## Copy correct values into the model instance ########
             if wrapobj_str == 'self.paramdic':
@@ -130,33 +130,33 @@ class dicwrap:
             if wrapobj_str == 'self.vardic':
                 other.vardic = deepcopy(wrapobj)
 
-            other.init1a()
+            other.inits.init1a()
             if wrapobj_str == 'self.nlsubsdic':
                 for i1,elem in enumerate(other.nlsubs_raw1):
                     other.nlsubs_raw1[i1][1] = self.wrapdic[other.nlsubs_raw1[i1][0]]
                 other.nlsubsdic.update(wrapobj)
 
-            other.init1b()
+            other.inits.init1b()
             if wrapobj_str == 'self.paramdic':
                 other.paramdic.update(wrapobj)
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
 
 
     def __repr__(self):
@@ -190,27 +190,27 @@ class listwrapk:
             other.vardic.update(other.updaters.vardic)
             other.updaters.vardic.wrapobj.update(other.updaters.vardic)            
             
-            other.init1a()
+            other.inits.init1a()
         
-            other.init1b()
+            other.inits.init1b()
         
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out() 
+                other.inits.init_out() 
     
     def __setitem__(self,ind,into):
         other = self.other
@@ -221,34 +221,34 @@ class listwrapk:
             print "ERROR: Assignment out of bounds of original list"
             return
         ##### THE INITS #####################
-        #other.init1()
+        #other.inits.init1()
         if self.wrapli[ind] != into:
             self.wrapli[ind] = into
             wrapobj[ind] = into
             other.vardic.update(other.updaters.vardic)
             other.updaters.vardic.wrapobj.update(other.updaters.vardic)
             
-            other.init1a()
+            other.inits.init1a()
             
-            other.init1b()
+            other.inits.init1b()
             
-            other.init1c()            
+            other.inits.init1c()            
             
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()             
+                other.inits.init_out()             
                   
 
     def __getitem__(self,ind):
@@ -283,31 +283,31 @@ class dicwrapk:
         if self.wrapdic != wrapobj:
             self.wrapdic[key] = value
             ##### THE INITS #####################
-            #other.init1()
+            #other.inits.init1()
             other.vardic.upate(self.wrapdic)
             other.updaters.vardic.wrapobj.update(self.wrapdic)            
 
-            other.init1a()
+            other.inits.init1a()
 
-            other.init1b()
+            other.inits.init1b()
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
 
     def __getitem__(self,key):
         return self.wrapdic[key]
@@ -327,31 +327,31 @@ class dicwrapk:
         if self.wrapdic != wrapobj:
             self.wrapdic.update(dico)
             ##### THE INITS #####################
-            #other.init1()
+            #other.inits.init1()
             other.vardic = deepcopy(self.wrapdic)
             other.updaters.vardic.wrapobj.update(self.wrapdic)            
 
-            other.init1a()
+            other.inits.init1a()
 
-            other.init1b()
+            other.inits.init1b()
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
 
 
     def __repr__(self):
@@ -387,37 +387,37 @@ class dicwrap_deep:
         if self.wrapdic != wrapobj:
             self.wrapdic[key] = value
             ##### THE INITS #####################
-            #other.init1()
+            #other.inits.init1()
             if wrapobj_str == 'self.vardic':
                 other.vardic.upate(wrapobj)
 
-            other.init1a()
+            other.inits.init1a()
             if wrapobj_str == 'self.nlsubsdic':
                 # not a deep dic
                 pass
 
-            other.init1b()
+            other.inits.init1b()
             if wrapobj_str == 'self.paramdic':
                 # not a deep dic
                 pass
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
 
 
     def __update__(self,dico):
@@ -430,31 +430,31 @@ class dicwrap_deep:
         if self.wrapdic != wrapobj:
             self.wrapdic.update(dico)
             ##### THE INITS #####################
-            #other.init1()
+            #other.inits.init1()
             if wrapobj_str == 'self.vardic':
                 other.vardic.upate(self.wrapdic)
 
-            other.init1a()
+            other.inits.init1a()
 
-            other.init1b()
+            other.inits.init1b()
             
-            other.init1c()
+            other.inits.init1c()
 
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
 
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()
+                other.inits.init_out()
                 
 
 
@@ -482,10 +482,10 @@ class listwrap:
             print "ERROR: Assignment out of bounds of original list"
             return
         ##### THE INITS #####################
-        #other.init1()
-        #other.init1a()
-        #other.init1b()
-        #other.init1c()
+        #other.inits.init1()
+        #other.inits.init1a()
+        #other.inits.init1b()
+        #other.inits.init1c()
         if self.wrapli[ind1:ind2] != into:
             self.wrapli[ind1:ind2] = into
             wrapobj[ind1:ind2] = into
@@ -493,20 +493,20 @@ class listwrap:
 
         if do_rest:
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out() 
+                other.inits.init_out() 
     
     def __setitem__(self,ind,into):
         other = self.other
@@ -519,10 +519,10 @@ class listwrap:
             print "ERROR: Assignment out of bounds of original list"
             return
         ##### THE INITS #####################
-        #other.init1()
-        #other.init1a()
-        #other.init1b()
-        #other.init1c()
+        #other.inits.init1()
+        #other.inits.init1a()
+        #other.inits.init1b()
+        #other.inits.init1c()
         if self.wrapli[ind] != into:
             self.wrapli[ind] = into
             wrapobj[ind] = into
@@ -530,20 +530,20 @@ class listwrap:
 
         if do_rest:
             # Prepare DSGE model instance for manual SS computation
-            other.init2()
+            other.inits.init2()
             if initlev == 0:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve for SS automatically
-            other.init3()
+            other.inits.init3()
             if initlev == 1:
-                other.init_out()
+                other.inits.init_out()
     
             # Solve model dynamically
-            other.init4()
-            other.init5()
+            other.inits.init4()
+            other.inits.init5()
             if initlev == 2:
-                other.init_out()           
+                other.inits.init_out()           
 
     def __getitem__(self,ind):
         lengo = len(self.wrapli)
@@ -575,27 +575,27 @@ class matwrap:
         wrapob_str = self.wrapobj_str
         initlev = self.initlev
         ##### THE INITS #####################
-        other.init1()
-        other.init1a()
-        other.init1b()
-        other.init1c()
+        other.inits.init1()
+        other.inits.init1a()
+        other.inits.init1b()
+        other.inits.init1c()
 
         # Prepare DSGE model instance for manual SS computation
-        other.init2()
+        other.inits.init2()
         if initlev == 0:
-            other.init_out()
+            other.inits.init_out()
 
         # Solve for SS automatically
-        other.init3()
+        other.inits.init3()
         if initlev == 1:
-            other.init_out()
+            other.inits.init_out()
 
-        other.init4()
+        other.inits.init4()
         if self.wrapmat[ind[0],ind[1]] != into and wrapob_str == 'self.sigma':
             self.wrapmat[ind[0],ind[1]] = into
             other.sigma[ind[0],ind[1]] = into
             
         # Solve model dynamically
-        other.init5()
+        other.inits.init5()
         if initlev == 2:
-            other.init_out()  
+            other.inits.init_out()  

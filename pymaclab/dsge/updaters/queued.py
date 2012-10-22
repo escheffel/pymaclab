@@ -399,23 +399,23 @@ class Process_Queue(object):
                 print elem
             print '================================================================'
         ##### THE INITS #####################
-        other.init1(no_wrap=True) 
+        other.inits.init1(no_wrap=True) 
         if 'self.vardic' in queue:
             other.vardic = deepcopy(self.vardic)
 
-        other.init1a()
+        other.inits.init1a()
         if 'self.nlsubsdic' in queue:
             for i1,elem in enumerate(other.nlsubs_raw1):
                 other.nlsubs_raw1[i1][1] = deepcopy(self.nlsubsdic[other.nlsubs_raw1[i1][0]])
             for keyo in self.nlsubsdic.keys():
                 other.nlsubsdic[keyo] = deepcopy(self.nlsubsdic[keyo])
 
-        other.init1b(no_wrap=True)
+        other.inits.init1b(no_wrap=True)
         if 'self.paramdic' in queue:
             for keyo in self.paramdic.keys():
                 other.paramdic[keyo] = deepcopy(self.paramdic[keyo])
         
-        other.init1c(no_wrap=True)
+        other.inits.init1c(no_wrap=True)
         if 'self.foceqs' in queue:
             other.foceqs = deepcopy(self.foceqs)
         if 'self.manss_sys' in queue:
@@ -424,21 +424,21 @@ class Process_Queue(object):
             other.ssys_list = deepcopy(self.ssys_list)
 
         # Prepare DSGE model instance for manual SS computation
-        other.init2()
+        other.inits.init2()
         if initlev == 0:
-            other.init_out()
+            other.inits.init_out()
 
         # Solve for SS automatically
-        other.init3()
+        other.inits.init3()
         if initlev == 1:
-            other.init_out() 
+            other.inits.init_out() 
 
-        other.init4(no_wrap=True)
+        other.inits.init4(no_wrap=True)
         if 'self.sigma' in queue:
             other.sigma = deepcopy(self.sigma)
 
         # Solve model dynamically            
-        other.init5()
+        other.inits.init5()
         if initlev == 2:
-            other.init_out() 
+            other.inits.init_out() 
         return

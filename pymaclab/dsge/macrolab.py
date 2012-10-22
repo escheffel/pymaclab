@@ -75,6 +75,601 @@ except:
 # Open mlab session
 if use_matlab:
     sess1 = mlabraw.open('matlab - nojvm -nosplash')
+    
+# Shell class for derivatives branch
+class Derivatives(object):
+    pass
+
+# Shell class for derivatives branch
+class Inits(object):
+    
+    def __init__(self,other=None):
+        self.other = other
+
+    def init1(self,no_wrap=False):
+        '''
+        The init1 method. Model population proceeds from the __init__function here. In particular the data gets read in
+        (not implemented at the moment) and the model parsing begins.
+        
+        .. note::
+           The other.vardic gets created and the manual as well as
+           the numerical steady state sections gets parsed and attached to the DSGE model instance. So the most import fields created
+           here using function populate_model_stage_one() are:
+           
+             * other.vardic - variable names dictionary with transform and filtering info
+             * other.mod_name - short name of the DSGE model from mod file
+             * other.mod_desc - longer model description from mod file
+             * other.paramdic - dic of defined parameters with their numerical values
+             * other.manss_sys - list of equations from the closed form steady state section
+             * other.ssys_list - list of equations from the numerical steady state section
+           
+           Also the updaters and updaters_queued branches are opened here and the other.vardic gets wrapped for dynamic updating
+           behaviour.
+        
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+        
+        '''
+        other = self.other
+        initlev = other._initlev
+        ncpus = other._ncpus
+        mk_hessian = other._mk_hessian
+        mesg = other._mesg
+        # Attach the data from database
+        if other.dbase != None:
+            other.getdata(dbase=other.dbase)        
+        if mesg: print "INIT: Instantiating DSGE model with INITLEV="+str(initlev)+" and NCPUS="+str(ncpus)+"..."
+        if mesg: print "INIT: Attaching model properties to DSGE model instance..."
+
+        # Create None tester regular expression
+        #        _nreg = '^\s*None\s*$'
+        #        nreg = re.compile(_nreg)
+        
+        if mesg: print "INIT: Parsing model file into DSGE model instance..."
+        txtpars = parse_mod(other.modfile)
+        other.txtpars = txtpars  # do we need txtpars attached for anything else?
+        secs = txtpars.secs # do we need txtpars attached for anything else?
+        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
+        # Initial population method of model, does NOT need steady states
+        other = populate_model_stage_one(other, secs)
+
+        if not no_wrap:
+            # Open updaters path
+            other.updaters = Updaters()        
+            # Open the updaters_queued path
+            other.updaters_queued = Updaters_Queued()
+            # Add the empty queue
+            other.updaters_queued.queue = queue
+    
+            # Wrap the vardic
+            other.updaters.vardic = dicwrap_deep(other,'self.vardic',initlev)
+            other.updaters_queued.vardic = dicwrap_deep_queued(other,'self.vardic',initlev)
+        
+    def init1a(self):
+        '''
+        The init1a method. Model population proceeds from the init1 method here. The only field which get created here is the raw
+        (i.e. unsubstituted) substitution dictionary.
+        
+        .. note::
+            Field which are created here using the function populate_model_stage_one_a() which in turn calls mk_subs_dic():
+           
+             * other.nlsubs_raw1 - a list of the @items and their replacements
+             * other.nlsubsdic - the above just expressed as a keyed list
+        
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+
+        '''
+        other = self.other
+        mesg = other._mesg
+        secs = other.txtpars.secs
+        # This is an additional populator which creates subsitution dictionary
+        # and uses this to already get rid of @s in the manuall sstate list
+        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
+        # This function only creates the raw substitution dictionary and list from modfile
+        other = populate_model_stage_one_a(other,secs)
+        
+    def init1b(self,no_wrap=False):
+        '''
+        The init1b method. Model population proceeds from the init1a method here.
+
+        .. note::
+        
+           The only thing which gets done here purposefully *after* calling init1a() is to wrap these fields:
+           
+             * other.nlsubsdic - the above just expressed as a keyed list
+             * other.paramdic - dic of defined parameters with their numerical values
+             
+           in order to give them dynamic updating behaviour. No more is done in this init method call.
+        
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+
+        '''
+        other = self.other
+        initlev = other._initlev
+        secs = other.txtpars.secs
+        other = populate_model_stage_one_b(other,secs)
+        
+        if not no_wrap:
+            # Wrap the nlsubsdic
+            if 'nlsubsdic' in dir(other): other.updaters_queued.nlsubsdic = dicwrap_queued(other,'self.nlsubsdic',initlev)
+            # Wrap the paramdic
+            other.updaters_queued.paramdic = dicwrap_queued(other,'self.paramdic',initlev)
+            
+    
+            # Wrap the nlsubsdic
+            if 'nlsubsdic' in dir(other): other.updaters.nlsubsdic = dicwrap(other,'self.nlsubsdic',initlev)
+            # Wrap the paramdic
+            other.updaters.paramdic = dicwrap(other,'self.paramdic',initlev)        
+        
+    def init1c(self,no_wrap=False):
+        '''
+        The init1c method. Model population proceeds from the init1b method here. We call populate_model_stage_one_bb() which does quite
+        a bit of substitution/replacement of the @-prefixed variables. It does this in the numerical and closed form steady state
+        calculation sections, as well as in the actual FOCs themselves.
+
+        .. note::
+        
+           *After* that we can wrap various fields for updating which are:
+           
+             * other.foceqs - list of firs-order conditions with @ replacements done
+             * other.manss_sys - the list of equations from closed form SS section
+             * other.syss_list - the list of equations from numerical SS section
+        
+           Notice also that here we replace or generate fields in case the FOCs are supposed to be used
+           directly in SS calculation because the "use_focs" parameter was not passed empty.
+        
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+
+        '''
+        other = self.other
+        initlev = other._initlev
+        secs = other.txtpars.secs
+        mesg = other._mesg
+        if mesg: print "INIT: Substituting out @ variables in steady state sections..."
+        other = populate_model_stage_one_bb(other,secs)
+        
+        if not no_wrap:
+            if 'foceqs' in dir(other):
+                # Wrap foceqs
+                other.updaters.foceqs = listwrap(other,'self.foceqs',initlev)
+                # Wrap foceqs
+                other.updaters_queued.foceqs = listwrap(other,'self.foceqs',initlev)
+        
+        # Allow for numerical SS to be calculated using only FOCs
+        if other._use_focs and other._ssidic != None:
+            list_tmp = []
+            for elem in other._use_focs:
+                list_tmp.append(other.foceqss[elem])
+            other.ssys_list = deepcopy(list_tmp)
+            # Check if this has not already been produced in populate_model_stage_one_bb, chances are it has
+            if 'ssidic' not in dir(other): other.ssidic = copy.deepcopy(other._ssidic)
+        
+        if not no_wrap:   
+            # Wrap manss_sys
+            if 'manss_sys' in dir(other):
+                other.updaters.manss_sys = listwrap(other,'self.manss_sys',initlev)
+                other.updaters_queued.manss_sys = listwrap_queued(other,'self.manss_sys',initlev)
+            # Wrap ssys_list
+            if 'ssys_list' in dir(other):
+                other.updaters.ssys_list = listwrap(other,'self.ssys_list',initlev)
+                other.updaters_queued.ssys_list = listwrap_queued(other,'self.ssys_list',initlev)
+
+
+    def init2(self):
+        '''
+        The init2 method. Model population proceeds from the init1c method here. In this initialisation method
+        the only thing which is being done is to open up the sssolvers branch and pass down required objects to
+        the manuals closed from solver and the numerical root-finding solver depending on whether information for
+        this has been included in the DSGE model file. *No* attempt is made at solving for the steady state, the
+        respective solvers are only being *prepared*.
+        
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+        
+        '''
+        other = self.other
+        mesg = other._mesg
+        secs = other.txtpars.secs
+        initlev = other._initlev
+        if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."
+
+        # Attach the steady state class branch, and add Fsolve if required but do no more !
+        other.sssolvers = SSsolvers()
+
+        # check if the Steady-State Non-Linear system .mod section has an entry
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) or other._use_focs:
+            intup = (other.ssys_list,other.ssidic,other.paramdic)
+            other.sssolvers.fsolve = Fsolve(intup,other=other)
+        # check if the Steady-State Non-Linear system closed form has an entry
+        #  we do this here with ELIF because we only want to set this up for solving if manualss does not exist
+        elif all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            alldic = {}
+            alldic.update(other.paramdic)
+            intup = (other.manss_sys,alldic)
+            other.sssolvers.manss = ManualSteadyState(intup,other=other)
+
+    def init3(self):
+        '''
+        Initialisation method init3 is quite complex and goes through a number of logical tests in order to determine
+        how to solve for the steady state of the model.
+        
+        .. note::
+        
+           There are 7 different ways a DSGE model can obtain its steady state solution depending on what information has
+           been provided:
+           
+             1) The steady state values dictionary has been passed as argument, then init3() will NEVER be called
+             2) Information has been provided using the "use_focs" parameter to use FOCs directly, externally passed using use_focs
+             3) Information has been provided using the "use_focs" parameter to use FOCs directly, but inside model file
+             4) Information has only been provided in the numerical SS section
+             5) Information has only been provided in the closed form SS section
+             6) Both CF-SS and NUM-SS info are present and NUM-SS is subset if CF-SS
+             7) Both CF-SS and NUM-SS info are present and CF is residual
+             
+           These options are better explained in the documentation to PyMacLab in the steady state solver section.
+           
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+        
+        '''
+        other = self.other
+        txtpars = other.txtpars
+        secs = txtpars.secs
+        initlev = other._initlev
+################################## STEADY STATE CALCULATIONS !!! #######################################
+        if other._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
+        # ONLY NOW try to solve !
+        ##### OPTION 1: There is only information externally provided and we are using FOCs
+        if other._use_focs and other._ssidic != None:
+            if '_internal_focs_used' not in dir(other):
+                if other._mesg: print "SS: Using FOCs and EXTERNALLY supplied information...attempting to solve SS..."
+            else:
+                ##### OPTION 1b: There is only information internally provided and we are using FOCs
+                if other._mesg: print "SS: Using FOCs and INTERNALLY supplied information...attempting to solve SS..."
+                del other._internal_focs_used
+            other.sssolvers.fsolve.solve()
+            if other.sssolvers.fsolve.ier == 1:
+                other.sstate = deepcopy(other.sssolvers.fsolve.fsout)
+                other.switches['ss_suc'] = ['1','1']
+                if other._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
+            else:
+                other.switches['ss_suc'] = ['1','0']
+                if other._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."            
+            return
+            
+        ##### OPTION 2: There is only information provided in the numerical section NOT in closed-form
+        if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['manualss'][0]]) and not other._use_focs and other._ssidic == None:
+            if other._mesg: print "SS: ONLY numerical steady state information supplied...attempting to solve SS..."
+            other.sssolvers.fsolve.solve()
+
+        ##### OPTION 3: There is only information on closed-form steady state, BUT NO info on numerical steady state
+        # Solve using purely closed form solution if no other info on model is available
+        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           not all([False if 'None' in x else True for x in secs['manualss'][0]]):
+            if other._mesg: print "SS: ONLY CF-SS information supplied...attempting to solve SS..."
+            alldic = {}
+            alldic.update(other.paramdic)
+            intup = (other.manss_sys,alldic)
+            other.sssolvers.manss = ManualSteadyState(intup)
+            other.sssolvers.manss.solve()
+            other.sstate = {}
+            other.sstate.update(other.sssolvers.manss.sstate)
+        ##### OPTION 4: There is information on closed-form AND on numerical steady state
+        # Check if the numerical and closed form sections have entries
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            # Create unordered Set of closed from solution variables
+            manss_set = set()
+            for elem in other.manss_sys:
+                manss_set.add(elem.split('=')[0].lstrip().rstrip())
+            # If ssidic is not empty we need to make sure it perfectly overlaps with manss_set in order to replace ssidic
+            if other.ssidic != {}:
+                numss_set = set()
+                for keyo in other.ssidic.keys():
+                    numss_set.add(keyo)
+                ##### OPTION 4a: If there is an ssidic and its keys are subset of manss_set, the use as suggestion for new ssi_dic
+                if numss_set.issubset(manss_set):
+                    if other._mesg: print "SS: CF-SS and NUM-SS (overlapping) information information supplied...attempting to solve SS..."
+                    alldic = {}
+                    alldic.update(other.paramdic)
+                    intup = (other.manss_sys,alldic)
+                    other.sssolvers.manss = ManualSteadyState(intup)
+                    other.sssolvers.manss.solve()
+                    for keyo in other.ssidic.keys():
+                        other.ssidic[keyo] = other.sssolvers.manss.sstate[keyo]
+            ##### OPTION 4b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
+            # If it is empty, then just compute the closed form SS and pass to ssidic as starting value
+            elif other.ssidic == {}:
+                if other._mesg: print "SS: CF-SS and NUM-SS (empty ssdic) information information supplied...attempting to solve SS..."
+                alldic = {}
+                alldic.update(other.paramdic)
+                intup = (other.manss_sys,alldic)
+                other.sssolvers.manss = ManualSteadyState(intup)
+                other.sssolvers.manss.solve()
+                other.ssidic.update(other.sssolvers.manss.sstate)
+                # Test at least if the number of ssidic vars equals number of equations
+                if len(other.ssidic.keys()) != len(other.ssys_list):
+                    print "Error: Number of variables in initial starting values dictionary != number of equations"
+                    sys.exit()
+        ######## Finally start the numerical root finder with old or new ssidic from above
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not other._use_focs:            
+            other.sssolvers.fsolve.solve()
+        elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not other._use_focs:           
+            other.sssolvers.fsolve.solve()
+
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]):
+            if other.sssolvers.fsolve.ier == 1:
+                other.sstate = other.sssolvers.fsolve.fsout
+                other.numssdic = other.sssolvers.fsolve.fsout
+                # Attach solutions to intial variable dictionaries, for further analysis
+                other.ssidic_modfile = deepcopy(other.ssidic)
+                # Update old ssidic with found solutions
+                other.ssidic = deepcopy(other.sssolvers.fsolve.fsout)
+                other.sssolvers.fsolve.ssi = other.ssidic
+                other.switches['ss_suc'] = ['1','1']
+                if other._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
+            else:
+                other.switches['ss_suc'] = ['1','0']
+                if other._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
+
+        ########## Here we are trying to merge numerical SS solver's results with result closed-form calculations, if required
+        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
+            if other._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
+        # Check for existence of closedform AND numerical steady state
+        # We need to stop the model instantiation IFF numerical solver was attempted but failed AND closed form solver depends on it.
+        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
+           all([False if 'None' in x else True for x in secs['manualss'][0]]) and other.ssidic != {}:
+            if other.switches['ss_suc'] == ['1','0']:
+                print "ERROR: You probably want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
+                print "However, the numerical steady state solver FAILED to find a root, so I am stopping model instantiation here."
+                sys.exit()
+            ##### OPTION 5: We have both numerical and (residual) closed form information
+            # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
+            elif other.switches['ss_suc'] == ['1','1'] and not numss_set.issubset(manss_set):
+                if other._mesg: print "SS: CF-SS (residual) and NUM-SS information information supplied...attempting to solve SS..."
+                alldic = {}
+                alldic.update(other.sstate)
+                alldic.update(other.paramdic)
+                intup = (other.manss_sys,alldic)
+                other.sssolvers.manss = ManualSteadyState(intup)
+                other.sssolvers.manss.solve()
+                # Here merging takes place
+                other.sstate.update(other.sssolvers.manss.sstate)
+
+        # Double check if no steady state values are negative, as LOGS may have to be taken.
+        if 'sstate' in dir(other):
+            for keyo in other.sstate.keys():
+                if '_bar' in keyo and float(other.sstate[keyo]) < 0.0:
+                    print "WARNING: Steady state value "+keyo+ " is NEGATIVE!"
+                    print "This is very likely going to either error out or produce strange results"
+                    print "Re-check your model declarations carefully!"
+######################################### STEADY STATE CALCULATION SECTION DONE ##################################
+    def init4(self,no_wrap=False):
+        '''
+        This model instance sub-initializor only calls the section which use the computed steady state
+        in order to compute derivatives and open dynamic solver branches on the instance. But Jacobian and Hessian
+        are *not* computed here, this is postponed to the next init level.
+        
+        .. note::
+        
+           The following last field is wrapped for dynamic execution:
+           
+             * other.sigma - the variance-covariance matrix of the iid shocks
+             
+           Notice that after wrapping this last field the process_queue class is instantiated at last,
+           because it needs to have access to *all* of the wrapped fields. Also in this method, the function
+           populate_model_stage_two() is called which prepares the nonlinear FOCs for derivative-taking.
+           
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+
+        '''
+        other = self.other
+        txtpars = other.txtpars
+        secs = txtpars.secs
+        initlev = other._initlev
+        ncpus = other._ncpus
+        mk_hessian = other._mk_hessian
+        mesg = other._mesg
+        if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
+        # Now populate more with stuff that needs steady state
+        other = populate_model_stage_two(other, secs)
+
+        if not no_wrap:
+            # Need to wrap variance covariance matrix here
+            other.updaters.sigma = matwrap(other,'self.sigma',initlev)
+            # Need to wrap variance covariance matrix here
+            other.updaters_queued.sigma = matwrap_queued(other,'self.sigma',initlev)
+
+            ####### All queued updaters initialized, no add processing instance
+            # Add the queue process instance
+            other.updaters_queued.process_queue = Process_Queue(other=other)
+
+    def init5(self,update=False):
+        '''
+        This model instance initialisation step is the last substantial one in which the dynamic solution of the DSGE
+        model instance is finally computed using a choice of methods which can be called at runtime.
+        
+         
+        :param other:     The DSGE model instance itother.
+        :type other:      dsge_inst
+
+        '''
+        other = self.other
+        other.derivatives = Derivatives()
+        txtpars = other.txtpars
+        secs = txtpars.secs
+        initlev = other._initlev
+        ncpus = other._ncpus
+        mk_hessian = other._mk_hessian
+        mesg = other._mesg
+        #TODO: delay above and only import if needed
+        from solvers.modsolvers import MODsolvers
+        # Open the model solution tree branch
+        other.modsolvers = MODsolvers()
+        ######################## LINEAR METHODS !!! ############################
+        # see if there are any log-linearized equations
+        if all([False if 'None' in x else True for x in secs['modeq'][0]]):
+            from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein
+            if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
+
+            # Open the matlab Uhlig object
+            intup = ((other.nendo,other.ncon,other.nexo),
+                 other.eqindx,
+                 other.vreg,
+                 other.llsys_list,
+                 other.diffli1,
+                 other.diffli2,
+                 sess1,
+                 other.vardic)
+            other.modsolvers.matuhlig = MatUhlig(intup)
+
+            # Open the native Uhlig object
+            intup = ((other.nendo,other.ncon,other.nexo),
+                 other.eqindx,
+                 other.vreg,
+                 other.llsys_list,
+                 other.diffli1,
+                 other.diffli2,
+                 sess1)
+            other.modsolvers.pyuhlig = PyUhlig(intup)
+
+            # Open the matlab Klein object
+            intup = ((other.nendo,other.ncon,other.nexo),
+                 other.eqindx,
+                 other.vreg,
+                 other.llsys_list,
+                 other.diffli1,
+                 other.diffli2,
+                 sess1)
+            other.modsolvers.matklein = MatKlein(intup)
+
+            # Open the Fortran Klein object
+            intup = ((other.nendo,other.ncon,other.nexo),
+                 other.eqindx,
+                 other.vreg,
+                 other.llsys_list,
+                 other.diffli1,
+                 other.diffli2,
+                 sess1)
+            other.modsolvers.forklein = ForKlein(intup)
+    ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
+        if all([False if 'None' in x else True for x in secs['focs'][0]]):
+            from solvers.modsolvers import (MatWood, ForKleinD)
+            
+            if not update:
+                if ncpus > 1 and mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                    other.mkjahepp()
+                elif ncpus > 1 and not mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                    other.mkjahepp()
+                else:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                    other.mkjahe()
+            else:
+                if ncpus > 1 and mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
+                    other.mkjaheppn()
+                elif ncpus > 1 and not mk_hessian:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
+                    other.mkjaheppn()
+                else:
+                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
+                    other.mkjahen()                
+
+            # Check if the obtained matrices A and B have correct dimensions
+            if other.derivatives.jAA.shape[0] != other.derivatives.jAA.shape[1]:
+                print "ERROR: Matrix A of derivatives does not have #vars=#equations"
+            if other.derivatives.jBB.shape[0] != other.derivatives.jBB.shape[1]:
+                print "ERROR: Matrix B of derivatives does not have #vars=#equations"
+            # Open the MatWood object
+            intup = (other.derivatives.jAA,other.derivatives.jBB,
+                 other.nexo,other.ncon,
+                 other.nendo,sess1)
+            other.modsolvers.matwood = MatWood(intup)
+            # Make the AA and BB matrices as references available instead
+            other.modsolvers.matwood.jAA = other.derivatives.jAA
+            other.modsolvers.matwood.jBB = other.derivatives.jBB
+            # Open the Fortran KleinD object
+            if 'nlsubsys' in dir(other):
+                intup = (other.derivatives.numj,
+                     other.nendo,other.nexo,
+                     other.ncon,other.sigma,
+                     other.derivatives.jAA,other.derivatives.jBB,
+                     other.vardic,other.vdic,
+                     other.mod_name,other.audic,
+                     other.derivatives.numjl,
+                     other.nother)
+            else:
+                intup = (other.derivatives.numj,
+                     other.nendo,other.nexo,
+                     other.ncon,other.sigma,
+                     other.derivatives.jAA,other.derivatives.jBB,
+                     other.vardic,other.vdic,
+                     other.mod_name,other.audic)
+            other.modsolvers.forkleind = ForKleinD(intup,other=other)
+            # Make the AA and BB matrices as references available instead
+            other.modsolvers.forkleind.A = other.derivatives.jAA
+            other.modsolvers.forkleind.B = other.derivatives.jBB
+
+    ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
+        if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(other):
+            from solvers.modsolvers import (PyKlein2D, MatKlein2D)
+            # Open the MatKlein2D object
+            if 'nlsubsys' in dir(other):
+                intup = (other.derivatives.numj,other.derivatives.numh,
+                     other.nendo,other.nexo,
+                     other.ncon,other.sigma,
+                     other.derivatives.jAA,other.derivatives.jBB,
+                     other.vardic,other.vdic,
+                     other.mod_name,other.audic,
+                     other.derivatives.numjl,other.derivatives.numhl,
+                     other.nother,sess1)
+            else:
+                intup = (other.derivatives.numj,other.derivatives.numh,
+                     other.nendo,other.nexo,
+                     other.ncon,other.sigma,
+                     other.derivatives.jAA,other.derivatives.jBB,
+                     other.vardic,other.vdic,
+                     other.mod_name,other.audic,
+                     sess1)
+            other.modsolvers.matklein2d = MatKlein2D(intup)
+            # Make the AA and BB matrices as references available instead
+            other.modsolvers.matklein2d.A = other.derivatives.jAA
+            other.modsolvers.matklein2d.B = other.derivatives.jBB
+
+            # Open the PyKlein2D object, but don't pass mlabwrap session
+            intup = intup[:-1]
+            other.modsolvers.pyklein2d = PyKlein2D(intup,other=other)
+            # Make the AA and BB matrices as references available instead
+            other.modsolvers.pyklein2d.A = other.derivatives.jAA
+            other.modsolvers.pyklein2d.B = other.derivatives.jBB
+            other.modsolvers.pyklein2d.forkleind.A = other.derivatives.jAA
+            other.modsolvers.pyklein2d.forkleind.B = other.derivatives.jBB
+            
+    def init_out(self):
+        '''
+        The final intializor section does some extra stuff after all has been done.
+           
+        :param self:     The DSGE model instance itself.
+        :type self:      dsge_inst
+
+        '''
+        other = self.other
+        initlev = other._initlev
+        # Compute the Eigenvalues of the AA matrix for inspection
+        if 'jAA' in dir(other.derivatives):
+            other.mkeigv()
+        # Make sure the jobserver has done his jobs
+        jobserver.wait()
 
 # Empty locdic for the locate helper function
 locdic = {}
@@ -124,6 +719,8 @@ class DSGEmodel(object):
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
                  use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
+        # Open the inits branch
+        self.inits = Inits(other=self)
         # Make sure the jobserver has done his global jobs each time you instantiate a new instance
         jobserver.wait()
         if sstate != None:
@@ -148,581 +745,6 @@ class DSGEmodel(object):
         self.modfile = ffile
         self.dbase = dbase
 
-    # Initializes all of the rest, errors can occur here ! (steady state, jacobian, hessian)
-    def init1(self,no_wrap=False):
-        '''
-        The init1 method. Model population proceeds from the __init__function here. In particular the data gets read in
-        (not implemented at the moment) and the model parsing begins.
-        
-        .. note::
-           The self.vardic gets created and the manual as well as
-           the numerical steady state sections gets parsed and attached to the DSGE model instance. So the most import fields created
-           here using function populate_model_stage_one() are:
-           
-             * self.vardic - variable names dictionary with transform and filtering info
-             * self.mod_name - short name of the DSGE model from mod file
-             * self.mod_desc - longer model description from mod file
-             * self.paramdic - dic of defined parameters with their numerical values
-             * self.manss_sys - list of equations from the closed form steady state section
-             * self.ssys_list - list of equations from the numerical steady state section
-           
-           Also the updaters and updaters_queued branches are opened here and the self.vardic gets wrapped for dynamic updating
-           behaviour.
-        
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-        
-        '''
-        initlev = self._initlev
-        ncpus = self._ncpus
-        mk_hessian = self._mk_hessian
-        mesg = self._mesg
-        # Attach the data from database
-        if self.dbase != None:
-            self.getdata(dbase=self.dbase)        
-        if mesg: print "INIT: Instantiating DSGE model with INITLEV="+str(initlev)+" and NCPUS="+str(ncpus)+"..."
-        if mesg: print "INIT: Attaching model properties to DSGE model instance..."
-
-        # Create None tester regular expression
-        #        _nreg = '^\s*None\s*$'
-        #        nreg = re.compile(_nreg)
-        
-        if mesg: print "INIT: Parsing model file into DSGE model instance..."
-        txtpars = parse_mod(self.modfile)
-        self.txtpars = txtpars  # do we need txtpars attached for anything else?
-        secs = txtpars.secs # do we need txtpars attached for anything else?
-        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
-        # Initial population method of model, does NOT need steady states
-        self = populate_model_stage_one(self, secs)
-
-        if not no_wrap:
-            # Open updaters path
-            self.updaters = Updaters()        
-            # Open the updaters_queued path
-            self.updaters_queued = Updaters_Queued()
-            # Add the empty queue
-            self.updaters_queued.queue = queue
-    
-            # Wrap the vardic
-            self.updaters.vardic = dicwrap_deep(self,'self.vardic',initlev)
-            self.updaters_queued.vardic = dicwrap_deep_queued(self,'self.vardic',initlev)
-        
-    def init1a(self):
-        '''
-        The init1a method. Model population proceeds from the init1 method here. The only field which get created here is the raw
-        (i.e. unsubstituted) substitution dictionary.
-        
-        .. note::
-            Field which are created here using the function populate_model_stage_one_a() which in turn calls mk_subs_dic():
-           
-             * self.nlsubs_raw1 - a list of the @items and their replacements
-             * self.nlsubsdic - the above just expressed as a keyed list
-        
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''
-        mesg = self._mesg
-        secs = self.txtpars.secs
-        # This is an additional populator which creates subsitution dictionary
-        # and uses this to already get rid of @s in the manuall sstate list
-        if mesg: print "INIT: Extraction of info into DSGE model instance Stage [2]..."
-        # This function only creates the raw substitution dictionary and list from modfile
-        self = populate_model_stage_one_a(self,secs)
-        
-    def init1b(self,no_wrap=False):
-        '''
-        The init1b method. Model population proceeds from the init1a method here.
-
-        .. note::
-        
-           The only thing which gets done here purposefully *after* calling init1a() is to wrap these fields:
-           
-             * self.nlsubsdic - the above just expressed as a keyed list
-             * self.paramdic - dic of defined parameters with their numerical values
-             
-           in order to give them dynamic updating behaviour. No more is done in this init method call.
-        
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''        
-        initlev = self._initlev
-        secs = self.txtpars.secs
-        self = populate_model_stage_one_b(self,secs)
-        
-        if not no_wrap:
-            # Wrap the nlsubsdic
-            if 'nlsubsdic' in dir(self): self.updaters_queued.nlsubsdic = dicwrap_queued(self,'self.nlsubsdic',initlev)
-            # Wrap the paramdic
-            self.updaters_queued.paramdic = dicwrap_queued(self,'self.paramdic',initlev)
-            
-    
-            # Wrap the nlsubsdic
-            if 'nlsubsdic' in dir(self): self.updaters.nlsubsdic = dicwrap(self,'self.nlsubsdic',initlev)
-            # Wrap the paramdic
-            self.updaters.paramdic = dicwrap(self,'self.paramdic',initlev)        
-        
-    def init1c(self,no_wrap=False):
-        '''
-        The init1c method. Model population proceeds from the init1b method here. We call populate_model_stage_one_bb() which does quite
-        a bit of substitution/replacement of the @-prefixed variables. It does this in the numerical and closed form steady state
-        calculation sections, as well as in the actual FOCs themselves.
-
-        .. note::
-        
-           *After* that we can wrap various fields for updating which are:
-           
-             * self.foceqs - list of firs-order conditions with @ replacements done
-             * self.manss_sys - the list of equations from closed form SS section
-             * self.syss_list - the list of equations from numerical SS section
-        
-           Notice also that here we replace or generate fields in case the FOCs are supposed to be used
-           directly in SS calculation because the "use_focs" parameter was not passed empty.
-        
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''
-        initlev = self._initlev
-        secs = self.txtpars.secs
-        mesg = self._mesg
-        if mesg: print "INIT: Substituting out @ variables in steady state sections..."
-        self = populate_model_stage_one_bb(self,secs)
-        
-        if not no_wrap:
-            if 'foceqs' in dir(self):
-                # Wrap foceqs
-                self.updaters.foceqs = listwrap(self,'self.foceqs',initlev)
-                # Wrap foceqs
-                self.updaters_queued.foceqs = listwrap(self,'self.foceqs',initlev)
-        
-        # Allow for numerical SS to be calculated using only FOCs
-        if self._use_focs and self._ssidic != None:
-            list_tmp = []
-            for elem in self._use_focs:
-                list_tmp.append(self.foceqss[elem])
-            self.ssys_list = deepcopy(list_tmp)
-            # Check if this has not already been produced in populate_model_stage_one_bb, chances are it has
-            if 'ssidic' not in dir(self): self.ssidic = copy.deepcopy(self._ssidic)
-        
-        if not no_wrap:   
-            # Wrap manss_sys
-            if 'manss_sys' in dir(self):
-                self.updaters.manss_sys = listwrap(self,'self.manss_sys',initlev)
-                self.updaters_queued.manss_sys = listwrap_queued(self,'self.manss_sys',initlev)
-            # Wrap ssys_list
-            if 'ssys_list' in dir(self):
-                self.updaters.ssys_list = listwrap(self,'self.ssys_list',initlev)
-                self.updaters_queued.ssys_list = listwrap_queued(self,'self.ssys_list',initlev)
-
-
-    def init2(self):
-        '''
-        The init2 method. Model population proceeds from the init1c method here. In this initialisation method
-        the only thing which is being done is to open up the sssolvers branch and pass down required objects to
-        the manuals closed from solver and the numerical root-finding solver depending on whether information for
-        this has been included in the DSGE model file. *No* attempt is made at solving for the steady state, the
-        respective solvers are only being *prepared*.
-        
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-        
-        '''
-        mesg = self._mesg
-        secs = self.txtpars.secs
-        initlev = self._initlev
-        if mesg: print "INIT: Preparing DSGE model instance for steady state solution..."
-
-        # Attach the steady state class branch, and add Fsolve if required but do no more !
-        self.sssolvers = SSsolvers()
-
-        # check if the Steady-State Non-Linear system .mod section has an entry
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]) or self._use_focs:
-            intup = (self.ssys_list,self.ssidic,self.paramdic)
-            self.sssolvers.fsolve = Fsolve(intup,other=self)
-        # check if the Steady-State Non-Linear system closed form has an entry
-        #  we do this here with ELIF because we only want to set this up for solving if manualss does not exist
-        elif all([False if 'None' in x else True for x in secs['closedformss'][0]]):
-            alldic = {}
-            alldic.update(self.paramdic)
-            intup = (self.manss_sys,alldic)
-            self.sssolvers.manss = ManualSteadyState(intup,other=self)
-
-    def init3(self):
-        '''
-        Initialisation method init3 is quite complex and goes through a number of logical tests in order to determine
-        how to solve for the steady state of the model.
-        
-        .. note::
-        
-           There are 7 different ways a DSGE model can obtain its steady state solution depending on what information has
-           been provided:
-           
-             1) The steady state values dictionary has been passed as argument, then init3() will NEVER be called
-             2) Information has been provided using the "use_focs" parameter to use FOCs directly, externally passed using use_focs
-             3) Information has been provided using the "use_focs" parameter to use FOCs directly, but inside model file
-             4) Information has only been provided in the numerical SS section
-             5) Information has only been provided in the closed form SS section
-             6) Both CF-SS and NUM-SS info are present and NUM-SS is subset if CF-SS
-             7) Both CF-SS and NUM-SS info are present and CF is residual
-             
-           These options are better explained in the documentation to PyMacLab in the steady state solver section.
-           
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-        
-        '''
-        txtpars = self.txtpars
-        secs = txtpars.secs
-        initlev = self._initlev
-################################## STEADY STATE CALCULATIONS !!! #######################################
-        if self._mesg: print "INIT: Attempting to find DSGE model's steady state automatically..."
-        # ONLY NOW try to solve !
-        ##### OPTION 1: There is only information externally provided and we are using FOCs
-        if self._use_focs and self._ssidic != None:
-            if '_internal_focs_used' not in dir(self):
-                if self._mesg: print "SS: Using FOCs and EXTERNALLY supplied information...attempting to solve SS..."
-            else:
-                ##### OPTION 1b: There is only information internally provided and we are using FOCs
-                if self._mesg: print "SS: Using FOCs and INTERNALLY supplied information...attempting to solve SS..."
-                del self._internal_focs_used
-            self.sssolvers.fsolve.solve()
-            if self.sssolvers.fsolve.ier == 1:
-                self.sstate = deepcopy(self.sssolvers.fsolve.fsout)
-                self.switches['ss_suc'] = ['1','1']
-                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
-            else:
-                self.switches['ss_suc'] = ['1','0']
-                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."            
-            return
-            
-        ##### OPTION 2: There is only information provided in the numerical section NOT in closed-form
-        if not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['manualss'][0]]) and not self._use_focs and self._ssidic == None:
-            if self._mesg: print "SS: ONLY numerical steady state information supplied...attempting to solve SS..."
-            self.sssolvers.fsolve.solve()
-
-        ##### OPTION 3: There is only information on closed-form steady state, BUT NO info on numerical steady state
-        # Solve using purely closed form solution if no other info on model is available
-        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
-           not all([False if 'None' in x else True for x in secs['manualss'][0]]):
-            if self._mesg: print "SS: ONLY CF-SS information supplied...attempting to solve SS..."
-            alldic = {}
-            alldic.update(self.paramdic)
-            intup = (self.manss_sys,alldic)
-            self.sssolvers.manss = ManualSteadyState(intup)
-            self.sssolvers.manss.solve()
-            self.sstate = {}
-            self.sstate.update(self.sssolvers.manss.sstate)
-        ##### OPTION 4: There is information on closed-form AND on numerical steady state
-        # Check if the numerical and closed form sections have entries
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
-            # Create unordered Set of closed from solution variables
-            manss_set = set()
-            for elem in self.manss_sys:
-                manss_set.add(elem.split('=')[0].lstrip().rstrip())
-            # If ssidic is not empty we need to make sure it perfectly overlaps with manss_set in order to replace ssidic
-            if self.ssidic != {}:
-                numss_set = set()
-                for keyo in self.ssidic.keys():
-                    numss_set.add(keyo)
-                ##### OPTION 4a: If there is an ssidic and its keys are subset of manss_set, the use as suggestion for new ssi_dic
-                if numss_set.issubset(manss_set):
-                    if self._mesg: print "SS: CF-SS and NUM-SS (overlapping) information information supplied...attempting to solve SS..."
-                    alldic = {}
-                    alldic.update(self.paramdic)
-                    intup = (self.manss_sys,alldic)
-                    self.sssolvers.manss = ManualSteadyState(intup)
-                    self.sssolvers.manss.solve()
-                    for keyo in self.ssidic.keys():
-                        self.ssidic[keyo] = self.sssolvers.manss.sstate[keyo]
-            ##### OPTION 4b: ssidic is empty, so we have to assumed that the variables in closed form are suggestions for ssidic
-            # If it is empty, then just compute the closed form SS and pass to ssidic as starting value
-            elif self.ssidic == {}:
-                if self._mesg: print "SS: CF-SS and NUM-SS (empty ssdic) information information supplied...attempting to solve SS..."
-                alldic = {}
-                alldic.update(self.paramdic)
-                intup = (self.manss_sys,alldic)
-                self.sssolvers.manss = ManualSteadyState(intup)
-                self.sssolvers.manss.solve()
-                self.ssidic.update(self.sssolvers.manss.sstate)
-                # Test at least if the number of ssidic vars equals number of equations
-                if len(self.ssidic.keys()) != len(self.ssys_list):
-                    print "Error: Number of variables in initial starting values dictionary != number of equations"
-                    sys.exit()
-        ######## Finally start the numerical root finder with old or new ssidic from above
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           not all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:            
-            self.sssolvers.fsolve.solve()
-        elif all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['closedformss'][0]]) and not self._use_focs:           
-            self.sssolvers.fsolve.solve()
-
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]):
-            if self.sssolvers.fsolve.ier == 1:
-                self.sstate = self.sssolvers.fsolve.fsout
-                self.numssdic = self.sssolvers.fsolve.fsout
-                # Attach solutions to intial variable dictionaries, for further analysis
-                self.ssidic_modfile = deepcopy(self.ssidic)
-                # Update old ssidic with found solutions
-                self.ssidic = deepcopy(self.sssolvers.fsolve.fsout)
-                self.sssolvers.fsolve.ssi = self.ssidic
-                self.switches['ss_suc'] = ['1','1']
-                if self._mesg: print "INIT: Steady State of DSGE model found (SUCCESS)..."
-            else:
-                self.switches['ss_suc'] = ['1','0']
-                if self._mesg: print "INIT: Steady State of DSGE model not found (FAILURE)..."
-
-        ########## Here we are trying to merge numerical SS solver's results with result closed-form calculations, if required
-        if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['closedformss'][0]]):
-            if self._mesg: print "INIT: Merging numerical with closed form steady state if needed..."
-        # Check for existence of closedform AND numerical steady state
-        # We need to stop the model instantiation IFF numerical solver was attempted but failed AND closed form solver depends on it.
-        if all([False if 'None' in x else True for x in secs['closedformss'][0]]) and\
-           all([False if 'None' in x else True for x in secs['manualss'][0]]) and self.ssidic != {}:
-            if self.switches['ss_suc'] == ['1','0']:
-                print "ERROR: You probably want to use numerical steady state solution to solve for RESIDUAL closed form steady states."
-                print "However, the numerical steady state solver FAILED to find a root, so I am stopping model instantiation here."
-                sys.exit()
-            ##### OPTION 5: We have both numerical and (residual) closed form information
-            # Check if a numerical SS solution has been attempted and succeeded, then take solutions in here for closed form.
-            elif self.switches['ss_suc'] == ['1','1'] and not numss_set.issubset(manss_set):
-                if self._mesg: print "SS: CF-SS (residual) and NUM-SS information information supplied...attempting to solve SS..."
-                alldic = {}
-                alldic.update(self.sstate)
-                alldic.update(self.paramdic)
-                intup = (self.manss_sys,alldic)
-                self.sssolvers.manss = ManualSteadyState(intup)
-                self.sssolvers.manss.solve()
-                # Here merging takes place
-                self.sstate.update(self.sssolvers.manss.sstate)
-
-        # Double check if no steady state values are negative, as LOGS may have to be taken.
-        if 'sstate' in dir(self):
-            for keyo in self.sstate.keys():
-                if '_bar' in keyo and float(self.sstate[keyo]) < 0.0:
-                    print "WARNING: Steady state value "+keyo+ " is NEGATIVE!"
-                    print "This is very likely going to either error out or produce strange results"
-                    print "Re-check your model declarations carefully!"
-######################################### STEADY STATE CALCULATION SECTION DONE ##################################
-    def init4(self,no_wrap=False):
-        '''
-        This model instance sub-initializor only calls the section which use the computed steady state
-        in order to compute derivatives and open dynamic solver branches on the instance. But Jacobian and Hessian
-        are *not* computed here, this is postponed to the next init level.
-        
-        .. note::
-        
-           The following last field is wrapped for dynamic execution:
-           
-             * self.sigma - the variance-covariance matrix of the iid shocks
-             
-           Notice that after wrapping this last field the process_queue class is instantiated at last,
-           because it needs to have access to *all* of the wrapped fields. Also in this method, the function
-           populate_model_stage_two() is called which prepares the nonlinear FOCs for derivative-taking.
-           
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''
-        txtpars = self.txtpars
-        secs = txtpars.secs
-        initlev = self._initlev
-        ncpus = self._ncpus
-        mk_hessian = self._mk_hessian
-        mesg = self._mesg
-        if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
-        # Now populate more with stuff that needs steady state
-        self = populate_model_stage_two(self, secs)
-
-        if not no_wrap:
-            # Need to wrap variance covariance matrix here
-            self.updaters.sigma = matwrap(self,'self.sigma',initlev)
-            # Need to wrap variance covariance matrix here
-            self.updaters_queued.sigma = matwrap_queued(self,'self.sigma',initlev)
-
-            ####### All queued updaters initialized, no add processing instance
-            # Add the queue process instance
-            self.updaters_queued.process_queue = Process_Queue(other=self)
-
-    def init5(self,update=False):
-        '''
-        This model instance initialisation step is the last substantial one in which the dynamic solution of the DSGE
-        model instance is finally computed using a choice of methods which can be called at runtime.
-        
-         
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''
-        txtpars = self.txtpars
-        secs = txtpars.secs
-        initlev = self._initlev
-        ncpus = self._ncpus
-        mk_hessian = self._mk_hessian
-        mesg = self._mesg
-        #TODO: delay above and only import if needed
-        from solvers.modsolvers import MODsolvers
-        # Open the model solution tree branch
-        self.modsolvers = MODsolvers()
-        ######################## LINEAR METHODS !!! ############################
-        # see if there are any log-linearized equations
-        if all([False if 'None' in x else True for x in secs['modeq'][0]]):
-            from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein
-            if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
-
-            # Open the matlab Uhlig object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1,
-                 self.vardic)
-            self.modsolvers.matuhlig = MatUhlig(intup)
-
-            # Open the native Uhlig object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.pyuhlig = PyUhlig(intup)
-
-            # Open the matlab Klein object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.matklein = MatKlein(intup)
-
-            # Open the Fortran Klein object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.forklein = ForKlein(intup)
-    ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-        if all([False if 'None' in x else True for x in secs['focs'][0]]):
-            from solvers.modsolvers import (MatWood, ForKleinD)
-            
-            if not update:
-                if ncpus > 1 and mk_hessian:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
-                    self.mkjahepp()
-                elif ncpus > 1 and not mk_hessian:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
-                    self.mkjahepp()
-                else:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
-                    self.mkjahe()
-            else:
-                if ncpus > 1 and mk_hessian:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using parallel approach..."
-                    self.mkjaheppn()
-                elif ncpus > 1 and not mk_hessian:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian using parallel approach..."
-                    self.mkjaheppn()
-                else:
-                    if mesg: print "INIT: Computing DSGE model's Jacobian and Hessian using serial approach..."
-                    self.mkjahen()                
-
-            # Check if the obtained matrices A and B have correct dimensions
-            if self.jAA.shape[0] != self.jAA.shape[1]:
-                print "ERROR: Matrix A of derivatives does not have #vars=#equations"
-            if self.jBB.shape[0] != self.jBB.shape[1]:
-                print "ERROR: Matrix B of derivatives does not have #vars=#equations"
-            # Open the MatWood object
-            intup = (self.jAA,self.jBB,
-                 self.nexo,self.ncon,
-                 self.nendo,sess1)
-            self.modsolvers.matwood = MatWood(intup)
-            # Make the AA and BB matrices as references available instead
-            self.modsolvers.matwood.jAA = self.jAA
-            self.modsolvers.matwood.jBB = self.jBB
-            # Open the Fortran KleinD object
-            if 'nlsubsys' in dir(self):
-                intup = (self.numj,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name,self.audic,
-                     self.numjl,
-                     self.nother)
-            else:
-                intup = (self.numj,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name,self.audic)
-            self.modsolvers.forkleind = ForKleinD(intup,other=self)
-            # Make the AA and BB matrices as references available instead
-            self.modsolvers.forkleind.A = self.jAA
-            self.modsolvers.forkleind.B = self.jBB
-
-    ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-        if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(self):
-            from solvers.modsolvers import (PyKlein2D, MatKlein2D)
-            # Open the MatKlein2D object
-            if 'nlsubsys' in dir(self):
-                intup = (self.numj,self.numh,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name,self.audic,
-                     self.numjl,self.numhl,
-                     self.nother,sess1)
-            else:
-                intup = (self.numj,self.numh,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name,self.audic,
-                     sess1)
-            self.modsolvers.matklein2d = MatKlein2D(intup)
-            # Make the AA and BB matrices as references available instead
-            self.modsolvers.matklein2d.A = self.jAA
-            self.modsolvers.matklein2d.B = self.jBB
-
-            # Open the PyKlein2D object, but don't pass mlabwrap session
-            intup = intup[:-1]
-            self.modsolvers.pyklein2d = PyKlein2D(intup,other=self)
-            # Make the AA and BB matrices as references available instead
-            self.modsolvers.pyklein2d.A = self.jAA
-            self.modsolvers.pyklein2d.B = self.jBB
-            self.modsolvers.pyklein2d.forkleind.A = self.jAA
-            self.modsolvers.pyklein2d.forkleind.B = self.jBB
-            
-    def init_out(self):
-        '''
-        The final intializor section does some extra stuff after all has been done.
-           
-        :param self:     The DSGE model instance itself.
-        :type self:      dsge_inst
-
-        '''
-        initlev = self._initlev
-        # Compute the Eigenvalues of the AA matrix for inspection
-        if 'jAA' in dir(self):
-            self.mkeigv()
-        # Make sure the jobserver has done his jobs
-        jobserver.wait()
         
     def mk_dynare(self,order=1,centralize=False):
         # Import the template and other stuff
@@ -1603,31 +1625,30 @@ class DSGEmodel(object):
             if mesg: print " DONE",
             return numh,hdic,hdicc
 
-        self.numj,self.jdic,self.jdicc,carry_over_dic = mkjac()
+        self.derivatives.numj,self.derivatives.jdic,self.derivatives.jdicc,carry_over_dic = mkjac()
         # To make line between Jacobian's and Hessian's computation
-        if self._mesg: print
-        numj = self.numj
+        numj = deepcopy(self.derivatives.numj)
         if mk_hessian:
-            self.numh,self.hdic,self.hdicc = mkhes(trans_dic=carry_over_dic)
-            numh = self.numh
+            self.derivatives.numh,self.derivatives.hdic,self.derivatives.hdicc = mkhes(trans_dic=carry_over_dic)
+            numh = deepcopy(self.numh)
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
             numjl = numj[-lsubs:,:]
-            self.numj = numjs
-            self.numjl = numjl
+            self.derivatives.numj = numjs
+            self.derivatives.numjl = numjl
             if mk_hessian:
                 numhs = numh[:-lsubs*jcols,:]
                 numhl = numh[-lsubs*jcols:,:]
-                self.numhl = numhl
-                self.numh = numhs
+                self.derivatives.numhl = numhl
+                self.derivatives.numh = numhs
         else:
-            self.numj = numj
+            self.derivatives.numj = numj
             if mk_hessian:
-                self.numh = numh
+                self.derivatives.numh = numh
 
-        self.jAA = self.numj[:,:int(len(intup)/2)]
-        self.jBB = -self.numj[:,int(len(intup)/2):]
+        self.derivatives.jAA = self.derivatives.numj[:,:int(len(intup)/2)]
+        self.derivatives.jBB = -self.derivatives.numj[:,int(len(intup)/2):]
         
         # Get rid of pointless keys in jdicc (and hdicc)
         jdicc_copy = deepcopy(jdicc)
@@ -1642,11 +1663,11 @@ class DSGEmodel(object):
                         if type(keyo2) == type(1): hdicc[keyo].pop(keyo2)
                     
         # Build string As and Bs
-        sAA = deepcopy(self.jAA.astype(str))
-        sBB = deepcopy(self.jBB.astype(str))
+        sAA = deepcopy(self.derivatives.jAA.astype(str))
+        sBB = deepcopy(self.derivatives.jBB.astype(str))
         sAA = np.matrix(sAA,dtype=np.object_)
         sBB = np.matrix(sBB,dtype=np.object_)
-        for elem in range(self.jAA.shape[0]):
+        for elem in range(self.derivatives.jAA.shape[0]):
             for i1,elem2 in enumerate(exo_1+endo_1+con_1):
                 sAA[elem,i1] = jdicc[elem][elem2]
             for i2,elem2 in enumerate(exo_0+endo_0+con_0):
@@ -1654,10 +1675,10 @@ class DSGEmodel(object):
                     sBB[elem,i2] = '-('+jdicc[elem][elem2]+')'
                 else:
                     sBB[elem,i2] = jdicc[elem][elem2]     
-        self.sAA = deepcopy(sAA)
-        self.sBB = deepcopy(sBB)
-        self.iA = deepcopy(exo_1+endo_1+con_1)
-        self.iB = deepcopy(exo_0+endo_0+con_0)
+        self.derivatives.sAA = deepcopy(sAA)
+        self.derivatives.sBB = deepcopy(sBB)
+        self.derivatives.iA = deepcopy(exo_1+endo_1+con_1)
+        self.derivatives.iB = deepcopy(exo_0+endo_0+con_0)
         
 
     # The parallelized mkjahe version using parallel python
@@ -1940,12 +1961,12 @@ class DSGEmodel(object):
                 numh = mat.vstack((numh,job()[3]))
                 hdic[i1+1] = job()[4]
                 hdicc[i1+1] = job()[5]
-            self.numj = numj
-            self.jdic = jdic
-            self.jdicc = jdicc
-            self.numh = numh
-            self.hdic = hdic
-            self.hdicc = hdicc
+            self.derivatives.numj = numj
+            self.derivatives.jdic = jdic
+            self.derivatives.jdicc = jdicc
+            self.derivatives.numh = numh
+            self.derivatives.hdic = hdic
+            self.derivatives.hdicc = hdicc
         else:
             jdic = {}
             jdicc = {}
@@ -1957,28 +1978,28 @@ class DSGEmodel(object):
                 numj = mat.vstack((numj,job()[0]))
                 jdic[i1+1] = job()[1]
                 jdicc[i1+1] = job()[2]
-            self.numj = numj
-            self.jdic = jdic
-            self.jdicc = jdicc
+            self.derivatives.numj = numj
+            self.derivatives.jdic = jdic
+            self.derivatives.jdicc = jdicc
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
             numjl = numj[-lsubs:,:]
-            self.numj = numjs
-            self.numjl = numjl
+            self.derivatives.numj = numjs
+            self.derivatives.numjl = numjl
 
             if mk_hessian:
                 numhs = numh[:-lsubs*jcols,:]
                 numhl = numh[-lsubs*jcols:,:]
-                self.numhl = numhl
-                self.numh = numhs
+                self.derivatives.numhl = numhl
+                self.derivatives.numh = numhs
         else:
             self.numj = numj
             if mk_hessian:
-                self.numh = numh
+                self.derivatives.numh = numh
 
-        self.jAA = self.numj[:,:int(len(intup)/2)]
-        self.jBB = -self.numj[:,int(len(intup)/2):]
+        self.derivatives.jAA = self.derivatives.numj[:,:int(len(intup)/2)]
+        self.derivatives.jBB = -self.derivatives.numj[:,int(len(intup)/2):]
         
         # Get rid of pointless keys in jdicc (and hdicc)
         jdicc_copy = deepcopy(jdicc)
@@ -1993,11 +2014,11 @@ class DSGEmodel(object):
                         if type(keyo2) == type(1): hdicc[keyo].pop(keyo2)
         
         # Build string As and Bs
-        sAA = deepcopy(self.jAA.astype(str))
-        sBB = deepcopy(self.jBB.astype(str))
+        sAA = deepcopy(self.derivatives.jAA.astype(str))
+        sBB = deepcopy(self.derivatives.jBB.astype(str))
         sAA = np.matrix(sAA,dtype=np.object_)
         sBB = np.matrix(sBB,dtype=np.object_)
-        for elem in range(self.jAA.shape[0]):
+        for elem in range(self.derivatives.jAA.shape[0]):
             for i1,elem2 in enumerate(exo_1+endo_1+con_1):
                 sAA[elem,i1] = jdicc[elem][elem2]
             for i2,elem2 in enumerate(exo_0+endo_0+con_0):
@@ -2005,10 +2026,10 @@ class DSGEmodel(object):
                     sBB[elem,i2] = '-('+jdicc[elem][elem2]+')'
                 else:
                     sBB[elem,i2] = jdicc[elem][elem2]     
-        self.sAA = deepcopy(sAA)
-        self.sBB = deepcopy(sBB)
-        self.iA = deepcopy(exo_1+endo_1+con_1)
-        self.iB = deepcopy(exo_0+endo_0+con_0)        
+        self.derivatives.sAA = deepcopy(sAA)
+        self.derivatives.sBB = deepcopy(sBB)
+        self.derivatives.iA = deepcopy(exo_1+endo_1+con_1)
+        self.derivatives.iB = deepcopy(exo_0+endo_0+con_0)        
     
     # The numerical (Paul Klein) Jacobian and Hessian computation method (uses matlab)
     def mkjahenmat(self,msess=sess1):
@@ -2225,8 +2246,8 @@ class DSGEmodel(object):
             self.numj = numj
             self.numh = numh
 
-        self.jAA = np.matrix(self.numj[:,:int(len(intup)/2)])
-        self.jBB = np.matrix(-self.numj[:,int(len(intup)/2):])
+        self.derivatives.jAA = np.matrix(self.numj[:,:int(len(intup)/2)])
+        self.derivatives.jBB = np.matrix(-self.numj[:,int(len(intup)/2):])
 
         del self.func1
         del self.func2
@@ -2258,26 +2279,7 @@ class DSGEmodel(object):
         '''
         mk_hessian = self._mk_hessian
         
-        #### WARNING #######
-        # If timing assumptions are changed here then we also need to modify them in
-        # dsge_parser in methods mkaug1 and mkaug2 !!!!
-        ####################        
-        '''
-        exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0] for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        '''
-        
-        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        con_0 = [x[0] for x in self.vardic['con']['var']]        
-        
-        con_0 = [x[0] for x in self.vardic['con']['var']]
+        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -2380,29 +2382,29 @@ class DSGEmodel(object):
                     count = count + 1
             return numh
 
-        self.numj = mkjac()
-        numj = self.numj
+        self.derivatives.numj = mkjac()
+        numj = deepcopy(self.numj)
         if mk_hessian:
-            self.numh = mkhes()
-            numh = self.numh
+            self.derivatives.numh = mkhes()
+            numh = deepcopy(self.numh)
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
             numjl = numj[-lsubs:,:]
-            self.numj = numjs
-            self.numjl = numjl
+            self.derivatives.numj = numjs
+            self.derivatives.numjl = numjl
             if mk_hessian:
                 numhs = numh[:-lsubs*jcols,:]
                 numhl = numh[-lsubs*jcols:,:]
-                self.numhl = numhl
-                self.numh = numhs
+                self.derivatives.numhl = numhl
+                self.derivatives.numh = numhs
         else:
-            self.numj = numj
+            self.derivatives.numj = numj
             if mk_hessian:
-                self.numh = numh
+                self.derivatives.numh = numh
 
-        self.jAA = self.numj[:,:int(len(intup)/2)]
-        self.jBB = -self.numj[:,int(len(intup)/2):]
+        self.derivatives.jAA = self.derivatives.numj[:,:int(len(intup)/2)]
+        self.derivatives.jBB = -self.derivatives.numj[:,int(len(intup)/2):]
 
     def mkjaheppn(self):
         '''
@@ -2430,26 +2432,7 @@ class DSGEmodel(object):
         # import local sympycore
         import sympycore
         
-        #### WARNING #######
-        # If timing assumptions are changed here then we also need to modify them in
-        # dsge_parser in methods mkaug1 and mkaug2 !!!!
-        ####################
-        '''
-        exo_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0] for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        con_0 = [x[0] for x in self.vardic['con']['var']]
-        '''
-        
-        exo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['exo']['var']]
-        endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
-        con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+1)' for x in self.vardic['con']['var']]
-        exo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['exo']['var']]
-        endo_0 = [x[0].split('(')[0]+'(t-1)' for x in self.vardic['endo']['var']]
-        con_0 = [x[0] for x in self.vardic['con']['var']]         
-        
+        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
         inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
         intup=tuple(inlist)
 
@@ -2563,33 +2546,33 @@ class DSGEmodel(object):
             for i1,job in enumerate(jobs[1:len(jobs)]):
                 numj = mat.vstack((numj,job()[0]))
                 numh = mat.vstack((numh,job()[1]))
-            self.numj = numj
-            self.numh = numh
+            self.derivatives.numj = numj
+            self.derivatives.numh = numh
         else:
             job_0 = jobs[0]
             numj = job_0()
             for i1,job in enumerate(jobs[1:len(jobs)]):
                 numj = mat.vstack((numj,job()))
-            self.numj = numj
+            self.derivatives.numj = numj
 
         if 'nlsubsys' in dir(self):
             numjs = numj[:-lsubs,:]
             numjl = numj[-lsubs:,:]
-            self.numj = numjs
-            self.numjl = numjl
+            self.derivatives.numj = numjs
+            self.derivatives.numjl = numjl
             
             if mk_hessian:
                 numhs = numh[:-lsubs*jcols,:]
                 numhl = numh[-lsubs*jcols:,:]
-                self.numhl = numhl
-                self.numh = numhs
+                self.derivatives.numhl = numhl
+                self.derivatives.numh = numhs
         else:
-            self.numj = numj
+            self.derivatives.numj = numj
             if mk_hessian:
-                self.numh = numh
+                self.derivatives.numh = numh
 
-        self.jAA = self.numj[:,:int(len(intup)/2)]
-        self.jBB = -self.numj[:,int(len(intup)/2):]       
+        self.derivatives.jAA = self.derivatives.numj[:,:int(len(intup)/2)]
+        self.derivatives.jBB = -self.derivatives.numj[:,int(len(intup)/2):]       
 ##########################################################  
     # Method updating model IF model file has been changed externally !
     def updf(self):
@@ -2601,155 +2584,14 @@ class DSGEmodel(object):
         '''
         self.txtpars.__init__(self.modfile)
 
-    # Method updating model after anything has been changed manually, like paramvalue, etc !
-    def updm(self):
-        '''
-        Method useful for upating model manually if any parameter value has been changed
-        manually as well.
-        '''
-        # Create None tester regular expression
-        _nreg = '^\s*None\s*$'
-        nreg = re.compile(_nreg)
-################## STEADY STATE CALCULATIONS !!! ####################
-        self.sssolvers = SSsolvers()
-        # Solve for steady-state using fsolve
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['manualss'][0]]) == 0:
-            intup = (self.ssys_list,self.ssidic,self.paramdic)
-            self.sssolvers.fsolve = Fsolve(intup)
-            self.sssolvers.fsolve.solve()
-            if self.sssolvers.fsolve.ier == 1:
-                self.sstate = self.sssolvers.fsolve.fsout
-                self.ssidic = self.sssolvers.fsolve.fsout
-                self.numssdic = self.sssolvers.fsolve.fsout
-                self.switches['ss_suc'] = ['1','1']
-            else:
-                self.switches['ss_suc'] = ['1','0']
-        # Solve for steady-state using manss
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['closedformss'][0]]) == 0:
-            intup = (self.manss_sys,self.paramdic)
-            self.sssolvers.manss = ManualSteadyState(intup)
-            self.sssolvers.manss.solve()
-            self.sstate = self.sssolvers.manss.sstate
-        if self._initlev == 1: return
-
-        # No populate more with stuff that needs steady state
-        secs = self.txtpars.secs
-        self = populate_model_stage_two(self, secs)
-
-        # Open the model solution tree branch
-        self.modsolvers = MODsolvers()
-        ######################## LINEAR METHODS !!! ############################
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['modeq'][0]]) == 0:
-            # Open the matlab Uhlig object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1,
-                 self.vardic)
-            self.modsolvers.matuhlig = MatUhlig(intup)
-            # Open the native Uhlig object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.pyuhlig = PyUhlig(intup)
-
-            # Open the matlab Klein object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.matklein = MatKlein(intup)
-
-            # Open the Fortran Klein object
-            intup = ((self.nendo,self.ncon,self.nexo),
-                 self.eqindx,
-                 self.vreg,
-                 self.llsys_list,
-                 self.diffli1,
-                 self.diffli2,
-                 sess1)
-            self.modsolvers.forklein = ForKlein(intup)
-        ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
-        if sum([nreg.search(x)!=None for x in self.txtpars.secs['focs'][0]]) == 0:
-
-        # First, create the Jacobian and (possibly-->mk_hessian==True?) Hessian
-            if ncpus > 1 and mk_hessian:
-                self.mkjahepp()
-            elif ncpus > 1 and not mk_hessian:
-                self.mkjahepp()
-            else:
-                self.mkjahe()
-
-            # Open the MatWood object
-            intup = (self.jAA,self.jBB,
-                 self.nexo,self.ncon,
-                 self.nendo,sess1)
-            self.modsolvers.matwood = MatWood(intup)
-            # Open the Fortran KleinD object
-            if 'nlsubsys' in dir(self):
-                intup = (self.numj,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name,
-                     self.numjl,
-                     self.nother)
-            else:
-                intup = (self.numj,
-                     self.nendo,self.nexo,
-                     self.ncon,self.sigma,
-                     self.jAA,self.jBB,
-                     self.vardic,self.vdic,
-                     self.mod_name)
-            self.modsolvers.forkleind = ForKleinD(intup)
-        ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-            if sum([nreg.search(x)!=None for x in self.txtpars.secs['vcvm'][0]]) == 0 and\
-               'numh' in dir(self):
-                # Open the MatKlein2D object
-                if 'nlsubsys' in dir(self):
-                    intup = (self.numj,self.numh,
-                         self.nendo,self.nexo,
-                         self.ncon,self.sigma,
-                         self.jAA,self.jBB,
-                         self.vardic,self.vdic,
-                         self.mod_name,
-                         self.numjl,self.numhl,
-                         self.nother,sess1)
-                else:
-                    intup = (self.numj,self.numh,
-                         self.nendo,self.nexo,
-                         self.ncon,self.sigma,
-                         self.jAA,self.jBB,
-                         self.vardic,self.vdic,
-                         self.mod_name,
-                         sess1)
-                self.modsolvers.matklein2d = MatKlein2D(intup)
-                # Open the PyKlein2D object
-                intup = intup[:-1]
-                self.modsolvers.pyklein2d = PyKlein2D(intup)
-
-        if 'jAA' in dir(self):
-            self.mkeigv()
-
     def mkeigv(self):
         '''
         A method useful for calculating the Eigenvalues as in Blanchard and Kahn
         for inspection. Recall the Eigenvalue Rule of this paper which needs to be
         meet for the model to be solvable.
         '''
-        AA = self.jAA
-        BB = self.jBB
+        AA = deepcopy(self.derivatives.jAA)
+        BB = deepcopy(self.derivatives.jBB)
         try:
             CC = BB.I*AA
             self.eigvals = scipyeig(CC)[0]

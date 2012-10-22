@@ -300,267 +300,6 @@ def def_timing(self,exo=[-1,0],endo=[-1,0],con=[0,1]):
     
     return self
 
-def mkaug1(self, insys, othersys):         
-    # Determine the lengths of augmented vars
-
-    # This copies in the standard nonlinear FOC system AND the declaration of the substitutions
-    list_tmp2 = deepcopy(insys)
-    list_tmp1 = deepcopy(othersys)
-
-    # Timing definitions
-    endotime = self.vtiming['endo']
-    exotime = self.vtiming['exo']
-    contime = self.vtiming['con']
-    endosp = []
-    for x in self.vardic['endo']['var']:
-        endosp = endosp + [[x,deepcopy(endotime)]]
-    exosp = []
-    for x in self.vardic['exo']['var']:
-        exosp = exosp + [[x,deepcopy(exotime)]]
-    consp = []
-    for x in self.vardic['con']['var']:
-        consp = consp + [[x,deepcopy(contime)]]
-
-    alldic = {}
-    alldic.update(self.paramdic)
-    alldic.update(self.sstate)
-
-    spvdic = {}
-    spvdic['endo'] = endosp
-    spvdic['exo'] = exosp
-    spvdic['con'] = consp
-
-    spvdic2 = deepcopy(spvdic)
-
-    endoli = [x[0].split('(')[0].strip() for x in self.vardic['endo']['var']]
-    exoli = [x[0].split('(')[0].strip() for x in self.vardic['exo']['var']]
-    conli = [x[0].split('(')[0].strip() for x in self.vardic['con']['var']]
-
-    patup = ('{-100,100}|None','all','{-100,100}')
-    count = 0
-    for i1,line in enumerate(list_tmp2):
-        iterob = self.vreg(patup,line,True,'max')
-        if iterob:
-            iterob = list(iterob)
-        else:
-            continue
-        iterob.reverse()
-        for vma in iterob:
-            vtype = vma[1][0]
-            vartime = vma[2][2]
-            vari = vma[2][1]
-            pos = vma[3][0]
-            poe = vma[3][1]
-            if vtype == 'endo':
-                indx = endoli.index(vari)
-            elif vtype == 'con':
-                indx = conli.index(vari)
-            elif vtype == 'exo':
-                indx = exoli.index(vari)
-            else:
-                continue
-
-            # Check for endo
-            if vtype == 'endo' and int(vartime) > spvdic['endo'][indx][1][1]:
-                spvdic2['endo'][indx][1][1] = int(vartime)
-                tind = (5-len(str(abs(endotime[1]-int(vartime)))))*'0'+str(abs(endotime[1]-int(vartime)+1))
-                newvar = vari+'_F'+tind+'(t)'
-                newname =  vari+'_F'+str(abs(int(vartime)))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t)'+list_tmp2[i1][poe:]
-                for i2 in range(abs(int(vartime)-spvdic['endo'][indx][1][1])):
-                    tind = (5-len(str(abs(i2+1))))*'0'+str(abs(i2+1))
-                    newvar = vari+'_F'+tind+'(t)'
-                    newname =  vari+'_F'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['con']['var']:
-                        self.vardic['con']['var'].append([newvar,newname])
-                        self.vardic['con']['mod'].append(self.vardic['endo']['mod'][indx])
-                        self.audic['con']['var'].append([newvar,newname])
-                        self.audic['con']['mod'].append(self.vardic['endo']['mod'][indx])
-                        if self.sstate.has_key(vari+'_bar'):
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
-                        else:
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
-                    continue
-            elif vtype == 'endo' and int(vartime) < spvdic['endo'][indx][1][0]:
-                spvdic2['endo'][indx][1][0] = int(vartime)
-                tind = (5-len(str(abs(endotime[0]-int(vartime)))))*'0'+str(abs(endotime[0]-int(vartime)))
-                newvar = vari+'_B'+tind+'(t)'
-                newname =  vari+'_B'+str(abs(int(vartime)))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t-1)'+list_tmp2[i1][poe:]
-                for i2 in range(1,abs(int(vartime)-spvdic['endo'][indx][1][0])):
-                    tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
-                    newvar = vari+'_B'+tind+'(t)'
-                    newname =  vari+'_B'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['endo']['var']:
-                        self.vardic['endo']['var'].append([newvar,newname])
-                        self.vardic['endo']['mod'].append(self.vardic['endo']['mod'][indx])
-                        self.audic['endo']['var'].append([newvar,newname])
-                        self.audic['endo']['mod'].append(self.vardic['endo']['mod'][indx])
-                        if self.sstate.has_key(vari+'_bar'):
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
-                        else:
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
-                    continue
-            # Check for exo
-            if vtype == 'exo' and int(vartime) > spvdic['exo'][indx][1][1]:
-                spvdic2['exo'][indx][1][1] = int(vartime)
-                tind = (5-len(str(abs(exotime[1]-int(vartime)))))*'0'+str(abs(exotime[1]-int(vartime)))
-                newvar = vari+'_F'+tind+'(t)'
-                newname =  vari+'_F'+str(abs(int(vartime)-1))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t)'+list_tmp2[i1][poe:]
-                for i2 in range(abs(int(vartime)-spvdic['exo'][indx][1][1])):
-                    tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
-                    newvar = vari+'_F'+tind+'(t)'
-                    newname =  vari+'_F'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['con']['var']:
-                        self.vardic['con']['var'].append([newvar,newname])
-                        self.vardic['con']['mod'].append(self.vardic['exo']['mod'][indx])
-                        self.audic['con']['var'].append([newvar,newname])
-                        self.audic['con']['mod'].append(self.vardic['exo']['mod'][indx])
-                        if self.sstate.has_key(vari+'_bar'):
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
-                        else:
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
-                    continue
-            elif vtype == 'exo' and int(vartime) < spvdic['exo'][indx][1][0]:
-                spvdic2['exo'][indx][1][0] = int(vartime)
-                tind = (5-len(str(abs(exotime[0]-int(vartime)))))*'0'+str(abs(exotime[0]-int(vartime)))
-                newvar = vari+'_B'+tind+'(t)'
-                newname =  vari+'_B'+str(abs(int(vartime)))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t-1)'+list_tmp2[i1][poe:]
-                for i2 in range(abs(int(vartime)-spvdic['exo'][indx][1][0])):
-                    tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
-                    newvar = vari+'_B'+tind+'(t)'
-                    newname =  vari+'_B'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['endo']['var']:
-                        self.vardic['endo']['var'].append([newvar,newname])
-                        self.vardic['endo']['mod'].append(self.vardic['exo']['mod'][indx])
-                        self.audic['endo']['var'].append([newvar,newname])
-                        self.audic['endo']['mod'].append(self.vardic['exo']['mod'][indx])
-                        if self.sstate.has_key(vari+'_bar'):
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
-                        else:
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
-                    continue
-            # Check for con
-            if vtype == 'con' and int(vartime) > spvdic['con'][indx][1][1]:
-                spvdic2['con'][indx][1][1] = int(vartime)
-                tind = (5-len(str(abs(contime[1]-int(vartime)))))*'0'+str(abs(contime[1]-int(vartime)))
-                newvar = vari+'_F'+tind+'(t)'
-                newname =  vari+'_F'+str(abs(int(vartime)-1))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t)'+list_tmp2[i1][poe:]
-                for i2 in range(abs(int(vartime)-spvdic['con'][indx][1][1])):
-                    tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
-                    newvar = vari+'_F'+tind+'(t)'
-                    newname =  vari+'_F'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['con']['var']:
-                        self.vardic['con']['var'].append([newvar,newname])
-                        self.vardic['con']['mod'].append(self.vardic['con']['mod'][indx])
-                        self.audic['con']['var'].append([newvar,newname])
-                        self.audic['con']['mod'].append(self.vardic['con']['mod'][indx])
-                        if self.sstate.has_key(vari+'_bar'):
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
-                        else:
-                            self.sstate[newvar.split('(')[0]+'_bar'] = self.paramdic[vari+'_bar']
-                    continue
-            elif vtype == 'con' and int(vartime) < spvdic['con'][indx][1][0]:
-                spvdic2['con'][indx][1][0] = int(vartime)
-                tind = (5-len(str(abs(contime[0]-int(vartime)))))*'0'+str(abs(contime[0]-int(vartime)))
-                newvar = vari+'_B'+tind+'(t)'
-                newname =  vari+'_B'+str(abs(int(vartime)))
-                list_tmp2[i1] = list_tmp2[i1][:pos]+newvar.split('(')[0]+'(t-1)'+list_tmp2[i1][poe:]
-                for i2 in range(abs(int(vartime)-spvdic['con'][indx][1][0])):
-                    tind = (5-len(str(abs(i2+2)-1)))*'0'+str(abs(i2+2)-1)
-                    newvar = vari+'_B'+tind+'(t)'
-                    newname =  vari+'_B'+str(abs(i2+1))
-                    if [newvar,newname] not in self.vardic['endo']['var']:
-                        self.vardic['endo']['var'].append([newvar,newname])
-                        self.vardic['endo']['mod'].append(self.vardic['con']['mod'][indx])
-                        self.audic['endo']['var'].append([newvar,newname])
-                        self.audic['endo']['mod'].append(self.vardic['con']['mod'][indx])
-                        self.sstate[newvar.split('(')[0]+'_bar'] = alldic[vari+'_bar']
-                    continue
-
-    # Now change the system to include possible augmented variables
-    endo_r = filter(lambda x: x[1] != endotime, spvdic2['endo'])
-    if endo_r:
-        endo_r = [[x[0],[abs(x[1][0]-endotime[0]),abs(x[1][1]-endotime[1])]] for x in endo_r ]
-        # Create lags and forwards equations
-        for vari in endo_r:
-            lagor = range(abs(vari[1][0]))
-            for lag in lagor:
-                tind = (5-len(str(lag+abs(x[1][0]))))*'0'+str(lag+abs(x[1][0]))
-                tind1 = (5-len(str(lag+1+abs(x[1][0]))))*'0'+str(lag+1+abs(x[1][0]))
-                if lag == lagor[-1]:
-                    if abs(int(vari[1][0])-int(endotime[0])) != 1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(int(vari[1][0])-int(endotime[0]))-1)+')')
-                    else:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)') 
-                    continue
-                else:
-                    if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)' not in list_tmp1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)')
-            leador = range(vari[1][1])
-            for lead in leador:
-                tind = (5-len(str(lead)))*'0'+str(lead+1)
-                tind1 = (5-len(str(lead+2)))*'0'+str(lead+2)
-                if lead == leador[-1]:
-                    list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(x[1][1])+')')
-                    continue
-                else:
-                    if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t-1)' not in list_tmp1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t-1)')
-    exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
-    if exo_r:
-        exo_r = [[x[0],[abs(x[1][0])-abs(exotime[0]),x[1][1]-abs(exotime[1])]] for x in exo_r ]
-        # Create lags and forwards equations
-        for vari in exo_r:
-            for lag in range(abs(vari[1][0])):
-                tind = (5-len(str(lag+1)))*'0'+str(lag+1)
-                if lag == 0:
-                    if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)' not in list_tmp1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
-                else:
-                    tind1 = (5-len(str(lag)))*'0'+str(lag)
-                    if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)' not in list_tmp1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)')
-            if vari[1][1] > 0:
-                for lead in range(vari[1][1]+1):
-                    tind = (5-len(str(lead+1)))*'0'+str(lead+1)
-                    if lead == 0:
-                        if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'(t+1)' not in list_tmp1:
-                            list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'(t+1)')
-                    else:
-                        tind1 = (5-len(str(lead)))*'0'+str(lead)
-                        if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
-                            list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-    con_r = filter(lambda x: x[1] != contime, spvdic2['con']) 
-    if con_r:
-        con_r = [[x[0],[abs(x[1][0])-abs(contime[0]),x[1][1]-abs(contime[1])]] for x in con_r ]
-        # Create lags and forwards equations
-        for vari in con_r:
-            for lag in range(abs(vari[1][0])):
-                tind = (5-len(str(lag+1)))*'0'+str(lag+1)
-                if lag == 0:
-                    if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+'-'+vari[0][0].split('(')[0]+'(t)' not in list_tmp1:
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+'-'+vari[0][0].split('(')[0]+'(t)')
-                else:
-                    tind1 = (5-len(str(lag)))*'0'+str(lag)
-                    if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)' not in list_tmp1: 
-                        list_tmp1.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind1+'(t-1)')
-            if vari[1][1] > 0:
-                for lead in range(int(vari[1][1])+1):
-                    tind = (5-len(str(lead+1)))*'0'+str(lead+1)
-                    if lead == 0:
-                        if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'(t+1)' not in list_tmp1:
-                            list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'(t+1)')
-                    else:
-                        tind1 = (5-len(str(lead)))*'0'+str(lead)
-                        if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)' not in list_tmp1:
-                            list_tmp1.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+'E(t)|'+vari[0][0].split('(')[0]+'_F'+tind1+'(t+1)')
-
-    return self, (list_tmp1,list_tmp2)
-
 def mkaug2(self,insys=None,othersys=None):
 
     # Timing definitions
@@ -809,8 +548,9 @@ def mkaug2(self,insys=None,othersys=None):
         endo_r = [[x[0],[abs(x[1][0]-endotime[0]),abs(x[1][1]-endotime[1])]] for x in endo_r ]
         # Create lags and forwards equations
         for vari in endo_r:
+            varin = vari[0][0].split('(')[0]
             if vari[1][0] != 0:
-                lagor = range(abs(spvdic3['endo'][vari[0][0].split('(')[0]][0]-endotime[0]))
+                lagor = range(abs(spvdic3['endo'][varin][0]-endotime[0]))
                 for lag in lagor:
                     
                     # Define some indices to be used
@@ -821,40 +561,40 @@ def mkaug2(self,insys=None,othersys=None):
                     
                     # Define the beginning definition, needs to link up with the last variable define in endotime[1]
                     if lag == lagor[0]:
-                        lag_endo_diff = spvdic3['endo'][vari[0][0].split('(')[0]][0]-endotime[0]
+                        lag_endo_diff = spvdic3['endo'][varin][0]-endotime[0]
                         if lag_endo_diff < 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t-'+str(abs(lag_endo_diff))+')'+' - '+vari[0][0].split('(')[0]+'_B00001(t-1)')
-                            if lag_endo_diff+1 > 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(lag_endo_diff-1)+')')
-                            elif lag_endo_diff+1 == 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
-                            elif lag_endo_diff+1 < 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(lag_endo_diff-1))+')')
+                            list_added.append(varin+'(t-'+str(abs(lag_endo_diff))+')'+' - '+varin+'_B00001(t-1)')
+                            if lag_endo_diff+1 > 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t+'+str(lag_endo_diff-1)+')')
+                            elif lag_endo_diff+1 == 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t)')
+                            elif lag_endo_diff+1 < 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t-'+str(abs(lag_endo_diff-1))+')')
                         elif lag_endo_diff == 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t)'+' - '+vari[0][0].split('(')[0]+'_B00001(t-1)')
-                            if lag_endo_diff-1 > 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(lag_endo_diff-1)+')')
-                            elif lag_endo_diff-1 == 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
-                            elif lag_endo_diff-1 < 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(lag_endo_diff-1))+')')                                        
+                            list_added.append(varin+'(t)'+' - '+varin+'_B00001(t-1)')
+                            if lag_endo_diff-1 > 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t+'+str(lag_endo_diff-1)+')')
+                            elif lag_endo_diff-1 == 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t)')
+                            elif lag_endo_diff-1 < 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t-'+str(abs(lag_endo_diff-1))+')')                                        
                         elif lag_endo_diff > 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t+'+str(lag_endo_diff)+')'+' - '+vari[0][0].split('(')[0]+'_B00001(t-1)')
-                            if lag_endo_diff-1 > 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(lag_endo_diff-1)+')')
-                            elif lag_endo_diff-1 == 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
-                            elif lag_endo_diff-1 < 0: list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(lag_endo_diff-1))+')')
-                        if vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)')
+                            list_added.append(varin+'(t+'+str(lag_endo_diff)+')'+' - '+varin+'_B00001(t-1)')
+                            if lag_endo_diff-1 > 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t+'+str(lag_endo_diff-1)+')')
+                            elif lag_endo_diff-1 == 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t)')
+                            elif lag_endo_diff-1 < 0: list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'(t-'+str(abs(lag_endo_diff-1))+')')
+                        if varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)' not in list_added:
+                            list_added.append(varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)')
                             
                     # For in between
                     if lag != lagor[0] and lag != lagor[-1]:
-                        expro = vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tindm1+'(t-1)'
+                        expro = varin+'_B'+tind+'(t)'+' - '+varin+'_B'+tindm1+'(t-1)'
                         if expro not in list_added:
                             list_added.append(expro)
 
                     # Define the end tail definition
                     if lag == lagor[-1] and len(lagor) != 1:  
-                        if vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tindm1+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tindm1+'(t-1)')
-                        if vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)')
+                        if varin+'_B'+tind+'(t)'+' - '+varin+'_B'+tindm1+'(t-1)' not in list_added:
+                            list_added.append(varin+'_B'+tind+'(t)'+' - '+varin+'_B'+tindm1+'(t-1)')
+                        if varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)' not in list_added:
+                            list_added.append(varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)')
                     
 
-            leador = range(abs(spvdic3['endo'][vari[0][0].split('(')[0]][1]-endotime[1]))
+            leador = range(abs(spvdic3['endo'][varin][1]-endotime[1]))
             if vari[1][1] != 0:
                 for lead in leador:
                     
@@ -867,31 +607,31 @@ def mkaug2(self,insys=None,othersys=None):
                     # Define the beginning definition, needs to link up with the last variable define in endotime[1]
                     if lead == leador[0]:
                         if endotime[1] < 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t'+str(endotime[1])+')'+' - '+vari[0][0].split('(')[0]+'_F00001(t-1)')
+                            list_added.append(varin+'(t'+str(endotime[1])+')'+' - '+varin+'_F00001(t-1)')
                         elif endotime[1] == 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t)'+' - '+vari[0][0].split('(')[0]+'_F00001(t-1)')
+                            list_added.append(varin+'(t)'+' - '+varin+'_F00001(t-1)')
                         elif endotime[1] > 0:
-                            list_added.append(vari[0][0].split('(')[0]+'(t+'+str(endotime[1])+')'+' - '+vari[0][0].split('(')[0]+'_F00001(t-1)')
+                            list_added.append(varin+'(t+'+str(endotime[1])+')'+' - '+varin+'_F00001(t-1)')
                         if endotime[1]+1 < 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(endotime[1]+1))+')')
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t-'+str(abs(endotime[1]+1))+')')
                         elif endotime[1]+1 == 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t)')
                         elif endotime[1]+1 > 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(abs(endotime[1]+1))+')')
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t+'+str(abs(endotime[1]+1))+')')
                                 
                     # For in between
                     if lead != leador[0] and lead != leador[-1]:
-                        if vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_F'+tind1+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_F'+tind1+'(t-1)')
+                        if varin+'_F'+tind+'(t)'+' - '+varin+'_F'+tind1+'(t-1)' not in list_added:
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'_F'+tind1+'(t-1)')
                         
                     # Define the end tail definition
                     if lead == leador[-1] and len(leador) != 1:
-                        if spvdic3['endo'][vari[0][0].split('(')[0]][1] > 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t+'+str(spvdic3['endo'][vari[0][0].split('(')[0]][1])+')')
-                        elif spvdic3['endo'][vari[0][0].split('(')[0]][1] == 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t)')
-                        elif spvdic3['endo'][vari[0][0].split('(')[0]][1] < 0:
-                            list_added.append(vari[0][0].split('(')[0]+'_F'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'(t-'+str(abs(spvdic3['endo'][vari[0][0].split('(')[0]][1]))+')')  
+                        if spvdic3['endo'][varin][1] > 0:
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t+'+str(spvdic3['endo'][varin][1])+')')
+                        elif spvdic3['endo'][varin][1] == 0:
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t)')
+                        elif spvdic3['endo'][varin][1] < 0:
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t-'+str(abs(spvdic3['endo'][varin][1]))+')')  
 
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:
@@ -900,7 +640,7 @@ def mkaug2(self,insys=None,othersys=None):
         for vari in exo_r:
             varin = vari[0][0].split('(')[0]
             if vari[1][0] != 0:
-                abstdiffer = abs(spvdic3['exo'][vari[0][0].split('(')[0]][0]-exotime[0])
+                abstdiffer = abs(spvdic3['exo'][varin][0]-exotime[0])
                 lagor = range(abstdiffer)
                 for lag in lagor:
                     
@@ -929,16 +669,16 @@ def mkaug2(self,insys=None,othersys=None):
                             
                     # For in between
                     if lag != lagor[0] and lag != lagor[-1] and len(lagor) != 1:
-                        expro = vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tindm1+'(t-1)'
+                        expro = varin+'_B'+tind+'(t)'+' - '+varin+'_B'+tindm1+'(t-1)'
                         if expro not in list_added:
                             list_added.append(expro)
 
                     # Define the end tail definition
                     if lag == lagor[-1] and len(lagor) != 1:  
-                        if vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)')
+                        if varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)' not in list_added:
+                            list_added.append(varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)')
             
-            abstdiffer = abs(spvdic3['exo'][vari[0][0].split('(')[0]][1]-exotime[1])       
+            abstdiffer = abs(spvdic3['exo'][varin][1]-exotime[1])       
             leador = range(abstdiffer)
             if vari[1][1] != 0:
                 for lead in leador:
@@ -979,7 +719,7 @@ def mkaug2(self,insys=None,othersys=None):
         for vari in con_r:
             varin = vari[0][0].split('(')[0]
             if vari[1][0] != 0:
-                abstdiffer = abs(spvdic3['con'][vari[0][0].split('(')[0]][0]-contime[0])
+                abstdiffer = abs(spvdic3['con'][varin][0]-contime[0])
                 lagor = range(abstdiffer)
                 for lag in lagor:
                     
@@ -1008,16 +748,16 @@ def mkaug2(self,insys=None,othersys=None):
                             
                     # For in between
                     if lag != lagor[0] and lag != lagor[-1] and len(lagor) != 1:
-                        expro = vari[0][0].split('(')[0]+'_B'+tind+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tindm1+'(t-1)'
+                        expro = varin+'_B'+tind+'(t)'+' - '+varin+'_B'+tindm1+'(t-1)'
                         if expro not in list_added:
                             list_added.append(expro)
 
                     # Define the end tail definition
                     if lag == lagor[-1] and len(lagor) != 1:  
-                        if vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)' not in list_added:
-                            list_added.append(vari[0][0].split('(')[0]+'_B'+tind1+'(t)'+' - '+vari[0][0].split('(')[0]+'_B'+tind+'(t-1)')
+                        if varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)' not in list_added:
+                            list_added.append(varin+'_B'+tind1+'(t)'+' - '+varin+'_B'+tind+'(t-1)')
             
-            abstdiffer = abs(spvdic3['con'][vari[0][0].split('(')[0]][1]-contime[1])       
+            abstdiffer = abs(spvdic3['con'][varin][1]-contime[1])       
             leador = range(abstdiffer)
             if vari[1][1] != 0:
                 for lead in leador:
@@ -1989,9 +1729,7 @@ def mknonlinsys(self, secs):
         self.nlsubs = dict(list_tmp2)
         nlsubs2 = {}
         for x in [x[0] for x in self.vardic['other']['var']]:
-            # We need to check here because variable may have gotten removed because was not used in FOCs
-            if '@'+x in self.nlsubs:
-                nlsubs2[x] = self.nlsubs['@'+x]
+            nlsubs2[x] = self.nlsubs['@'+x]
         self.nlsubs2 = nlsubs2
 
         # Create ordered nlsubsys
@@ -1999,9 +1737,7 @@ def mknonlinsys(self, secs):
             nlsubsys = []
             varother = self.vardic['other']['var']
             for vari in [x[0] for x in varother]:
-                # We need to check here because variable may have gotten removed because was not used in FOCs
-                if vari in nlsubs2:
-                    nlsubsys.append(nlsubs2[vari])
+                nlsubsys.append(nlsubs2[vari])
             self.nlsubsys = nlsubsys
 
     # Count the number of distinct forward expectations
