@@ -84,7 +84,7 @@ class Derivatives(object):
 class Inits(object):
     
     def __init__(self,other=None):
-        self.other = other
+        self._other = other
 
     def init1(self,no_wrap=False):
         '''
@@ -110,7 +110,7 @@ class Inits(object):
         :type other:      dsge_inst
         
         '''
-        other = self.other
+        other = self._other
         initlev = other._initlev
         ncpus = other._ncpus
         mk_hessian = other._mk_hessian
@@ -160,7 +160,7 @@ class Inits(object):
         :type other:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         mesg = other._mesg
         secs = other.txtpars.secs
         # This is an additional populator which creates subsitution dictionary
@@ -186,7 +186,7 @@ class Inits(object):
         :type other:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         initlev = other._initlev
         secs = other.txtpars.secs
         other = populate_model_stage_one_b(other,secs)
@@ -224,7 +224,7 @@ class Inits(object):
         :type other:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         initlev = other._initlev
         secs = other.txtpars.secs
         mesg = other._mesg
@@ -270,7 +270,7 @@ class Inits(object):
         :type other:      dsge_inst
         
         '''
-        other = self.other
+        other = self._other
         mesg = other._mesg
         secs = other.txtpars.secs
         initlev = other._initlev
@@ -315,7 +315,7 @@ class Inits(object):
         :type other:      dsge_inst
         
         '''
-        other = self.other
+        other = self._other
         txtpars = other.txtpars
         secs = txtpars.secs
         initlev = other._initlev
@@ -471,7 +471,7 @@ class Inits(object):
         :type other:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         txtpars = other.txtpars
         secs = txtpars.secs
         initlev = other._initlev
@@ -502,7 +502,7 @@ class Inits(object):
         :type other:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         other.derivatives = Derivatives()
         txtpars = other.txtpars
         secs = txtpars.secs
@@ -663,7 +663,7 @@ class Inits(object):
         :type self:      dsge_inst
 
         '''
-        other = self.other
+        other = self._other
         initlev = other._initlev
         # Compute the Eigenvalues of the AA matrix for inspection
         if 'jAA' in dir(other.derivatives):
@@ -1314,7 +1314,6 @@ class DSGEmodel(object):
         else:
             return False
 ###########ANALYTIC AND NUMERICAL JACOBIAN AND HESSIAN METHODS############
-
     def def_differ_periods(self):
         vtiming = deepcopy(self.vtiming)
         # Timing assumptions, first for exogenous variables

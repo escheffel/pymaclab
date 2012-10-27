@@ -2021,6 +2021,7 @@ class PyKlein2D(object):
         for spos in sposli:
             shock[spos,0] = 1.0
         shock = MAT.vstack((shock,sendo))
+        shock = np.dot(ssigma,shock)
 
         x_one_m1 = shock
         x_one_0 = pp*x_one_m1
@@ -2094,8 +2095,8 @@ class PyKlein2D(object):
         irf_x = MAT.hstack((MAT.zeros((irf_x.shape[0],20)),irf_x))
         irf_y = COP.deepcopy(inirf[1])
         irf_y = MAT.hstack((MAT.zeros((irf_y.shape[0],20)),irf_y))
-        irf_x = irf_x*100.0
-        irf_y = irf_y*100.0
+        #irf_x = irf_x*100.0
+        #irf_y = irf_y*100.0
         mname = self.modname
         vardic = self.vardic
         time_axis = np.arange(-20,tlen,1)
@@ -2557,7 +2558,7 @@ class ForKleinD(PyKlein2D):
             self.sim_o_one = o_one
             self.insim = self.insim + [self.sim_o_one,]
 
-    def irf(self,tlen,sntup):
+    def irf(self,tlen,sntup=None,shockvec=None):
         # Deals with 0-tuples
         if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
             sntup = (sntup,)
@@ -2593,6 +2594,16 @@ class ForKleinD(PyKlein2D):
         for spos in sposli:
             shock[spos,0] = 1.0
         shock = MAT.vstack((shock,sendo))
+        if shockvec == None:
+            for elem in range(ssigma.shape[0]):
+                ssigma[elem,elem] = np.sqrt(ssigma[elem,elem])
+            shock = np.dot(ssigma,shock)
+        else:
+            ssigma = self.mkssigma(self.tstates,self.nexo,shockvec)
+            for elem in range(ssigma.shape[0]):
+                ssigma[elem,elem] = np.sqrt(ssigma[elem,elem])            
+            shock = np.dot(ssigma,shock)
+        self.sshock = COP.deepcopy(shock)
 
         x_one_m1 = shock
         y_one_0 = ff*x_one_m1
