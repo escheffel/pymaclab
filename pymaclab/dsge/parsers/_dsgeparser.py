@@ -989,7 +989,7 @@ def subs_in_subs(self):
     self.nlsubs_raw2 = deepcopy(list_tmp2)
     return self
 
-def ff_chron_str(self,str1='',ff_int=1):
+def ff_chron_str(self,str1='',ff_int=1,vtype='all'):
     '''
     This forwards all variables in an algebraic string expression by ff_int,
     but it leaves the timing of the expectations operator untouched.
@@ -998,10 +998,22 @@ def ff_chron_str(self,str1='',ff_int=1):
     _mregv1c = '(?<=E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)(?=\|)'
     mregv1b = re.compile(_mregv1b)
     mregv1c = re.compile(_mregv1c)
-    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
-    var_li = list(self.vreg(patup,str1,True,'max'))
+    patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
+    reg_li = self.vreg(patup,str1,True,'max')
+    if type(reg_li) == type(False):
+        print "ERROR at: ",str1
+        sys.exit()    
+    var_li = list(reg_li)
     var_li.reverse()
     for varo in var_li:
+        if vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
         varn = varo[0]
         ma = mregv1b.search(varn)
         starts = ma.start()
@@ -1045,17 +1057,25 @@ def ff_chron_str(self,str1='',ff_int=1):
         str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
     return str1
 
-def bb_chron_str(self,str1='',bb_int=1):
+def bb_chron_str(self,str1='',bb_int=1,vtype='all'):
     '''
     This backwards (lags) all variables in an algebraic string expression by bb_int,
     but it leaves the timing of the expectations operator untouched.
     '''
     _mregv1b = '(?<!E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)'
     mregv1b = re.compile(_mregv1b)    
-    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
     var_li = list(self.vreg(patup,str1,True,'max'))
     var_li.reverse()
     for varo in var_li:
+        if vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
+        elif vtype != 'all' and varo[1][0] != vtype:
+            continue
         varn = varo[0]
         ma = mregv1b.search(varn)
         starts = ma.start()
@@ -1082,7 +1102,14 @@ def bb_chron_str(self,str1='',bb_int=1):
         elif oper == '-':
             counto = -int(counto)-bb_int
             counto = str(counto)[1]
-        varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        if 'E(t)|' not in varn:
+            varn_new = varn.split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        elif 'E(t)|' in varn and counto == '':
+            varn_new = varn.split('E(t)|')[1].split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'            
+        elif 'E(t)|' in varn and int(counto) > 0:
+            varn_new = 'E(t)|'+varn.split('E(t)|')[1].split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
+        elif 'E(t)|' in varn and int(counto) <= 0:
+            varn_new = varn.split('E(t)|')[1].split('(')[0].replace('-','').replace('+','')+'(t'+str(oper)+str(counto)+')'
         # Compare this line with ff_chron_str, here I do not add any expectations term
         str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
     return str1
@@ -1108,6 +1135,27 @@ def ss_chron_str(self,str1=''):
             varn_new = varn.split('(')[0]+'_bar'
         str1 = str1[:varpos[0]]+varn_new+str1[varpos[1]:]
     return str1
+
+def chg_vtimings(self,eqli,vdico):
+    vtiming = self._vtiming
+    for keyo in vdico.keys():
+        if vdico[keyo] != vtiming[keyo]:
+            diffli = list(np.array(vdico[keyo]) - np.array(vtiming[keyo]))
+            if diffli[0] < 0:
+                for i1,lino in enumerate(eqli):
+                    if keyo == 'exo':
+                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype=keyo)
+                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype='iid')
+                    else:
+                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype=keyo)
+            elif diffli[0] > 0:
+                for i1,lino in enumerate(eqli):
+                    if keyo == 'exo':
+                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype=keyo)
+                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype='iid')
+                    else:
+                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype=keyo)
+    return eqli
 
 def mk_steady(self):
     list_tmp2 = deepcopy(self.nlsubs_raw2)
@@ -2135,7 +2183,7 @@ def populate_model_stage_one_bb(self, secs):
     if all([False if 'None' in x else True for x in secs['focs'][0]]):
         self = premknonlinsys(self,secs)
         # Save for template instantiation
-        self.template_paramdic['focs_list'] = deepcopy(self.foceqs)
+        self.template_paramdic['focs_list'] = self.foceqs
         if all([False if 'None' in x else True for x in secs['vsfocs'][0]]):
             # This takes the stripped system and does @ replacements
             self = premknonlinsys2(self,secs)
@@ -2143,8 +2191,10 @@ def populate_model_stage_one_bb(self, secs):
             self.foceqs2 = deepcopy(self.foceqs)
         # Also create a steady state version
         self = mk_steady2(self)
-        # Also save a copy of the focs with replaced substitutions
-        self.template_paramdic['focs_list2'] = deepcopy(self.foceqs2)        
+        # Also save a copy of the focs with replaced substitutions, but change timing to Dynare !
+        foceqs2 = chg_vtimings(self,deepcopy(self.foceqs2),{'con':[0,1],'endo':[-1,0],'exo':[-1,0]})
+        self.template_paramdic['focs_list2'] = deepcopy(self.foceqs2)
+        self.template_paramdic['focs_dynare'] = deepcopy(foceqs2)
     else:
         # Save for template instantiation
         self.template_paramdic['focs_list'] = False

@@ -2454,7 +2454,9 @@ class ForKleinD(PyKlein2D):
         A = self.A
         B = self.B
         tstates = self.tstates
-        (F,P,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
+        (F,P,alpha,betta,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
+        self.alpha = abs(alpha)
+        self.betta = abs(betta)
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:

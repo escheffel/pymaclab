@@ -6,15 +6,18 @@ template = """\
 var ${[x[0].split('(')[0] for x in vardic['endo']['var']+vardic['con']['var']+vardic['exo']['var']].__str__().replace('[','').replace(']','').replace("'","")};
 varexo ${[x[2].split('(')[0] for x in vardic['exo']['var']].__str__().replace('[','').replace(']','').replace("'","")};
 
-parameters ${[x for x in paramdic.keys() if '_bar' not in x].__str__().replace('[','').replace(']','').replace("'","")};
+parameters ${[x for x in paramdic.keys()].__str__().replace('[','').replace(']','').replace("'","")}, ${[x for x in ssidic.keys()].__str__().replace('[','').replace(']','').replace("'","")};
 
-% for keyo in [x for x in paramdic.keys() if '_bar' not in x]:
+% for keyo in [x for x in paramdic.keys()]:
 ${keyo} = ${paramdic[keyo]};
+% endfor
+% for keyo in [x for x in ssidic.keys()]:
+${keyo} = ${ssidic[keyo]};
 % endfor
 
 
 model;
-% for item in focs_list2:
+% for item in focs_dynare:
 0=${item.replace('E(t)|','').replace('LOG','log').replace('EXP','exp').replace('(t)','').replace('(t+1)','(+1)').replace('(t-1)','(-1)').replace('**','^')};
 % endfor
 end;

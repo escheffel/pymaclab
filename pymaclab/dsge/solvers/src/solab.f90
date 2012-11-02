@@ -2,7 +2,7 @@ module solab
 
 contains
 
-    subroutine zsolab(f,p,a,b,n,k,retco)
+    subroutine zsolab(f,p,a,b,alpha,beta,n,k,retco)
 
     implicit none
     integer, intent(in) :: n,k
@@ -17,7 +17,9 @@ contains
 !    complex*16 s(n,n), t(n,n)
     complex(kind=8) s(n,n), t(n,n)
 !    complex*16 alpha(n),beta(n),vsl(n,n),vsr(n,n)
-    complex(kind=8) alpha(n),beta(n),vsl(n,n),vsr(n,n)
+    complex(kind=8) vsl(n,n),vsr(n,n)
+    complex(kind=8), intent(out) :: alpha(n)
+    complex(kind=8), intent(out) :: beta(n)
 !    complex*16 tempwork(1)
     complex(kind=8) tempwork(1)
 !    complex*16, allocatable :: work(:)

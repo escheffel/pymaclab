@@ -665,9 +665,6 @@ class Inits(object):
         '''
         other = self._other
         initlev = other._initlev
-        # Compute the Eigenvalues of the AA matrix for inspection
-        if 'jAA' in dir(other.derivatives):
-            other.mkeigv()
         # Make sure the jobserver has done his jobs
         jobserver.wait()
 
@@ -746,7 +743,7 @@ class DSGEmodel(object):
         self.dbase = dbase
 
         
-    def mk_dynare(self,order=1,centralize=False):
+    def mk_dynare(self,order=1,centralize=False,fpath=None,focli=None):
         # Import the template and other stuff
         from pymaclab.modfiles.templates import mako_dynare_template
         from scipy import io
@@ -754,12 +751,26 @@ class DSGEmodel(object):
         import tempfile
         import os
         import glob
+        template_dic = deepcopy(self.template_paramdic)
+        
+        # Render the template to be passed to dynare++
+        tmp_dic = {}
+        tmp_dic['focli'] = focli
+        template_dic.update(tmp_dic)
+        modstr = mako_dynare_template.render(**template_dic)
+        
+        # If a filepath has been passed then just write the Dynare++ modfile, but no more!
+        if fpath != None:
+            filo = open(fpath,'w')
+            filo.write(modstr)
+            filo.flush()
+            filo.close()
+            return
+
         filo = tempfile.NamedTemporaryFile()
         fname = filo.name
         fname2 = fname.split('/')[-1]
         filo2 = open(os.path.join(os.getcwd(),'test.mod'),'w')
-        # Render the template to be passed to dynare++
-        modstr = mako_dynare_template.render(**self.template_paramdic)
         filo2.write(modstr)
         filo2.flush()
         filo2.close()
@@ -781,6 +792,30 @@ class DSGEmodel(object):
         # Delete all of the files
         for filor in glob.glob(fname2+'*.*'):
             os.remove(filor)
+
+        # Create some other objects on dynare branch
+        self.modsolvers.dynare.sstate = {}
+        self.modsolvers.dynare.dynorder = []
+        self.modsolvers.dynare.dynsorder = []
+        for i1,elem in enumerate(self.modsolvers.dynare.dyn_vars):
+            self.modsolvers.dynare.dynorder.append(str(elem).strip()+'(t)')
+            if str(elem).strip()+'_bar' in self.sstate.keys():
+                self.modsolvers.dynare.sstate[str(elem).strip()+'_bar'] = self.modsolvers.dynare.dyn_ss[i1,0]
+        for i1,elem in enumerate(self.modsolvers.dynare.dyn_state_vars):
+            self.modsolvers.dynare.dynsorder.append(str(elem).strip()+'(t)')
+
+        # Create P and F matrix reflecting ordering of pymaclab
+        P = np.matlib.zeros([self.nstat,self.nstat])
+        F = np.matlib.zeros([self.ncon,self.nstat])
+        listo = [x[0] for x in self.vdic['exo']]+[x[0] for x in self.vdic['endo']]
+        for i1,elem in enumerate(listo):
+            for i2,elem2 in enumerate(listo):
+                P[i1,i2] = self.modsolvers.dynare.dyn_g_1[self.modsolvers.dynare.dynorder.index(elem),self.modsolvers.dynare.dynsorder.index(elem2)]
+        for i1,elem in enumerate([x[0] for x in self.vdic['con']]):
+            for i2,elem2 in enumerate(listo):
+                F[i1,i2] = self.modsolvers.dynare.dyn_g_1[self.modsolvers.dynare.dynorder.index(elem),self.modsolvers.dynare.dynsorder.index(elem2)]
+        self.modsolvers.dynare.PP = deepcopy(P)
+        self.modsolvers.dynare.FF = deepcopy(F)
             
     def find_rss(self,mesg=False,rootm='hybr',scale=0.0):
         '''
@@ -2582,19 +2617,5 @@ class DSGEmodel(object):
         using this method.
         '''
         self.txtpars.__init__(self.modfile)
-
-    def mkeigv(self):
-        '''
-        A method useful for calculating the Eigenvalues as in Blanchard and Kahn
-        for inspection. Recall the Eigenvalue Rule of this paper which needs to be
-        meet for the model to be solvable.
-        '''
-        AA = deepcopy(self.derivatives.jAA)
-        BB = deepcopy(self.derivatives.jBB)
-        try:
-            CC = BB.I*AA
-            self.eigvals = scipyeig(CC)[0]
-        except:
-            pass
 
 

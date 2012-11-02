@@ -3,7 +3,7 @@
 
 python module isolab ! in 
     interface  ! in :isolab
-        subroutine isolab(g,q,x,y,m,l,retcon) ! in :isolab:isolab.f90
+        subroutine isolab(g,q,x,y,alpha,beta,m,l,retcon) ! in :isolab:isolab.f90
             use solab
             real(kind=8) dimension(m-l,l),intent(out),depend(m,l,l) :: g
             real(kind=8) dimension(l,l),intent(out),depend(l,l) :: q
@@ -11,6 +11,8 @@ python module isolab ! in
             real(kind=8) dimension(m,m),intent(in),depend(m,m) :: y
             integer optional,intent(in),check(shape(x,0)==m),depend(x) :: m=shape(x,0)
             integer intent(in) :: l
+            complex(kind=8) dimension(m),intent(out),depend(m) :: alpha
+            complex(kind=8) dimension(m),intent(out),depend(m) :: beta
             integer intent(out) :: retcon
         end subroutine isolab
     end interface 
