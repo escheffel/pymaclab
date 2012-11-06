@@ -621,7 +621,7 @@ class Inits(object):
             other.modsolvers.forkleind.B = other.derivatives.jBB
 
     ################## 2ND-ORDER NON-LINEAR METHODS !!! ##################
-        if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(other):
+        if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and 'numh' in dir(other.derivatives):
             from solvers.modsolvers import (PyKlein2D, MatKlein2D)
             # Open the MatKlein2D object
             if 'nlsubsys' in dir(other):

@@ -857,6 +857,13 @@ def mk_subs_dic(self, secs):
                 linecounter = 0 
         i1 += 1
         splitline = line.split('=')
+        # Only consider the first split of = found, this is used because of subs_ind
+        if len(splitline) > 2:
+            tmpstr = ''
+            for elem in splitline[1:]:
+                tmpstr = tmpstr+'='+elem
+            tmpstr = tmpstr[1:]
+            splitline = [splitline[0],tmpstr]
         list_tmp4.append([splitline[0].strip(), splitline[1].strip()])
         list_tmp2.append([splitline[0].strip(), splitline[1].strip()])
     self.allsubs_raw1 = deepcopy(list_tmp3)
@@ -2123,6 +2130,28 @@ def mk_cfstate_subs(self):
     self.manss_sys = deepcopy(tmp_list)
     return self
 
+def subs_indic(self):
+    '''
+    This function replaces indicator function occurrences inside the substitution system
+    '''
+    list_tmp1 = deepcopy(self.nlsubs_raw1)
+    _mreg = '\S{0,1}\s*@I{(?P<cond>.*?)}{(?P<expr>.*?)}'
+    mreg = re.compile(_mreg)
+    for i1,lino in enumerate(list_tmp1):
+        while mreg.search(list_tmp1[i1][1]):
+            ma = mreg.search(list_tmp1[i1][1])
+            pos, poe = ma.span()
+            condi = ma.group('cond')
+            expr = ma.group('expr')
+            # Expose parameters
+            locals().update(self.paramdic)
+            if eval(condi):
+                list_tmp1[i1][1] = list_tmp1[i1][1][:pos] + expr + list_tmp1[i1][1][poe:]
+            else:
+                list_tmp1[i1][1] = list_tmp1[i1][1][:pos] + list_tmp1[i1][1][poe:]
+    self.nlsubs_raw1 = deepcopy(list_tmp1)
+    return self
+
 # Extra population stage factored out, which is needed before steady state calculations
 def populate_model_stage_one_a(self, secs):
     # Check and calculate the substitution list and dictionary
@@ -2135,6 +2164,8 @@ def populate_model_stage_one_a(self, secs):
 def populate_model_stage_one_b(self, secs):
     # Check and calculate the substitution list and dictionary
     if any([False if 'None' in x else True for x in secs['vsfocs'][0]]):
+        # Deal with indicator functions inside substitutions
+        self = subs_indic(self)         
         # Substitute out in @ALL list for expressions, then do expressions
         self = subs_in_subs_all(self)
         self = mk_all(self)
@@ -2157,7 +2188,7 @@ def populate_model_stage_one_b(self, secs):
         # Make second differentiation pass for remaining DIFFs
         self = differ_out(self)
         # Apply timeshifts where needed
-        self = mk_timeshift(self)
+        self = mk_timeshift(self)       
     return self
 
 def populate_model_stage_one_bb(self, secs):

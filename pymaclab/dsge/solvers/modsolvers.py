@@ -2560,10 +2560,17 @@ class ForKleinD(PyKlein2D):
             self.sim_o_one = o_one
             self.insim = self.insim + [self.sim_o_one,]
 
-    def irf(self,tlen,sntup=None,shockvec=None):
+    def irf(self,tlen,sntup=None,shockmod=None):
         # Deals with 0-tuples
         if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
             sntup = (sntup,)
+        # Deal with shockmod, also take care of 0-tuples by turning all into lists
+        if shockmod != None and type(shockmod) != type((1,2,3)) and type(shockmod) == type(1.0):
+            shockmod = [shockmod,]
+        elif shockmod != None and len(shockmod) > 1:
+            shockmod = [x for x in shockmod]
+        elif shockmod == None:
+            shockmod = [1.0,]*len(sntup)
         tlen = tlen + 1
         ncon = self.ncon
         nexo = self.nexo
@@ -2593,9 +2600,10 @@ class ForKleinD(PyKlein2D):
         shock = MAT.zeros((nexo,1))
         sendo = MAT.zeros((nendo,1))
 
-        for spos in sposli:
-            shock[spos,0] = 1.0
+        for i1,spos in enumerate(sposli):
+            shock[spos,0] = 1.0*shockmod[i1]
         shock = MAT.vstack((shock,sendo))
+        '''
         if shockvec == None:
             for elem in range(ssigma.shape[0]):
                 ssigma[elem,elem] = np.sqrt(ssigma[elem,elem])
@@ -2605,6 +2613,7 @@ class ForKleinD(PyKlein2D):
             for elem in range(ssigma.shape[0]):
                 ssigma[elem,elem] = np.sqrt(ssigma[elem,elem])            
             shock = np.dot(ssigma,shock)
+        '''
         self.sshock = COP.deepcopy(shock)
 
         x_one_m1 = shock

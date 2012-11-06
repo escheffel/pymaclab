@@ -71,7 +71,7 @@ class Fsolve(SSsolvers):
 
         # Turn the non-linear system into a representation
         # that is suitable for fsolve(invar) !
-
+        patup = ('{-10,10}|None','iid','{-10,10}')
         ssi = self.ssi
         subdic = {}
         for y,z in zip(ssi.items(),range(len(ssi.items()))):
@@ -92,7 +92,16 @@ class Fsolve(SSsolvers):
                 while rlog.search(list_tmp1[i1]):
                     list_tmp1[i1] = re.sub(rlog,'np.log(',list_tmp1[i1])
                 while rexp.search(list_tmp1[i1]):
-                    list_tmp1[i1] = re.sub(rexp,'np.exp(',list_tmp1[i1])                 
+                    list_tmp1[i1] = re.sub(rexp,'np.exp(',list_tmp1[i1])
+                # Eliminate IID variables by setting equal to zero
+                while self.other.vreg(patup,list_tmp1[i1],True,'max'):
+                    varli = self.other.vreg(patup,list_tmp1[i1],True,'max')
+                    varli.reverse()
+                    for varo in varli:
+                        pos = varo[3][0]
+                        poe = varo[3][1]
+                        vari = varo[0]
+                        list_tmp1[i1] = list_tmp1[i1][:pos]+'0.0'+list_tmp1[i1][poe:]                        
                 while mreg.search(list_tmp1[i1]):
                     ma = mreg.search(list_tmp1[i1])
                     matot = ma.group()

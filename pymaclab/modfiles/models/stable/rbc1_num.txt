@@ -34,7 +34,7 @@ None
 [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
 [2]   @Fk_bar   = SS{@Fk(t)};
 [2]   @F_bar    = SS{@F(t)};
-[4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+[4]   @U(t)     = @I{eta!=1.0}{c(t)**(1-eta)/(1-eta)}+@I{eta==1.0}{LOG(c(t))};
 [5]   @MU(t)    = DIFF{@U(t),c(t)};
 [5]   @MU_bar   = SS{@U(t)};
 [6]   @MU(t+1)  = FF_1{@MU(t)};
