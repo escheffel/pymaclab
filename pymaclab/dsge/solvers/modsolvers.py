@@ -1983,10 +1983,17 @@ class PyKlein2D(object):
         return "Your plot has been saved in: "+fpath
 
 
-    def irf(self,tlen,sntup):
+    def irf(self,tlen,sntup,shockmod=None):
         # Deals with 0-tuples
         if type(sntup) != type((1,2,3)) and type(sntup) == type('abc'):
             sntup = (sntup,)
+        # Deal with shockmod, also take care of 0-tuples by turning all into lists
+        if shockmod != None and type(shockmod) != type((1,2,3)) and type(shockmod) == type(1.0):
+            shockmod = [shockmod,]
+        elif shockmod != None and len(shockmod) > 1:
+            shockmod = [x for x in shockmod]
+        elif shockmod == None:
+            shockmod = [1.0,]*len(sntup)
         tlen = tlen + 1
         ncon = self.ncon
         nexo = self.nexo
@@ -2012,21 +2019,24 @@ class PyKlein2D(object):
                 return 'Error: '+name+' is not a valid exoshock name for this model!'
         for name in sntup:
             sposli.append(exoli.index(name))
+
         # Expose spos choice to self for show_irf
         self.spos = (sntup,sposli)
 
         shock = MAT.zeros((nexo,1))
         sendo = MAT.zeros((nendo,1))
 
-        for spos in sposli:
-            shock[spos,0] = 1.0
+        for i1,spos in enumerate(sposli):
+            shock[spos,0] = 1.0*shockmod[i1]
         shock = MAT.vstack((shock,sendo))
-        shock = np.dot(ssigma,shock)
+        
+        self.sshock = COP.deepcopy(shock)
 
         x_one_m1 = shock
         x_one_0 = pp*x_one_m1
         x_two_m1 = shock
         y_one_0 = ff*x_one_m1
+        # Because they are jump variables
         y_one_m1 = MAT.zeros(y_one_0.shape)
         y_two_0 = 0.5*MAT.kron(MAT.eye(ncon),x_one_m1.T)*ee*x_one_m1
         if self.oswitch:
