@@ -1,0 +1,305 @@
+%Model Description++++++++++++++++++++++++++++++++++
+This is the open-source software developer RBC model
+
+
+%Model Information++++++++++++++++++++++++++++++++++
+Name = Open-source RBC Model;
+
+
+
+%Parameters+++++++++++++++++++++++++++++++++++++++++
+#####################
+# Utility parameters
+#####################
+# Discount factor
+betta    = 0.99;
+# Utility parameter on employment variable
+ups      = -1.25;
+#####################################
+# Search and vacancy cost parameters
+#####################################
+eta      = 1.0;
+a        = 0.05;
+c0       = 0.005;
+#####################
+# Depreciation Rates
+#####################
+# For open-source physical capital
+delta_os    = 0.022;
+# For non-open-source physical capital
+delta_nos   = 0.022;
+# For reputational capital
+delta_rk = 0.022;
+# For human capital state variable
+psi_h    = 0.022;
+# For employment state variable
+psi_em   = 0.07;
+
+#################################
+# Production Function parameters
+#################################
+# For final IT goods production
+alpha_1  = 0.15;
+alpha_2  = 0.15;
+# For open-source physical capital goods production
+eta_1    = 0.15;
+eta_2    = 0.15;
+# For non-open-source physical capital goods production
+gamma_1  = 0.15;
+gamma_2  = 0.15;
+
+lambdar  = 0.40;
+mu       = 0.004;
+rho_z    = 0.95;
+z_bar    = 1.0;
+A_f      = 1.0;
+A_os     = 1.0;
+A_nos    = 1.0;
+sigma_z  = 0.007;
+
+
+%Variable Vectors++++++++++++++++++++++++++++++++++++
+[1]  k_os(t):os_capital{endo}[log,cf]
+[2]  k_nos(t):nos_capital{endo}[log,cf]
+[2]  k_rep(t):repcapital{end}[log,cf]
+[2]  c(t):consumption{con}[log,cf]
+[3]  y(t):output{con}[log,cf]
+[4]  a_os(t):cap_share_os_os{con}[log,cf]
+[5]  b_os(t):cap_share_os_nos{con}[log,cf]
+[4]  a_nos(t):cap_share_nos_os{con}[log,cf]
+[5]  b_nos(t):cap_share_nos_nos{con}[log,cf]
+[5]  p_n(t):relprice_em{con}[log,cf]
+[5]  p_os(t):relprice_os{con}[log,cf]
+[5]  p_nos(t):relprice_nos{con}[log,cf]
+[5]  p_rk(t):relprice_rk{con}[log,cf]
+[4]  em(t):employment{endo}[log,cf]
+[5]  n_f(t):em_share_final{con}[log,cf]
+[6]  n_os(t):em_share_os{con}[log,cf]
+[7]  n_nos(t):em_share_nos{con}[log,cf]
+[5]  ma(t):matches{con}[log,cf]
+[6]  va(t):vacancies{con}[log,cf]
+[9]  si(t):search_intensity{con}[log,cf]
+[10] inv(t):investment{con}[log,cf]
+[11] r(t):real_rate{con}
+[12] w(t):wage{con}[log,cf]
+[13] z(t):epsz(t):productivity{exo}[log,cf]
+
+
+%Boundary Conditions+++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System+++++++++++++
+# The utility function and its derivatives
+[1]   @U(t)         = LOG(c(t))-em(t-1)**(1-1/ups)/(1-1/ups);
+[2]   @ALL{@U(t),[0-1],SS};
+# The matching function and its derivatives
+[3]   @MA(t)         = va(t)**(1-lambdar)*(si(t)*(1-em(t-1)))**lambdar;
+[3]   @MA_bar        = SS{@MA(t)};
+[4]   @MAv(t)        = DIFF{@MA(t),va(t)};
+[5]   @MAv(t+1)      = FF_1{@MAv(t)};
+[5]   @MAv_bar       = SS{@MAv(t)};
+[4]   @MAem(t)       = DIFF{@MA(t),em(t-1)};
+[5]   @MAem(t+1)     = FF_1{@MAem(t)};
+[4]   @MAem_bar      = SS{@MAem(t)};
+[4]   @MAsi(t)       = DIFF{@MA(t),si(t)};
+[5]   @MAsi(t+1)     = FF_1{@MAsi(t)};
+[4]   @MAsi_bar      = SS{@MAsi(t)};
+# The production function of final IT products and its derivatives
+[6]   @F(t)          = z_f(t-1)*A_f*((1-a_os(t)-a_nos(t))*k_os(t-1))**(alpha_1)*((1-b_os(t)-b_nos(t))*k_nos(t-1))**(alpha_2)*n_f(t)**(1-alpha_1-alpha_2);
+[6]   @F_bar         = SS{@F(t)};
+[6]   @Fn(t)         = DIFF{@F(t),n_f(t-1)};
+[7]   @Fn(t+1)       = FF_1{@Fn(t)};
+[6]   @Fn_bar        = SS{@Fn(t)};
+[8]   @Fkos(t)       = DIFF{@F(t),k_os(t-1)};
+[9]   @Fkos(t+1)     = FF_1{@Fkos(t)};
+[8]   @Fkos_bar      = SS{@Fkos(t)};
+[8]   @Fknos(t)      = DIFF{@F(t),k_nos(t-1)};
+[9]   @Fknos(t+1)    = FF_1{@Fknos(t)};
+[8]   @Fknos_bar     = SS{@Fknos(t)};
+# The production function of open source physical capital goods and its derivatives
+[6]   @Fos(t)        = z_os(t-1)*A_os*(a_os(t)*k_os(t-1))**(eta_1)*(b_os(t)*k_nos(t-1))**(eta_2)*n_os(t)**(1-eta_1-eta_2);
+[6]   @Fos_bar       = SS{@Fos(t)};
+[6]   @Fosn(t)       = DIFF{@Fos(t),n_os(t-1)};
+[7]   @Fosn(t+1)     = FF_1{@Fosn(t)};
+[6]   @Fosn_bar      = SS{@Fosn(t)};
+[8]   @Foskos(t)     = DIFF{@Fos(t),k_os(t-1)};
+[9]   @Foskos(t+1)   = FF_1{@Foskos(t)};
+[8]   @Foskos_bar    = SS{@Foskos(t)};
+[8]   @Fosknos(t)    = DIFF{@Fos(t),k_nos(t-1)};
+[9]   @Fosknos(t+1)  = FF_1{@Fosknos(t)};
+[8]   @Fosknos_bar   = SS{@Fosknos(t)};
+# The production function of non-open source physical capital goods and its derivatives
+[6]   @Fnos(t)       = z_nos(t-1)*A_nos*(a_nos(t)*k_os(t-1))**(gamma_1)*(b_nos(t)*k_nos(t-1))**(gamma_2)*n_nos(t)**(1-gamma_1-gamma_2);
+[6]   @Fnos_bar      = SS{@Fnos(t)};
+[6]   @Fnosn(t)      = DIFF{@Fnos(t),n_nos(t)};
+[7]   @Fnosn(t+1)    = FF_1{@Fnosn(t)};
+[6]   @Fnosn_bar     = SS{@Fnosn(t)};
+[8]   @Fnoskos(t)    = DIFF{@Fnos(t),k_os(t-1)};
+[9]   @Fnoskos(t+1)  = FF_1{@Fnoskos(t)};
+[8]   @Fnoskos_bar   = SS{@Fnoskos(t)};
+[8]   @Fnosknos(t)   = DIFF{@Fnos(t),k_nos(t-1)};
+[9]   @Fnosk(t+1)    = FF_1{@Fk(t)};
+[8]   @Fnosk_bar     = SS{@Fk(t)};
+# The cost function for search intensity and its derivatives
+[10]  @Cs(t)         = c0*(si(t))**eta*rk(t)**(-1);
+[10]  @Cs(t+1)       = FF_1{@Cs(t)};
+[10]  @Cs_bar        = SS{@Cs(t)};
+[11]  @Css(t)        = DIFF{@Cs(t),si(t)};
+[11]  @Css(t+1)      = FF_1{@Css(t)};
+[11]  @Css_bar       = SS{@Css(t)};
+[11]  @Csr(t)        = DIFF{@Cs(t),rk(t)};
+[11]  @Csr(t+1)      = FF_1{@Csr(t)};
+[11]  @Csr_bar       = SS{@Csr(t)};
+# The vacancy cost function and its derivatives
+[1]   @Vac(t)         = a*va(t);
+[2]   @Vacva(t)       = DIFF{@Vac(t),va(t)};
+[3]   @Vacva(t+1)     = FF_1{@Vacva(t)};
+[4]   @Vacva_bar      = SS{@Vacva(t)};
+# The human capital investment function and its derivatives
+[6]   @Fh(t)         = z_h(t-1)*A_h*n_os(t-1)**tau*n_nos**(1-tau)*h(t-1);
+[6]   @Fh_bar        = SS{@Fh(t)};
+[6]   @Fhnos(t)      = DIFF{@Fh(t),n_nos(t-1)};
+[7]   @Fhnos(t+1)    = FF_1{@Fhnos(t)};
+[6]   @Fhnos_bar     = SS{@Fhnos(t)};
+[8]   @Fhos(t)       = DIFF{@F(t),n_os(t-1)};
+[9]   @Fhos(t+1)     = FF_1{@Fhos(t)};
+[8]   @Fhos_bar      = SS{@Fhos(t)};
+# The reputational capital investment function and its derivatives
+[1]   @Fr(t)         = n_os(t-1);
+[2]   @Frnos(t)      = DIFF{@Fr(t),n_os(t)};
+
+%Non-Linear First-Order Conditions+++++++++++++++++++
+
+################################
+# Definition of relative prices
+################################
+# Relative price of employment with respect to final good
+[1]   p_n(t)-@Vacva(t)/@MAv(t) = 0;
+# Complementary marginal condition for above price
+[2]   (@Vacva(t)/@MAv(t))-(@Css(t)/@MAsi(t)) = 0;
+# Relative price of open-source physical capital good with respect to final good
+[3]   p_os(t)-(@Fkos(t)/@Foskos(t)) = 0;
+# Complementary marginal condition for above price
+[2]   (@Fkos(t)/@Foskos(t))-(@Fknos(t)/@Fosknos(t)) = 0;
+# Relative price of non-open-source physical capital good with respect to final good
+[3]   p_nos(t)-(@Fkos(t)/@Fnoskos(t)) = 0;
+# Complementary marginal condition for above price
+[2]   (@Fkos(t)/@Fnoskos(t))-(@Fknos(t)/@Fnosknos(t)) = 0;
+# Relative price of reputational capital with respect to final good
+[1]   p_rk(t)-(-@Uem(t)/@Uc(t))+p_os(t)*(@Fosnos(t)/@Frnos(t))+p_h(t)
+# Budget constraint, c(t)
+[1]   c(t)+sic(t)+@Vac(t)-w(t)*(n_f(t)+n_os(t)+n_nos(t))*h(t-1) = 0;
+
+# The time budget constraint
+[2]   em(t-1)-n_f(t)-n_os(t)-n_nos(t) = 0;
+
+# Search cost function, sic(t)
+[2]   sic(t)-@Cs(t) = 0;
+
+# Vacancy posting function, vac(t)
+[3]   vac(t)-a*va(t) = 0;
+
+# Definition for investment into non-os physical capital
+[4]   G_nos(t)-k_nos(t)+(1-delta_nos)*k_nos(t-1) = 0;
+
+# Definition of the investment function for non-os physical capital
+[5]   G_nos(t)-@Fnos(t) = 0;
+
+# Definition for investment into os physical capital
+[4]   G_os(t)-k_os(t)+(1-delta_os)*k_os(t-1) = 0;
+
+# Definition of the investment function for os physical capital
+[5]   G_os(t)-@Fos(t) = 0;
+
+# Definition for accumulation of reputational capital
+[5]   k_rep(t)-(1-delta_rk)*k_rep(t-1)-G_r(t) = 0;
+
+# Definition of investment into reputational capital
+[6]   G_r(t)-@Fr(t) = 0;
+
+# Definition for accumulation of human capital
+[5]   h(t)-(1-psi_h)*h(t-1)-@G_h(t) = 0;
+
+# Matching Cobb-Douglas function, ma(t)
+[5]   ma(t)-@MA(t) = 0;
+
+# Employment law of motion, em(t)
+[6]   em(t)-(1-psi_em)*em(t-1)-ma(t) = 0;
+
+# Defintion of aggregate output, y(t)
+[7]   y(t)-@F(t) = 0;
+
+# Law of motion of productivity shock, z(t)
+[8]   (z_f(t)/z_f(t-1)**rho_z)-epsz(t) = 0;
+
+# Definition of the real rate of return on capital, r(t)
+[9]   r(t)-1-@Fk(t)+delta = 0;
+
+# Definition of the return on labour (i.e. wage rate), w(t)
+[10]   w(t)-@Fn(t) = 0;
+
+# Physical capital Euler equation, k(t)
+[11]   betta*@Uc(t+1)*(1+@Fk(t+1)-delta)-@Uc(t) = 0;
+
+# First-order condition with respect to vacancies, va(t) using the employment Euler equation
+[12]  (a*@Uc(t)/@MAv(t))-betta*(@Uc(t+1)*(@Fn(t+1)+@Cs(t+1))+@Uem(t+1)+...
+      (a*@Uc(t+1)/@MAv(t+1))*((1-psi_em)+@MAem(t+1))) = 0;
+      
+# Eurler equation 3, si(t) also using the employment Euler equation
+[13]  (@Uc(t)*@Css(t)*(1-em(t-1))/@MAsi(t))-betta*(@Uc(t+1)*(@Fn(t+1)+@Cs(t+1))+@Uem(t+1)+...
+      (@Uc(t+1)*@Css(t+1)*(1-em(t))/@MAsi(t+1))*((1-psi_em)+@MAem(t+1))) = 0;
+
+
+%Manual entry of sstate non-linear system++++++++++++
+None
+
+
+%Steady States [Closed Form]++++++++++++++++++++++++++
+
+inv_bar = delta*k_bar;
+vac_bar = a*va_bar;
+r_bar   = 1-@Fk_bar+delta
+y_bar   = @F_bar;
+w_bar   = @Fn_bar;
+sic_bar = @Cs_bar;
+ma_bar  = @MA_bar;
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++
+
+# Steady State budget constraint
+[1]  @F_bar-c_bar-delta*k_bar-a*va_bar-@Cs_bar = 0;
+
+# Steady state employment law of motion, i.e. steady state of matches in labour market
+[2]  @MA_bar-psi*em_bar = 0;
+
+# Physical capital Eurler steady state equation
+[3]  @Uc_bar-betta*(@Uc_bar*(1+@Fk_bar-delta)) = 0;
+
+# Vacancies Euler equation
+[4]  (a*@Uc_bar/@MAv_bar)-betta*(@Uc_bar*(@Fn_bar+@Cs_bar)-@Uem_bar+...
+     (a*@Uc_bar/@MAv_bar)*((1-psi)+@MAem_bar)) = 0;
+     
+# Search Intensity Euler equation
+[5]  (@Uc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)-betta*(@Uc_bar*(@Fn_bar+@Cs_bar)-...
+      @Uem_bar+(@Uc_bar*@Css_bar*(1-em_bar)/@MAsi_bar)*((1-psi)+@MAem_bar)) = 0;
+
+# For this model, sensible starting values are key to solving the steady state !
+[1]  c_bar     = 2.0;
+[2]  si_bar    = 0.01;
+[3]  va_bar    = 0.01;
+[4]  k_bar     = 12.0;
+[5]  em_bar    = 0.3;
+
+
+%Log-Linearized Model Equations++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++
+Sigma = [sigma_z**2];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++
+

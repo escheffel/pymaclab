@@ -274,6 +274,29 @@ Generating impulse-response functions
 
   .. plot:: ../make_graphs/test5.py
 
+  
+  Notice that the IRF-generating function also accepts (a tuple or list of) values defining the sign and magnitude of the shock. So the above could also
+  have been written as follows:
+  
+  .. sourcecode:: ipython
+
+    # Import the pymaclab module into its namespace, also import os module
+    In [1]: import pymaclab as pm
+    In [2]: from pymaclab.modfiles import models
+
+    # Also import matplotlib.pyplot for showing the graph
+    In [3]: from matplotlib import pyplot as plt
+
+    # Instantiate a new DSGE model instance like so
+    In [4]: rbc1 = pm.newMOD(models.stable.rbc1_res)
+
+    # Now solve and simulate the model
+    In [5]: rbc1.modsolvers.forkleind.solve()
+    In [6]: rbc1.modsolvers.forkleind.irf(100,('productivity',),(-2.0,))
+
+    # Plot the simulation and show it on screen
+    In [7]: rbc1.modsolvers.forkleind.show_irf(('output','consumption'))
+    In [8]: plt.show()
 
 .. rubric:: Footnotes
 

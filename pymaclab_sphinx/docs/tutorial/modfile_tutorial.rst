@@ -59,7 +59,7 @@ The PyMacLab DSGE model file
       [3]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
       [4]   @R_bar    = SS{@R(t)};
       [3]   @R(t+1)   = FF_1{@R(t)};
-      [4]   @U(t)     = c(t)**(1-eta)/(1-eta);
+      [4]   @U(t)     = @I{eta!=1.0}{c(t)**(1-eta)/(1-eta)}+@I{eta==1.0}{LOG(c(t))};
       [5]   @MU(t)    = DIFF{@U(t),c(t)};
       [5]   @MU_bar   = SS{@U(t)};
       [6]   @MU(t+1)  = FF_1{@MU(t)};
@@ -194,7 +194,7 @@ A Description of the model file's individual sections
      [3]   @F_bar    = SS{@F(t)};
      [4]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
      [5]   @R(t+1)   = FF_1{@R(t)};
-     [6]   @U(t)     = c(t)**(1-eta)/(1-eta);
+     [6]   @U(t)     = @I{eta!=1.0}{c(t)**(1-eta)/(1-eta)}+@I{eta==1.0}{LOG(c(t))};
      [7]   @MU(t)    = DIFF{@U(t),c(t)};
      [8]   @MU(t+1)  = FF_1{@MU(t)};
 
@@ -220,6 +220,9 @@ A Description of the model file's individual sections
       
       @DISCOUNT                 # Special reserved keyword to define the discount factor.
                                 # See further below for detailed explanation.
+                                
+      @I{CONDITION}{EXPRESSION} # An indicator function which inserts the expression whenever
+                                # the condition evaluates to TRUE.
 
   When declaring replacement items in this section make sure to adhere to the syntax of always naming them beginning with a @. Also, within this
   section substitutions within substitutions are permitted. Replacement items for steady-state calculations in the subsequent sections can also

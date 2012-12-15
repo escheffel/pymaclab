@@ -51,13 +51,13 @@ None
 # The matching function and its derivatives
 [3]   @MA(t)     = va(t)**(1-lambdar)*(si(t)*(1-em(t-1)))**lambdar;
 [3]   @MA_bar    = SS{@MA(t)};
-[4]   @MAv(t)    = (1-lambdar)*((si(t)*(1-em(t-1)))/va(t))**lambdar;
+[4]   @MAv(t)    = DIFF{@MA(t),va(t)};
 [5]   @MAv(t+1)  = FF_1{@MAv(t)};
 [5]   @MAv_bar   = SS{@MAv(t)};
-[4]   @MAem(t)   = -si(t)*lambdar*(va(t)/(si(t)*(1-em(t-1))))**(1-lambdar);
+[4]   @MAem(t)   = DIFF{@MA(t),em(t-1)};
 [5]   @MAem(t+1) = FF_1{@MAem(t)};
 [4]   @MAem_bar  = SS{@MAem(t)};
-[4]   @MAsi(t)   = (1-em(t-1))*lambdar*(va(t)/(si(t)*(1-em(t-1))))**(1-lambdar);
+[4]   @MAsi(t)   = DIFF{@MA(t),si(t)};
 [5]   @MAsi(t+1) = FF_1{@MAsi(t)};
 [4]   @MAsi_bar  = SS{@MAsi(t)};
 # The production function and its derivatives
