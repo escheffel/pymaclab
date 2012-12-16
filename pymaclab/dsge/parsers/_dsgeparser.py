@@ -1370,9 +1370,8 @@ def differ_out(self):
     patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
     # Collect some necessary info for steady state substitutions
     var_bar = []
-    varnames = deepcopy(self.vardic)
     for elem in ['con','endo','exo','other']:
-        tmp_li = [x[0].split('(')[0]+'_bar' for x in varnames[elem]['var']]
+        tmp_li = [x[0].split('(')[0]+'_bar' for x in self.vardic[elem]['var']]
         for elem2 in tmp_li:
             var_bar.append(elem2)
     for kk1,elem in enumerate(list_tmp2):

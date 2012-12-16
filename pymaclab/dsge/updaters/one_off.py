@@ -165,11 +165,34 @@ class dicwrap:
         return self.wrapdic.__str__()
 
 class listwrapk:
-    def __init__(self,other,wrapobj,initlev):
+    def __init__(self,other,wrapobj,wrapobj_str,wrapdic,initlev):
         self.other = other
         self.wrapobj = wrapobj
+        self.wrapobj_str = wrapobj_str
+        self.wrapdic = wrapdic
         self.initlev = initlev
         self.wrapli = deepcopy(wrapobj)
+        
+    def reinit(self,other):
+        # Need to copy manually as inner wrapped objects do not support deepcopy
+        if self.wrapobj_str == 'self.vardic':
+            var_keys = []
+            for keyo in other.vardic.keys():
+                var_keys.append(keyo)
+            del other.vardic
+            other.vardic = {}
+            for keyo in var_keys:
+                other.vardic[keyo]={}
+                other.vardic[keyo]['var']=[]
+                other.vardic[keyo]['mod']=[]
+            for keyo1 in self.wrapdic.keys():
+                for keyo2 in self.wrapdic[keyo1].keys():
+                    other.vardic[keyo1][keyo2] = []
+                    for i1,elem1 in enumerate(self.wrapdic[keyo1][keyo2]):
+                        other.vardic[keyo1][keyo2].append([])
+                        for i2,elem2 in enumerate(elem1):
+                            other.vardic[keyo1][keyo2][i1].append(elem2)
+        
             
     def __getattr__(self,attrname):
         return getattr(self.wrapli,attrname)
@@ -187,8 +210,8 @@ class listwrapk:
         if self.wrapli[ind1:ind2] != into:
             self.wrapli[ind1:ind2] = into
             wrapobj[ind1:ind2] = into
-            other.vardic.update(other.updaters.vardic)
-            other.updaters.vardic.wrapobj.update(other.updaters.vardic)            
+            other.updaters.vardic.wrapobj.update(other.updaters.vardic)
+            self.reinit(other)
             
             other.inits.init1a()
         
@@ -225,8 +248,8 @@ class listwrapk:
         if self.wrapli[ind] != into:
             self.wrapli[ind] = into
             wrapobj[ind] = into
-            other.vardic.update(other.updaters.vardic)
             other.updaters.vardic.wrapobj.update(other.updaters.vardic)
+            self.reinit(other)
             
             other.inits.init1a()
             
@@ -373,7 +396,7 @@ class dicwrap_deep:
                 for keyo2 in self.wrapdic[keyo].keys():
                     self.wrapdic[keyo][keyo2] = dicwrapk(other,self.wrapdic[keyo][keyo2],initlev)
                     for i1,elem in enumerate(self.wrapdic[keyo][keyo2]):
-                        self.wrapdic[keyo][keyo2][i1] = listwrapk(other,self.wrapdic[keyo][keyo2][i1],initlev)
+                        self.wrapdic[keyo][keyo2][i1] = listwrapk(other,self.wrapdic[keyo][keyo2][i1],self.wrapobj_str,self.wrapdic,initlev)
 
     def __getattr__(self,attrname):
         return getattr(self.wrapdic,attrname)
@@ -384,12 +407,29 @@ class dicwrap_deep:
         wrapobj = self.wrapobj
         wrapobj[key] = value
         # Test if the dictionary has changed relative to self.wrapdic
-        if self.wrapdic != wrapobj:
+        if self.wrapdic[key] != wrapobj[key]:
             self.wrapdic[key] = value
             ##### THE INITS #####################
             #other.inits.init1()
+            # Need to copy manually as inner wrapped objects do not support deepcopy
             if wrapobj_str == 'self.vardic':
-                other.vardic.upate(wrapobj)
+                var_keys = []
+                for keyo in other.vardic.keys():
+                    var_keys.append(keyo)
+                del other.vardic
+                other.vardic = {}
+                for keyo in var_keys:
+                    other.vardic[keyo]={}
+                    other.vardic[keyo]['var']=[]
+                    other.vardic[keyo]['mod']=[]
+                for keyo1 in self.wrapdic.keys():
+                    for keyo2 in self.wrapdic[keyo1].keys():
+                        other.vardic[keyo1][keyo2] = []
+                        for i1,elem1 in enumerate(self.wrapdic[keyo1][keyo2]):
+                            other.vardic[keyo1][keyo2].append([])
+                            for i2,elem2 in enumerate(elem1):
+                                other.vardic[keyo1][keyo2][i1].append(elem2)
+                            
 
             other.inits.init1a()
             if wrapobj_str == 'self.nlsubsdic':
@@ -431,8 +471,24 @@ class dicwrap_deep:
             self.wrapdic.update(dico)
             ##### THE INITS #####################
             #other.inits.init1()
+            # Need to copy manually as inner wrapped objects do not support deepcopy
             if wrapobj_str == 'self.vardic':
-                other.vardic.upate(self.wrapdic)
+                var_keys = []
+                for keyo in other.vardic.keys():
+                    var_keys.append(keyo)
+                del other.vardic
+                other.vardic = {}
+                for keyo in var_keys:
+                    other.vardic[keyo]={}
+                    other.vardic[keyo]['var']=[]
+                    other.vardic[keyo]['mod']=[]
+                for keyo1 in self.wrapdic.keys():
+                    for keyo2 in self.wrapdic[keyo1].keys():
+                        other.vardic[keyo1][keyo2] = []
+                        for i1,elem1 in enumerate(self.wrapdic[keyo1][keyo2]):
+                            other.vardic[keyo1][keyo2].append([])
+                            for i2,elem2 in enumerate(elem1):
+                                other.vardic[keyo1][keyo2][i1].append(elem2)
 
             other.inits.init1a()
 

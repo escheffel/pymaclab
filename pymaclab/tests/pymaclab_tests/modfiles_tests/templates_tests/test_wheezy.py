@@ -35,8 +35,10 @@ def test_others():
     # Remove models which need external file or otherwise don't work
     modelli.remove('rbc1_ext')
     modelli.remove('rbc1_extss')
-    modelli.remove('prog')
     modelli.remove('jermann98_ext')
+    modelli.remove('jermann98')
+    modelli.remove('grohurib03')
+    modelli.remove('merz')
     
     for modelo in modelli:
         print "Now testing for model: ",modelo

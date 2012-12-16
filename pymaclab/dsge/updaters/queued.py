@@ -346,8 +346,21 @@ class Process_Queue(object):
         self.other = other
         self.queue = other.updaters_queued.queue
         self.initlev = other._initlev
-        # The vardic
-        self.vardic = deepcopy(other.updaters_queued.vardic.wrapobj)
+
+        # The vardic, do manually in order to avoid deepcopy problem with custom instances
+        self.vardic = {}
+        var_keys = []
+        for keyo in other.updaters_queued.vardic.wrapobj.keys():
+            var_keys.append(keyo)
+        for keyo in var_keys:
+            self.vardic[keyo] = {}
+            self.vardic[keyo]['var']= []
+            self.vardic[keyo]['mod']= []
+        for keyo1 in other.updaters_queued.vardic.wrapobj.keys():
+            for keyo2 in other.updaters_queued.vardic.wrapobj[keyo1].keys():
+                self.vardic[keyo1][keyo2]=[]
+                for i1,elem1 in enumerate(other.updaters_queued.vardic.wrapobj[keyo1][keyo2]):
+                    self.vardic[keyo1][keyo2].append([x for x in elem1])
         # The nlsubsdic
         if 'nlsubsdic' in dir(other):
             self.nlsubsdic = deepcopy(other.updaters_queued.nlsubsdic.wrapobj)
@@ -367,8 +380,24 @@ class Process_Queue(object):
         
     def reinit(self):
         other = self.other
-        # The vardic
-        self.vardic = deepcopy(other.updaters_queued.vardic.wrapobj)
+        # Save the original var categories before deleting original vardic
+        var_keys = []
+        for keyo in self.vardic.keys():
+            var_keys.append(keyo)
+        # Delete and re-build
+        del self.vardic
+        self.vardic = {}
+        for keyo in var_keys:
+            self.vardic[keyo]={}
+            self.vardic[keyo]['var']=[]
+            self.vardic[keyo]['mod']=[]
+        # The vardic, can't use deepcopy because the nested instances don't implement it
+        for keyo1 in other.updaters_queued.vardic.wrapobj.keys():
+            for keyo2 in other.updaters_queued.vardic.wrapobj[keyo1].keys():
+                for i1,elem1 in enumerate(other.updaters_queued.vardic.wrapobj[keyo1][keyo2]):
+                    self.vardic[keyo1][keyo2].append([elem2 for elem2 in elem1])
+                    
+        #self.vardic = deepcopy(other.updaters_queued.vardic.wrapobj)
         # The nlsubsdic
         if 'nlsubsdic' in dir(other):
             self.nlsubsdic = deepcopy(other.updaters_queued.nlsubsdic.wrapobj)

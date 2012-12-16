@@ -4,6 +4,24 @@
 Release History
 ===============
 
+**0.95.9** (2012-12-16)
+==========================
+
+    * Fixed small bug in updater function which should have been fixed for 0.95.8.
+
+
+**0.95.8** (2012-12-15)
+==========================
+    
+    * Introduced indicator function feature in variable substitution section in order to manage discontinuities in FOCs.
+    
+    * The magnitude and sign of shock can now be passed to IRF-generating method.
+    
+    * Certain methods in pymaclab have been refactored and cleaned up considerably, making code more robust.
+
+    * Much work done on getting closer to having a pymaclab-to-dynare translator (but not quite there yet).
+
+
 **0.95.1** (2012-10-8)
 ==========================
     

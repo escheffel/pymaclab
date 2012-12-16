@@ -36,16 +36,7 @@ First things first
   * Latest source tar ball at `http://pypi.python.org/pypi/pymaclab/ <http://pypi.python.org/pypi/pymaclab/>`_
   * Latest bleeding-edge source via git at `http://github.com/escheffel/pymaclab <http://github.com/escheffel/pymaclab>`_
   * Source code issues tracker at `http://github.com/escheffel/pymaclab/issues/ <http://github.com/escheffel/pymaclab/issues/>`_
-  
-.. note::
 
-    If you want to give PyMacLab a try without installing it onto your own computer you can access an IPython web server frontend in which
-    you can create notebooks (as in Mathematica and Maple) from which calls to Python, Numpy, Scipy and PyMacLab can be made. Plots are
-    directly rendered to screen. Access this experimental web portal at:
-    
-                                   `http://www.notebook.pymaclab.com <http://notebook.pymaclab.com>`_
-    
-    There you will also find provided example scripts which can be run inside your webbrowser.
 
 Features at a Glance
 --------------------
@@ -224,7 +215,7 @@ Option 2
 
   Otherwise get the latest source code compressed as a tarball here:
 
-    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.95.1.tar.gz>`_
+    `pymaclab.tar.gz <http://pypi.python.org/packages/source/p/pymaclab/pymaclab-0.95.8.tar.gz>`_
 
   And install it in the usual way by running in a Linux shell the command::
 
