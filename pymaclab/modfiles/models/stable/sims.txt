@@ -38,7 +38,7 @@ None
 [1]  c(t)**(-gamma)-betta*E(t)|c(t+1)**(-gamma)*...
      (alpha*z(t)*k(t)**(alpha-1)+delta) = 0;
 [2]  c(t)+@inv(t)-@F(t) = 0;
-[3]  LOG(z(t))-rho*LOG(z(t-1)) = 0;
+[3]  LOG(z(t))-rho*LOG(z(t-1))-eps(t) = 0;
 
 
 %Manual entry of sstate non-linear system++++++++++++++++++++++++++++++++++++++++++++++++

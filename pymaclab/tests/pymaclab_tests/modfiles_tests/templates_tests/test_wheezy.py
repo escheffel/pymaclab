@@ -17,11 +17,20 @@ def test_cee():
     # Check if the two template_paramdics are identical
     for keyo in cee.template_paramdic.keys():
         print "Now testing key: ",keyo
+        print cee.template_paramdic[keyo]
+        print '--------------------------'
+        print cee2.template_paramdic[keyo]
         if keyo == 'sigma':
             assert cee.template_paramdic[keyo].all() == cee2.template_paramdic[keyo].all()
         elif keyo == 'paramdic':
             for keyo2 in cee.template_paramdic[keyo].keys():
                 assert round(cee.template_paramdic[keyo][keyo2],6) == round(cee2.template_paramdic[keyo][keyo2],6)
+        elif keyo == 'ssili':
+	  for i1,elem in enumerate([x[0] for x in cee.template_paramdic[keyo]]):
+	    assert round(float(cee.template_paramdic[keyo][i1][1]),6) == round(float(cee2.template_paramdic[keyo][i1][1]),6)
+        elif keyo == 'ssidic':
+	  for keyo2 in cee.template_paramdic[keyo].keys():
+	    assert round(cee.template_paramdic[keyo][keyo2],6) == round(cee2.template_paramdic[keyo][keyo2],6)
         else:
             assert cee.template_paramdic[keyo] == cee2.template_paramdic[keyo]
 

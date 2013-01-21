@@ -27,7 +27,7 @@ def populate_model_stage_one(self, secs):
     # Establish the timing convention of variables in the model file
     self = def_timing(self,**self._vtiming)    
     
-    # This is a special dictionary which can be handed over to the template engines (i.e. Jinja2)
+    # This is a special dictionary which can be handed over to the template engines (i.e. Mako or Jinja2 or whatever)
     if 'template_paramdic' not in dir(self): self.template_paramdic = {}
 
 
@@ -199,7 +199,8 @@ from __future__ import division
     if all([False if 'None' in x else True for x in secs['manualss'][0]]):
         _mreg_alt = '^\s*[a-zA-Z]*\d*_bar(?!=\+|-|\*|/])\s*=\s*.*'
         _mreg = '\[\d+\]\s*[a-zA-Z]*\d*_bar(?!=\+|-|\*|/])\s*=\s*.*'
-        _mreg2 = '\[\d+\]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*[0-9]*\.[0-9]*'
+        # Put the -{0,1} in here as well as some parameters may really be negative, like a utility function parameter!
+        _mreg2 = '\[\d+\]\s*[a-zA-Z]*(?!=\+|-|\*|/])\s*=\s*-{0,1}[0-9]*\.[0-9]*'
         _mregfocs = 'USE_FOCS=\[.*?\]'
         mregfocs = re.compile(_mregfocs)
         use_focs = False
@@ -250,6 +251,7 @@ from __future__ import division
             i1=i1+1
         if anyssi_found:
             self.ssidic = deepcopy(ssidic)
+            ssili.sort()
             self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssidic'] = deepcopy(ssidic)            
@@ -268,6 +270,7 @@ from __future__ import division
         elif use_focs and anyssi_found:
             self._use_focs = deepcopy(use_focs)
             self._ssidic = deepcopy(ssidic)
+            ssili.sort()
             self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssys_list'] = False
@@ -318,7 +321,8 @@ def mkaug2(self,insys=None,othersys=None):
 
     alldic = {}
     alldic.update(self.paramdic)
-    alldic.update(self.sstate)
+    if 'sstate' in dir(self):
+        alldic.update(self.sstate)
 
     spvdic = {}
     spvdic['endo'] = endosp
@@ -1970,7 +1974,8 @@ def mksigmat(self, secs):
             elif x[-2:] == '];':
                 str_tmp1=str_tmp1+x.lstrip().rstrip()[:-2]
     locals().update(self.paramdic)
-    locals().update(self.sstate)
+    if 'sstate' in dir(self):
+        locals().update(self.sstate)
     list_tmp1 = str_tmp1.split(';')
     len1 = len(list_tmp1[0].split())
     mat1=mat.zeros((len1,len1))
@@ -2109,6 +2114,17 @@ def mk_mssidic_subs(self):
         # Update ssidic
         self.ssidic.update(tmp_dic)
     self.ssili = deepcopy(tmp_list)
+    # Update the template_paramdic dictionary for the dynare model file generator
+    if 'ssidic' in self.template_paramdic.keys() and self.template_paramdic['ssidic'] != None:
+        self.template_paramdic['ssidic'].update(self.ssidic)
+    if 'ssili' in self.template_paramdic.keys() and self.template_paramdic['ssili'] != None:
+        self.template_paramdic['ssili'] = deepcopy(self.ssili)
+    # Make sure that the ssili entries don't contain any single symbolic operations,
+    # but only string-cast floats
+    for i1,keyo in enumerate([x[0] for x in self.ssili]):
+        if keyo in self.ssidic.keys() and str(self.ssidic[keyo]) != self.ssili[i1][1]:
+            self.ssili[i1][1] = str(self.ssidic[keyo])
+    self.ssili.sort()
     return self
 
 #This function is needed in population stage 1, at the end
@@ -2203,7 +2219,8 @@ def populate_model_stage_one_bb(self, secs):
        all([False if 'None' in x else True for x in secs['manualss'][0]]):
         self = mk_mssidic_subs(self)
         # Also save a copy of substituted and evaluated ssili with starting values
-        self.template_paramdic['ssili'] = deepcopy(self.ssidic.items())
+        self.template_paramdic['ssili'] = [[y for y in x] for x in self.ssidic.items()]
+        self.template_paramdic['ssili'].sort()
     # Do substitutions inside the closed form steady state list
     # Check and do substitutions
     if all([False if 'None' in x else True for x in secs['vsfocs'][0]]) and\
@@ -2253,8 +2270,7 @@ def populate_model_stage_two(self, secs):
         self.template_paramdic['llsys_list'] = False
 
     # Creates variance/covariance
-    if all([False if 'None' in x else True for x in secs['vcvm'][0]]) and\
-       'sstate' in dir(self):
+    if all([False if 'None' in x else True for x in secs['vcvm'][0]]):
         self.sigma = mksigmat(self, secs)
         # Save for template instantiation
         self.template_paramdic['sigma'] = deepcopy(self.sigma)

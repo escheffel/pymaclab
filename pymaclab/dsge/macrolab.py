@@ -82,6 +82,21 @@ class Derivatives(object):
 
 # Shell class for derivatives branch
 class Inits(object):
+    '''
+    This is the factored-out macrolab DSGEmodel Initialisation class. This used to be part of the DSGEmodel
+    class itself in the form of methods, but has been factored out into a separate class which takes a newly
+    instantiated DSGEmodel instance as and argument. It then possess several init methods which "work on the
+    instance" and produce desired attributes
+    
+    .. note::
+    
+       Notice that the various init method, i.e. init1, init1a, etc. are not called here, but they are called externally in the
+       pymaclab package when instantiating a new DSGE model using pymaclab.newMOD().
+    
+    :param other:             The DSGEmodel instance to be passed to the Inits instance
+    :type other:              DSGEmodel
+
+    '''
     
     def __init__(self,other=None):
         self._other = other
@@ -144,7 +159,7 @@ class Inits(object):
             # Wrap the vardic
             other.updaters.vardic = dicwrap_deep(other,'self.vardic',initlev)
             other.updaters_queued.vardic = dicwrap_deep_queued(other,'self.vardic',initlev)
-        
+################################### BASIC READING-IN OF MODEL FILE INFO DONE ###############################        
     def init1a(self):
         '''
         The init1a method. Model population proceeds from the init1 method here. The only field which get created here is the raw
@@ -290,7 +305,7 @@ class Inits(object):
             alldic.update(other.paramdic)
             intup = (other.manss_sys,alldic)
             other.sssolvers.manss = ManualSteadyState(intup,other=other)
-
+##################################### FULL PARSING AND UPDATER WRAPPING DONE #############################
     def init3(self):
         '''
         Initialisation method init3 is quite complex and goes through a number of logical tests in order to determine
@@ -358,6 +373,13 @@ class Inits(object):
             other.sssolvers.manss.solve()
             other.sstate = {}
             other.sstate.update(other.sssolvers.manss.sstate)
+            # Save the solution of the closed-form calculations in the template_paramdic for dynare
+            other.template_paramdic['ssidic'] = {}
+            other.template_paramdic['ssidic'].update(other.sstate)
+            # Also save as ssili for consistency's sake
+            other.template_paramdic['ssili'] = []
+            for itemo in other.template_paramdic['ssidic'].items():
+                other.template_paramdic['ssili'].append([itemo[0],str(itemo[1])])
         ##### OPTION 4: There is information on closed-form AND on numerical steady state
         # Check if the numerical and closed form sections have entries
         if all([False if 'None' in x else True for x in secs['manualss'][0]]) and\
@@ -450,7 +472,11 @@ class Inits(object):
                     print "WARNING: Steady state value "+keyo+ " is NEGATIVE!"
                     print "This is very likely going to either error out or produce strange results"
                     print "Re-check your model declarations carefully!"
-######################################### STEADY STATE CALCULATION SECTION DONE ##################################
+        # Re-attach the solutions back to the dynare template generator dictionary
+        for keyo in other.template_paramdic['ssidic'].keys():
+            if keyo in other.sstate.keys(): other.template_paramdic['ssidic'][keyo] = deepcopy(other.sstate[keyo])
+            other.template_paramdic['ssili'][[x[0] for x in other.template_paramdic['ssili']].index(keyo)][1] = str(other.sstate[keyo])
+##################################### STEADY STATE CALCULATION SECTION DONE ##############################
     def init4(self,no_wrap=False):
         '''
         This model instance sub-initializor only calls the section which use the computed steady state
@@ -481,6 +507,9 @@ class Inits(object):
         if mesg: print "INIT: Preparing DSGE model instance for computation of Jacobian and Hessian..."
         # Now populate more with stuff that needs steady state
         other = populate_model_stage_two(other, secs)
+        # We can also already compute a dictionary holding all the vars w.r.t which derivatives will be taken
+        # This will attach a dictionary to the model instance called self.differvardic
+        other.def_differ_periods()
 
         if not no_wrap:
             # Need to wrap variance covariance matrix here
@@ -770,10 +799,12 @@ class DSGEmodel(object):
         filo = tempfile.NamedTemporaryFile()
         fname = filo.name
         fname2 = fname.split('/')[-1]
+        '''
         filo2 = open(os.path.join(os.getcwd(),'test.mod'),'w')
         filo2.write(modstr)
         filo2.flush()
         filo2.close()
+        '''
         filo.file.write(modstr)
         filo.file.flush()
         self.modsolvers.dynare = Dynare({})
@@ -804,7 +835,7 @@ class DSGEmodel(object):
         for i1,elem in enumerate(self.modsolvers.dynare.dyn_state_vars):
             self.modsolvers.dynare.dynsorder.append(str(elem).strip()+'(t)')
 
-        # Create P and F matrix reflecting ordering of pymaclab
+        # Create PP and FF matrix reflecting ordering of pymaclab
         P = np.matlib.zeros([self.nstat,self.nstat])
         F = np.matlib.zeros([self.ncon,self.nstat])
         listo = [x[0] for x in self.vdic['exo']]+[x[0] for x in self.vdic['endo']]
@@ -1350,6 +1381,17 @@ class DSGEmodel(object):
             return False
 ###########ANALYTIC AND NUMERICAL JACOBIAN AND HESSIAN METHODS############
     def def_differ_periods(self):
+        '''
+        A convenience method which uses the vtiming attribute in order to create a number of lists of
+        variables with their time definitions (subscripts) for which derivates have to be taken using the
+        non-linear system of FOCs.
+        
+        :param self: object instance
+        :type self: dsge_inst
+        
+        :return self.jAA:  *(arr2d)* - attaches numerical AA matrix used in Forkleind solution method
+        :return self.jBB:  *(arr2d)* - attaches numerical BB matrix used in Forkleind solution method
+        '''
         vtiming = deepcopy(self.vtiming)
         # Timing assumptions, first for exogenous variables
         # For past
@@ -1398,7 +1440,15 @@ class DSGEmodel(object):
             con_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['con']['var']]
         elif vtiming['con'][1] > 0:
             con_1 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['con'][1])+')' for x in self.vardic['con']['var']]
-
+        # Also attach the final differvardic to the model for inspection
+        differvardic = {}
+        differvardic['exo_0'] = exo_0
+        differvardic['exo_1'] = exo_1
+        differvardic['endo_0'] = endo_0
+        differvardic['endo_1'] = endo_1
+        differvardic['con_0'] = con_0
+        differvardic['con_1'] = con_1
+        self.differvardic = deepcopy(differvardic)
         return exo_0,exo_1,endo_0,endo_1,con_0,con_1
 
     def mkjahe(self):

@@ -54,7 +54,7 @@ None
 [1]   @F(t)-@inv(t)-c(t) = 0;
 [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
 [3]   @F(t)-y(t) = 0;
-[4]   LOG(z(t))-psi*LOG(z(t-1)) = 0;
+[4]   LOG(z(t))-psi*LOG(z(t-1))-eps(t) = 0;
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

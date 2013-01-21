@@ -83,7 +83,7 @@ None
 # Consumption Euler
 [4]   betta*E(t)|lam(t+1)*@R(t+1)-lam(t) = 0;
 # Shock Process
-[5]   LOG(z(t))-psi*z(t-1) = 0;
+[5]   LOG(z(t))-psi*z(t-1)-eps(t) = 0;
 
 
 %Steady States [Closed Form]++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
