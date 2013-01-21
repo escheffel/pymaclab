@@ -47,12 +47,12 @@ Dependencies
 -------
 [numpy](http://numpy.scipy.org/) (required)   
 [scipy](http://www.scipy.org/) (required)   
-[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)
-[mako](http://www.makotemplates.org/) (optional - but necessary for dynare++ translator)
+[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)  
+[mako](http://www.makotemplates.org/) (optional - but necessary for dynare++ translator)  
 [pp](http://www.parallelpython.com/) (optional - but highly recommended for speed)   
 [ipython](http://ipython.org/) (optional)   
 [mlabwrap](http://mlabwrap.sourceforge.net/) (optional)   
-[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)
+[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)  
 [dynare++](http://www.dynare.org/documentation-and-support/dynarepp) (optional - but necessary for dynare++ solution)
 
 While numpy, scipy, and sympycore are absolutely necessary to run PyMacLab, Parallel Python (PP)
