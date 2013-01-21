@@ -97,4 +97,10 @@ rbc2.modsolvers.pyklein2d.solve()
 # Simulate the models after they have been solved
 rbc1.modsolvers.forkleind.sim(400)
 rbc2.modsolvers.pyklein2d.sim(1000)
+
+# If dynare++ is installed and in your PATH, then you can solve
+# the model alternatively using dynare++ in the background and all 
+# relevant solution attributes get attached to the DSGE model instance
+rbc1.mk_dynare(order=1,centralize=False)
+rbc1.modsolvers.dynare.PP
 ```
