@@ -99,7 +99,9 @@ Series of Brief Tutorials
     This section finally shows how dynamic solution to the PyMacLab DSGE models are obtained.
 7) :doc:`PyMacLab DSGE simulation and plotting tutorial <tutorial/simirf_plotting_tutorial>`
     Short tutorial on using convenience functions for simulations, IRFs and plotting.
-8) :doc:`Description of all template DSGE models <tutorial/started_allmodels>`
+8) :doc:`The PyMacLab Dynare++ wrapper tutorial <tutorial/dynarewrap_tutorial>`
+    PyMacLab comes shipped with a dynare++ wrapper/translator, this tutorial explains how it works.
+9) :doc:`Description of all template DSGE models <tutorial/started_allmodels>`
     Detailed description of all of the template DSGE models which come supplied with PyMacLab.
 
 
@@ -173,6 +175,7 @@ Dependencies
   * `Parallel Python <http://www.parallelpython.com/>`_
   * `Matplotlib <http://matplotlib.sourceforge.net/>`_
   * `Pandas <http://pandas.pydata.org/>`_
+  * `Mako <http://pypi.python.org/pypi/Mako>`_
   * `Wheezy.template <http://pypi.python.org/pypi/wheezy.template/>`_
 
   Sympycore and Parallel Python come distributed with PyMacLab and will be installed along with the main library; the other
@@ -183,6 +186,12 @@ Dependencies
   The Pandas data library is *not* needed by the DSGE-modelling features of PyMacLab itself, but is instead required in the experimentally
   made available modules used to estimated and work with VAR and FAVAR models. These modules are in the ``pymaclab.stats.`` branch and
   some test files are included in the test/stats directory.
+  
+  The Mako templating library is an optional but required option for thise users who wish to work with PyMacLab's dynare++ translator and
+  solution wrapper function. The templating library is used in order to translate a solved DSGE model using PyMacLab into a dynare++
+  conformable model files, which then if requested, can also be solved from within PyMacLab using dynare++ in the background with solution
+  matrices being passed by to the PyMacLab DSGE model instance. For this to work users in a \*nix environment need to have a functional
+  dynare++ executable (binary) file located in their local PATH.
   
   The Wheezy.template libary is - similar to the more popular Jinja2 - a templating library which can be used to generate PyMacLab
   model files on-the-fly inside your Python scripts based on a Python dictionary with DSGE model attributes conforming to a specific format.
