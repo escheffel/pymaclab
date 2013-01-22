@@ -102,6 +102,13 @@ try:
 except:
     print "Wheezy.template not detected but used in PyMacLab. Fetching now using pip..."
     os.system("pip install wheezy.template")
+
+# Now check for mako and install if needed, but cannot check version so just install any latest
+try:
+    import mako
+except:
+    print "Mako not detected but used in PyMacLab. Fetching now using pip..."
+    os.system("pip install Mako")
 ##########################################################################
 # Done checking for dependencies
 ##########################################################################
