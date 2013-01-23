@@ -15,6 +15,7 @@
 import copy
 from copy import deepcopy
 import os
+import subprocess
 import sys
 import re
 from helpers import now_is
@@ -31,6 +32,15 @@ import sympycore
 # Import PP, now comes supplied and installed with pymaclab
 import pp
 
+# Check if dynare++ is installed and in your path
+dynare_flag = False
+try:
+    dynret = subprocess.call('dynare++',stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    dynare_flag = True
+    print 'Dynare++ found on your system path, accessible from PyMacLab...'
+except:
+    dynare_flag = False
+
 #NOTE: Imports from the refactor
 from pymaclab.filters._hpfilter import hpfilter
 from pymaclab.filters._bkfilter import bkfilter
@@ -42,6 +52,7 @@ from parsers._dsgeparser import populate_model_stage_one,populate_model_stage_on
 from updaters.one_off import Updaters, dicwrap, dicwrap_deep, listwrap, matwrap
 from updaters.queued import Updaters_Queued, dicwrap_queued, dicwrap_deep_queued, listwrap_queued,\
      matwrap_queued, Process_Queue, queue
+from pymaclab.dsge.translators.translators import Translators
 
 #Define a list of the Greek Alphabet for Latex
 greek_alph = ['alpha','beta','gamma','delta','epsilon',
@@ -75,23 +86,26 @@ except:
 # Open mlab session
 if use_matlab:
     sess1 = mlabraw.open('matlab - nojvm -nosplash')
+
+# Empty locdic for the locate helper function
+locdic = {}
     
 # Shell class for derivatives branch
 class Derivatives(object):
     pass
 
-# Shell class for derivatives branch
+
 class Inits(object):
     '''
-    This is the factored-out macrolab DSGEmodel Initialisation class. This used to be part of the DSGEmodel
+    This is the factored-out macrolab DSGEmodel Initialisation class. This is used to be part of the DSGEmodel
     class itself in the form of methods, but has been factored out into a separate class which takes a newly
     instantiated DSGEmodel instance as and argument. It then possess several init methods which "work on the
-    instance" and produce desired attributes
+    instance" and produce desired attributes to different depths of solution levels.
     
     .. note::
     
-       Notice that the various init method, i.e. init1, init1a, etc. are not called here, but they are called externally in the
-       pymaclab package when instantiating a new DSGE model using pymaclab.newMOD().
+       Notice that the various init method, i.e. init1, init1a, etc. are not called here, but they are called
+       externally in the pymaclab package when instantiating a new DSGE model using pymaclab.newMOD().
     
     :param other:             The DSGEmodel instance to be passed to the Inits instance
     :type other:              DSGEmodel
@@ -304,7 +318,7 @@ class Inits(object):
             alldic = {}
             alldic.update(other.paramdic)
             intup = (other.manss_sys,alldic)
-            other.sssolvers.manss = ManualSteadyState(intup,other=other)
+            other.sssolvers.manss = ManualSteadyState(intup,other=other) 
 ##################################### FULL PARSING AND UPDATER WRAPPING DONE #############################
     def init3(self):
         '''
@@ -510,6 +524,9 @@ class Inits(object):
         # We can also already compute a dictionary holding all the vars w.r.t which derivatives will be taken
         # This will attach a dictionary to the model instance called self.differvardic
         other.def_differ_periods()
+        # Open the translators branch on the DSGE model instance
+        # This should be done here, so that the passed "other" model instance has the translator branch
+        other.translators = Translators(other=other)         
 
         if not no_wrap:
             # Need to wrap variance covariance matrix here
@@ -542,8 +559,13 @@ class Inits(object):
         #TODO: delay above and only import if needed
         from solvers.modsolvers import MODsolvers
         # Open the model solution tree branch
-        other.modsolvers = MODsolvers()
-        ######################## LINEAR METHODS !!! ############################
+        other.modsolvers = MODsolvers()        
+        ################################### DYNARE++ ####################################
+        # Open the dynare branch if dynare++ is installed on the system and in your PATH
+        if dynare_flag:
+            from solvers.modsolvers import Dynarepp
+            other.modsolvers.dynarepp = Dynarepp({'_other':other,'_mesg':other._mesg})
+        ############################# LINEAR METHODS !!! ################################
         # see if there are any log-linearized equations
         if all([False if 'None' in x else True for x in secs['modeq'][0]]):
             from solvers.modsolvers import PyUhlig, MatUhlig, MatKlein, MatKleinD, ForKlein
@@ -693,12 +715,10 @@ class Inits(object):
 
         '''
         other = self._other
-        initlev = other._initlev
+        initlev = other._initlev      
         # Make sure the jobserver has done his jobs
         jobserver.wait()
 
-# Empty locdic for the locate helper function
-locdic = {}
 
 ##################THE DSGE MODEL CLASS (WORKS)#####################
 class DSGEmodel(object):
@@ -745,8 +765,6 @@ class DSGEmodel(object):
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
                  use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
-        # Open the inits branch
-        self.inits = Inits(other=self)
         # Make sure the jobserver has done his global jobs each time you instantiate a new instance
         jobserver.wait()
         if sstate != None:
@@ -770,83 +788,9 @@ class DSGEmodel(object):
         # Attach some model attributes
         self.modfile = ffile
         self.dbase = dbase
+        # Open the inits branch at the end
+        self.inits = Inits(other=self)        
 
-        
-    def mk_dynare(self,order=1,centralize=False,fpath=None,focli=None):
-        # Import the template and other stuff
-        from pymaclab.modfiles.templates import mako_dynare_template
-        from scipy import io
-        from solvers.modsolvers import Dynare
-        import tempfile
-        import os
-        import glob
-        template_dic = deepcopy(self.template_paramdic)
-        
-        # Render the template to be passed to dynare++
-        tmp_dic = {}
-        tmp_dic['focli'] = focli
-        template_dic.update(tmp_dic)
-        modstr = mako_dynare_template.render(**template_dic)
-        
-        # If a filepath has been passed then just write the Dynare++ modfile, but no more!
-        if fpath != None:
-            filo = open(fpath,'w')
-            filo.write(modstr)
-            filo.flush()
-            filo.close()
-            return
-
-        filo = tempfile.NamedTemporaryFile()
-        fname = filo.name
-        fname2 = fname.split('/')[-1]
-        '''
-        filo2 = open(os.path.join(os.getcwd(),'test.mod'),'w')
-        filo2.write(modstr)
-        filo2.flush()
-        filo2.close()
-        '''
-        filo.file.write(modstr)
-        filo.file.flush()
-        self.modsolvers.dynare = Dynare({})
-        self.modsolvers.dynare.__setattr__('modfile',modstr)
-        if not centralize:
-            os.system('dynare++ --no-centralize --order '+str(order)+' '+filo.name)
-        else:
-            os.system('dynare++ --order '+str(order)+' '+filo.name)
-        dynret = io.loadmat(os.path.join(os.getcwd(),filo.name.split('/')[-1]+'.mat'))
-        # Check if solution has been computed and attache all solution matrices to dynare instance
-        if dynret.has_key('dyn_g_1'):
-            self.modsolvers.dynare.__init__(dynret)
-        else:
-            print "FAIL: Dynare could not determine solution."
-        filo.close()
-        # Delete all of the files
-        for filor in glob.glob(fname2+'*.*'):
-            os.remove(filor)
-
-        # Create some other objects on dynare branch
-        self.modsolvers.dynare.sstate = {}
-        self.modsolvers.dynare.dynorder = []
-        self.modsolvers.dynare.dynsorder = []
-        for i1,elem in enumerate(self.modsolvers.dynare.dyn_vars):
-            self.modsolvers.dynare.dynorder.append(str(elem).strip()+'(t)')
-            if str(elem).strip()+'_bar' in self.sstate.keys():
-                self.modsolvers.dynare.sstate[str(elem).strip()+'_bar'] = self.modsolvers.dynare.dyn_ss[i1,0]
-        for i1,elem in enumerate(self.modsolvers.dynare.dyn_state_vars):
-            self.modsolvers.dynare.dynsorder.append(str(elem).strip()+'(t)')
-
-        # Create PP and FF matrix reflecting ordering of pymaclab
-        P = np.matlib.zeros([self.nstat,self.nstat])
-        F = np.matlib.zeros([self.ncon,self.nstat])
-        listo = [x[0] for x in self.vdic['exo']]+[x[0] for x in self.vdic['endo']]
-        for i1,elem in enumerate(listo):
-            for i2,elem2 in enumerate(listo):
-                P[i1,i2] = self.modsolvers.dynare.dyn_g_1[self.modsolvers.dynare.dynorder.index(elem),self.modsolvers.dynare.dynsorder.index(elem2)]
-        for i1,elem in enumerate([x[0] for x in self.vdic['con']]):
-            for i2,elem2 in enumerate(listo):
-                F[i1,i2] = self.modsolvers.dynare.dyn_g_1[self.modsolvers.dynare.dynorder.index(elem),self.modsolvers.dynare.dynsorder.index(elem2)]
-        self.modsolvers.dynare.PP = deepcopy(P)
-        self.modsolvers.dynare.FF = deepcopy(F)
             
     def find_rss(self,mesg=False,rootm='hybr',scale=0.0):
         '''
@@ -1862,6 +1806,12 @@ class DSGEmodel(object):
                 pos = ma.span()[0]
                 poe = ma.span()[1]
                 str_tmp = str_tmp[:pos]+'sympycore.exp('+str_tmp[poe:]
+            eexp2 = re.compile('(?<!sympycore\.)E\*\*')
+            while eexp2.search(str_tmp):
+                ma = eexp2.search(str_tmp)
+                pos = ma.span()[0]
+                poe = ma.span()[1]
+                str_tmp = str_tmp[:pos]+'sympycore.E**'+str_tmp[poe:]
             try:
                 func.append(eval(str_tmp))
             except:

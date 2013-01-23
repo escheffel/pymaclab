@@ -19,6 +19,7 @@ import numpy as np
 import pylab as P
 from matplotlib import pyplot as PLT
 import copy as COP
+import subprocess
 from pymaclab.filters import hpfilter
 from pymaclab.filters import bkfilter
 from pymaclab.filters import cffilter
@@ -33,12 +34,136 @@ class MODsolvers(object):
     def __init__(self):
         pass
 
-class Dynare(object):
+
+class Dynarepp(object):
+
+    class __Dynarepp_out(object):
+        '''
+        Inner class used to store dynare++ output if model was successfully solved
+        '''
+        def __init__(self,attdic):
+            for keyo in attdic.keys():
+                self.__setattr__(keyo,COP.deepcopy(attdic[keyo])) 
     
     def __init__(self,attdic):
-        self.attdic = attdic
         for keyo in attdic.keys():
             self.__setattr__(keyo,COP.deepcopy(attdic[keyo]))
+            
+    def solve(self,order=1,per=100,sim=80,rtper=0,rtsim=0,condper=0,condsim=0,centralize=False,\
+              seed=934098,sstol=0.0000000000001,check='pes',checkevals=1000,checknum=10,checkscale=2.0,\
+              focli=None):
+        '''
+        This is a method in order to invokde dynare++ from within a DSGE
+        model instance. This method should never be called directly. Instead it is linked to a function
+        in model.modsolvers.dynare.solve(), which then calls it indirectly so long as dynare++ is installed
+        on your system and in your local PATH.
+        
+        
+        :param self:             The PyMacLab DSGE model instance
+        :type self:              *(dsge_inst)* - A populated DSGE model instance with fields and methods
+        :param order:            The order of approximation used in calculating the solution using dynare++
+        :type order:             int
+        :param centralize:       Should the approximation calculated around the risky steady state?
+        :type centralize:        boolean
+        :param fpath:            A full path name including file name to which dynare++ model file
+                                 translation should be saved
+        :type fpath:             str
+        :param focli:            A list of indeces to pick out selectively equations from the system of FOCs
+        :type focli:             list
+        '''
+        from scipy import io
+        import tempfile
+        import os
+        import glob
+        # Copy the DSGE model instance and make it thus available
+        other = self._other
+        ncpus = other._ncpus
+        mesg = self._mesg
+        
+        # Render the template to be passed to dynare++
+        if mesg: print "Translating PyMacLab model file to dynare++..."
+        modstr = other.translators.pml_to_dynarepp(template_paramdic=other.template_paramdic,focli=focli)
+        self.modfile = modstr
+
+        filo = tempfile.NamedTemporaryFile()
+        fname = filo.name
+        fname2 = fname.split('/')[-1]
+        filo.file.write(modstr)
+        filo.file.flush()
+        if mesg: print "Attempting to solve model using dynare++ (approx. order="+str(order)+")..."
+        if not centralize:
+            os.system('dynare++'+' --check '+check+' --check-num '+str(checknum)\
+                      +' --check-scale '+str(checkscale)\
+                      +' --check-evals '+str(checkevals)+' --ss-tol '+str(sstol)\
+                      +' --seed '+str(seed)+' --per '+str(per)+' --sim '+str(sim)\
+                      +' --rtper '+str(rtper)+' --rtsim '+str(rtsim)+' --condper '+str(condper)\
+                      +' --condsim '+str(condsim)+' --no-centralize'+' --order '+str(order)\
+                      +' --threads '+str(ncpus)+' '+filo.name)
+        else:
+            os.system('dynare++'+' --check '+check+' --check-num '+str(checknum)\
+                      +' --check-scale '+str(checkscale)\
+                      +' --check-evals '+str(checkevals)+' --ss-tol '+str(sstol)\
+                      +' --seed '+str(seed)+' --per '+str(per)+' --sim '+str(sim)\
+                      +' --rtper '+str(rtper)+' --rtsim '+str(rtsim)+' --condper '+str(condper)\
+                      +' --condsim '+str(condsim)+' --centralize'+' --order '+str(order)\
+                      +' --threads '+str(ncpus)+' '+filo.name)
+        dynret = io.loadmat(os.path.join(os.getcwd(),filo.name.split('/')[-1]+'.mat'))
+        # Check if solution has been computed and attache all solution matrices to dynare instance
+        if dynret.has_key('dyn_g_1'):
+            if mesg: print "SUCCESS: Dynare++ successfully computed solution."
+            # Create instance of inner class holding results obtained from dynare++
+            self.dynarepp_out = Dynarepp.__Dynarepp_out(dynret)
+            filo.close()
+            # Delete all of the files
+            for filor in glob.glob(fname2+'*.*'):
+                os.remove(filor)            
+        else:
+            if mesg: print "FAIL: Dynare could not determine solution."
+            filo.close()
+            # Delete all of the files
+            for filor in glob.glob(fname2+'*.*'):
+                os.remove(filor)
+            return False
+
+        ###################################################
+        ## Create some derived solution objects          ##
+        ###################################################
+        # Create some other objects on dynare branch
+        self.sstate = {}
+        self.dynorder = []
+        self.dynsorder = []
+        self.dynsindex = []
+        self.dynindex = []
+        for i1,elem in enumerate(self.dynarepp_out.dyn_vars):
+            if str(elem).strip() in [str(x).strip() for x in self.dynarepp_out.dyn_state_vars]:
+                self.dynsindex.append(i1)
+            else:
+                self.dynindex.append(i1)
+            self.dynorder.append(str(elem).strip()+'(t)')
+            if str(elem).strip()+'_bar' in other.sstate.keys():
+                self.sstate[str(elem).strip()+'_bar'] = self.dynarepp_out.dyn_ss[i1,0]
+                
+        for i1,elem in enumerate(self.dynarepp_out.dyn_state_vars):
+            self.dynsorder.append(str(elem).strip()+'(t)')
+
+        # Create PP and FF matrix reflecting ordering of pymaclab
+        P = np.matlib.zeros([other.nstat,other.nstat])
+        F = np.matlib.zeros([other.ncon,other.nstat])
+        #percP = np.matlib.zeros([other.nstat,other.nstat])
+        #percF = np.matlib.zeros([other.ncon,other.nstat])        
+        listo = [x[0] for x in other.vdic['exo']]+[x[0] for x in other.vdic['endo']]
+        for i1,elem in enumerate(listo):
+            for i2,elem2 in enumerate(listo):
+                P[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
+                #percP[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/self.dynarepp_out.dyn_steady_states[self.dynorder.index(self.dynorder[self.dynsindex[i2]])]
+        for i1,elem in enumerate([x[0] for x in other.vdic['con']]):
+            for i2,elem2 in enumerate(listo):
+                F[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
+                #percF[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/self.dynarepp_out.dyn_steady_states[self.dynorder.index(self.dynorder[self.dynsindex[i2]])]
+        self.P = COP.deepcopy(P)
+        self.F = COP.deepcopy(F)
+        #self.percP = COP.deepcopy(percP)
+        #self.percF = COP.deepcopy(percF)
     
 
 class PyUhlig(MODsolvers):

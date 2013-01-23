@@ -1728,16 +1728,23 @@ def premknonlinsys2(self, secs):
         # substitute out in main nonlinear equation system
         list_tmp2 = deepcopy(self.nlsubs_list)
         mreg = re.compile('@(E\(t.*?\)\|){0,1}.*?\(t.*?\)')
+        # This (below) regex pattern is used to get rid of E**var(t) expressions and replace with EXP(var(t)) instead
+        # this is done so that the pymaclab-to-dynare++ translation can proceed more easily
+        mreg2 = re.compile('E\*\*(?P<varo>.*?(\({0,1}.*?\)){0,1})(?=\+|-|\*|/|\*\*)')
         for i,x in enumerate(list_tmp1):
             rhs_eq = list_tmp1[i]
             while mreg.search(rhs_eq):
                 ma = mreg.search(rhs_eq)
                 subv = ma.group()
                 if subv not in subs_found: subs_found.append(subv)
-                pos, poe = ma.span()
+                pos,poe = ma.span()
                 indx = variables.index(subv)
-                rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+\
-                    rhs_eq[poe:]
+                rhs_eq = rhs_eq[:pos]+'('+list_tmp2[indx][1]+')'+rhs_eq[poe:]
+            while mreg2.search(rhs_eq):
+                ma = mreg2.search(rhs_eq)
+                subv = ma.group('varo')
+                pos,poe = ma.span()
+                rhs_eq = rhs_eq[:pos]+'EXP('+subv+')'+rhs_eq[poe:] 
             list_tmp1[i] = rhs_eq
         i1+=1
     self.foceqs2 = deepcopy(list_tmp1)
@@ -2108,8 +2115,8 @@ def mk_mssidic_subs(self):
             str_tmp = ma.group()
             tmp_list[i1][1] = tmp_list[i1][1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
         locals().update(self.paramdic)
-        tmp_dic = {}
-        tmp_dic[tmp_list[i1][0]] = eval(tmp_list[i1][1])
+        tmp_dic = {}       
+        tmp_dic[tmp_list[i1][0]] = eval(tmp_list[i1][1].replace('EXP(','np.exp(').replace('LOG(','np.log('))
         locals().update(tmp_dic)
         # Update ssidic
         self.ssidic.update(tmp_dic)

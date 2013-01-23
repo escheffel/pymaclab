@@ -5,6 +5,7 @@ def configuration(parent_package='',top_path=None):
     config = Configuration('dsge', parent_package, top_path)
     config.add_subpackage('solvers')
     config.add_subpackage('parsers')
+    config.add_subpackage('translators')
     config.add_subpackage('updaters')
     return config
 

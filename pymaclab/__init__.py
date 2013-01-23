@@ -30,7 +30,7 @@ jobserver = pp.Server(ppservers=ppservers)
 ncpus = jobserver.get_ncpus()
 del jobserver
 del ppservers
-print "PyMacLab started with parallel jobserver using "+str(ncpus)+" cores..."
+print "PyMacLab library loaded with parallel jobserver using "+str(ncpus)+" cores..."
 
 
 # Some helper functions

@@ -124,8 +124,8 @@ class Fsolve(SSsolvers):
                 locals().update(self.paramdic)
                 locals().update(self.nonbardic)
                 fdot = np.zeros((len(func_repr)),float)
-                for i1,x in enumerate(func_repr):
-                    fdot[i1] = eval(x)
+                for i1,x in enumerate(func_repr):                    
+                    fdot[i1] = eval(x.replace('E**','np.e**').replace('EXP(','np.exp(').replace('LOG(','np.log('))
                 return fdot
         else:
             def func(invar):
@@ -133,7 +133,7 @@ class Fsolve(SSsolvers):
                 locals().update(self.nonbardic)
                 fdot = np.zeros((len(func_repr)),float)
                 for i1,x in enumerate(func_repr):
-                    fdot[i1] = eval(x)
+                    fdot[i1] = eval(x.replace('E**','np.e**').replace('EXP(','np.exp(').replace('LOG(','np.log('))
                 return np.sum(np.abs(fdot))
             
 
