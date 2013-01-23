@@ -47,11 +47,13 @@ Dependencies
 -------
 [numpy](http://numpy.scipy.org/) (required)   
 [scipy](http://www.scipy.org/) (required)   
-[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)   
+[sympycore](http://code.google.com/p/sympycore/) (comes supplied with pymaclab)  
+[mako](http://www.makotemplates.org/) (optional - but necessary for dynare++ translator)  
 [pp](http://www.parallelpython.com/) (optional - but highly recommended for speed)   
 [ipython](http://ipython.org/) (optional)   
 [mlabwrap](http://mlabwrap.sourceforge.net/) (optional)   
-[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)   
+[scikits.timeseries](http://pytseries.sourceforge.net/) (optional)  
+[dynare++](http://www.dynare.org/documentation-and-support/dynarepp) (optional - but necessary for dynare++ solution)
 
 While numpy, scipy, and sympycore are absolutely necessary to run PyMacLab, Parallel Python (PP)
 can autodetect multi-core processors and can potentially speed up the computation of elements such as the analytical
@@ -95,4 +97,10 @@ rbc2.modsolvers.pyklein2d.solve()
 # Simulate the models after they have been solved
 rbc1.modsolvers.forkleind.sim(400)
 rbc2.modsolvers.pyklein2d.sim(1000)
+
+# If dynare++ is installed and in your PATH, then you can solve
+# the model alternatively using dynare++ in the background and all 
+# relevant solution attributes get attached to the DSGE model instance
+rbc1.mk_dynare(order=1,centralize=False)
+rbc1.modsolvers.dynare.PP
 ```
