@@ -14,7 +14,6 @@ import numpy.matlib as mat
 import numpy as np
 import sys
 import os
-# This used to import sympycore, but should now also work with sympy
 import sympycore as SP
 
 

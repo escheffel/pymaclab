@@ -24,10 +24,6 @@ from pymaclab.filters import hpfilter
 from pymaclab.filters import bkfilter
 from pymaclab.filters import cffilter
 from isolab import isolab
-try:
-    import mlabraw
-except:
-    pass
 
 
 class MODsolvers(object):
@@ -583,6 +579,8 @@ class PyUhlig(MODsolvers):
         return (A,B,Q,Z)
 
 #----------------------------------------------------------------------------------------------------------------------
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
 class MatUhlig:
 
     def __init__(self,intup):
@@ -733,7 +731,11 @@ class MatUhlig:
             pass
         finally:
             return
+'''
+#########################################################################################################################
 #----------------------------------------------------------------------------------------------------------------------
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
 class MatKlein:
 
     def __init__(self,intup):
@@ -830,7 +832,11 @@ class MatKlein:
             pass
         finally:
             return
+'''
+#########################################################################################################################
 #----------------------------------------------------------------------------------------------------------------------
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
 class MatKleinD:
 
     def __init__(self,intup):
@@ -1054,7 +1060,11 @@ class MatKleinD:
         mlabraw.eval(sess1,'cd Klein')
         mlabraw.put(sess1,'gradm',self.gradm)
         mlabraw.put(sess1,'hessm',self.hessm)
-#----------------------------------------------------------------------------------------------------------------------
+'''
+#########################################################################################################################
+
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
 class MatWood:
 
     def __init__(self,intup):
@@ -1140,6 +1150,99 @@ class MatWood:
         self.F = np.matrix(mlabraw.get(sess1,'F'))
         self.G = np.matrix(mlabraw.get(sess1,'G'))
         self.H = np.matrix(mlabraw.get(sess1,'H'))
+'''
+#########################################################################################################################
+
+#----------------------------------------------------------------------------------------------------------------------
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
+class MatWood:
+
+    def __init__(self,intup):
+        self.jAA = intup[0]
+        self.jBB = intup[1]
+        self.nexo = intup[2]
+        self.ncon = intup[3]
+        self.nendo = intup[4]
+        self.sess1 = intup[5]
+        self.NY = self.ncon+self.nendo
+        self.NK = self.nendo
+        self.NX = self.nexo
+        self.mkwoodm()
+
+    def solve(self):
+        self.reds()
+        self.solds()
+
+    def mkwoodm(self):
+        AA = self.jAA
+        BB = self.jBB
+        nendo = self.nendo
+        nexo = self.nexo
+        ncon = self.ncon
+        nstates = nexo+nendo
+
+        wAA = MAT.hstack((AA[:-nexo,nstates:],AA[:-nexo,nexo:nstates]))
+        #wAA = MAT.hstack((AA[:,nstates:],AA[:,:nstates]))
+        wBB = MAT.hstack((BB[:-nexo,nstates:],BB[:-nexo,nexo:nstates]))
+        #wBB = MAT.hstack((BB[:,nstates:],BB[:,:nstates]))
+        wCC = BB[:-nexo,:nexo]
+        #wCC = MAT.zeros((ncon+nstates,1))
+
+
+        self.wAA = wAA
+        self.wBB = wBB
+        self.wCC = wCC
+
+    def reds(self):
+        A = self.wAA
+        B = self.wBB
+        C = self.wCC
+        NX = self.NX
+        NK = self.NK
+        NY = self.NY
+        sess1 = self.sess1
+        mlabraw.eval(sess1,'clear all;')
+        mlabraw.eval(sess1,'cd '+mlabpath)
+        mlabraw.eval(sess1,'cd Woodford')
+        mlabraw.put(sess1,'wAA',A)
+        mlabraw.put(sess1,'wBB',B)
+        mlabraw.put(sess1,'wCC',C)
+        mlabraw.put(sess1,'NX',NX)
+        mlabraw.put(sess1,'NY',NY)
+        mlabraw.put(sess1,'NK',NK)
+        mlabraw.eval(sess1,'[Br,Cr,Lr,NF] = redsf(wAA,wBB,wCC,NY,NX,NK)')
+        self.Br = np.matrix(mlabraw.get(sess1,'Br'))
+        self.Cr = np.matrix(mlabraw.get(sess1,'Cr'))
+        self.Lr = np.matrix(mlabraw.get(sess1,'Lr'))
+        self.NF = np.matrix(mlabraw.get(sess1,'NF'))
+
+    def solds(self):
+        Br = self.Br
+        Cr = self.Cr
+        Lr = self.Lr
+        NF = self.NF
+        NX = self.NX
+        NK = self.NK
+        NY = self.NY
+        sess1 = self.sess1
+        mlabraw.eval(sess1,'clear all;')
+        mlabraw.eval(sess1,'cd '+mlabpath)
+        mlabraw.eval(sess1,'cd Woodford')
+        mlabraw.put(sess1,'Br',Br)
+        mlabraw.put(sess1,'Cr',Cr)
+        mlabraw.put(sess1,'Lr',Lr)
+        mlabraw.put(sess1,'NF',NF)
+        mlabraw.put(sess1,'NX',NX)
+        mlabraw.put(sess1,'NY',NY)
+        mlabraw.put(sess1,'NK',NK)
+        mlabraw.eval(sess1,'[D,F,G,H] = soldsf(Br,Cr,Lr,NY,NX,NK,NF)')
+        self.D = np.matrix(mlabraw.get(sess1,'D'))
+        self.F = np.matrix(mlabraw.get(sess1,'F'))
+        self.G = np.matrix(mlabraw.get(sess1,'G'))
+        self.H = np.matrix(mlabraw.get(sess1,'H'))
+'''
+#########################################################################################################################
 #----------------------------------------------------------------------------------------------------------------------
 class ForKlein:
 
@@ -2533,6 +2636,8 @@ class PyKlein2D(object):
         return "Your plot has been save in: "+fpath
 
 #----------------------------------------------------------------------------------------------------------------------
+############### ALL MATLAB-DEPENDENT CLASSES ARE NOW RETIRED AND ARE NO LONGER LOADED ANYWHERE !!! ######################
+'''
 class MatKlein2D(PyKlein2D):
 
     def __init__(self,intup):
@@ -2559,6 +2664,8 @@ class MatKlein2D(PyKlein2D):
         self.G = np.matrix(mlabraw.get(sess1,'gg'))
         self.KX = np.matrix(mlabraw.get(sess1,'kx'))
         self.KY = np.matrix(mlabraw.get(sess1,'ky'))
+'''
+#########################################################################################################################
 #----------------------------------------------------------------------------------------------------------------------
 class ForKleinD(PyKlein2D):
 

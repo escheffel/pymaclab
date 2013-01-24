@@ -7,6 +7,8 @@ def configuration(parent_package='',top_path=None):
     config.add_subpackage('parsers')
     config.add_subpackage('translators')
     config.add_subpackage('updaters')
+    config.add_subpackage('inits')
+    config.add_subpackage('helpers')
     return config
 
 if __name__ == '__main__':

@@ -1,11 +1,8 @@
 '''
 .. module:: pymaclab
    :platform: Linux
-   :synopsis: The var module contains the VAR class for estimating and doing further work with Vector Autoregressions commonly
-              used in applied macroeconometrics. It supports advanced methods such as bootstrapping confidence intervals including
-              Killian's boostrap-after-bootstrap small-sample bias correction. Also CPU-intensive methods such as the bootstrap can
-              be computed using Parallel Python to exploit multi-core CPUs. Pretty plotting methods are also included which depend
-              on matplotlib.
+   :synopsis: This is the module initialising the pymaclab library.
+              When the library gets loaded everything in this module gets called.
 
 .. moduleauthor:: Eric M. Scheffel <eric.scheffel@nottingham.edu.cn>
 
@@ -13,7 +10,8 @@
 '''
 
 import os as OPS
-from dsge import macrolab
+# Loading like this because the _dsge module used to be called macrolab
+from pymaclab.dsge import _dsge as macrolab
 from stats import var
 from stats import favar
 import linalg
