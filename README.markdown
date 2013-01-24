@@ -56,7 +56,7 @@ Features at a Glance
 * Benefit from a large and growing set of convenience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
 * Carry out advanced empirical macroeconometric analyses using the VAR and FAVAR classes which come provided.
 * Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.
-* Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab. You can easily programm extension for pymaclab, you *cannot* for dynare!
+* Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab. You can easily programm extensions for pymaclab, you *cannot* do this easily for Dynare or Dynare++!
 * PyMacLab is free as in freedom and distributed under a Apache 2.0 license.
 
 
