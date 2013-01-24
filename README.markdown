@@ -42,6 +42,24 @@ the project (using Latex) as:
 }
 ```
 
+Features at a Glance
+--------------------
+* No “paper-and-pencil” linearization required, done automatically by parsing a DSGE model file.
+* Solutions based on *analytical* computation of Jacobian and Hessian of models using Sympycore.
+* DSGE models are Python DSGE class *instances*, treat them as if they were *ordinary data structures*, pass them around, copy them, stack them into arrays, and work with many of them simultaneously!
+* Loop over a DSGE model instance thousands of times to alter the parameter space, each time re-computing the solution.
+* Choose from closed form or non-linear steady state solvers or a combination of both. Many options provided for solving for a model's steady state.
+* Choose from a number of tried and tested perturbation methods, such as Klein’s 1st order accurate and Klein & Gomme’s 2nd order accurate methods.
+* If you have dynare++ installed on your computer, pymaclab provides a convenient wrapper/translation module to allow it to be used from inside pymaclab.
+* Solving models is as fast as using optimized compiled C or Fortran code, expensive computation of analytical Jacobian and Hessian employs parallelized multi-core CPU approach.
+* DSGE example models are provided, including very complex ones such as the one based on Christiano, Eichenbaum and Evans (2001) [9].
+* Benefit from a large and growing set of convenience methods to simulate models and plot filtered simulated series as well as impulse-response functions.
+* Carry out advanced empirical macroeconometric analyses using the VAR and FAVAR classes which come provided.
+* Use PyMacLab as a free Python library within a rich and rapidly evolving Python software ecosystem for scientists.
+* Enjoy the power, flexibility and extensibility of the Python programming language and the open-source transparency of PyMacLab. You can easily programm extension for pymaclab, you *cannot* for dynare!
+* PyMacLab is free as in freedom and distributed under a Apache 2.0 license.
+
+
 
 Dependencies
 -------
