@@ -111,7 +111,7 @@ class DSGEmodel(object):
 
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
-                 use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
+                 use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'iid':[0,1],'con':[0,1]}):
         jobserver.wait()
         if sstate != None:
             self._sstate = deepcopy(sstate)
@@ -479,7 +479,8 @@ class DSGEmodel(object):
             vars['endo'].append(x[0].split('(')[0])
         for x in self.vardic['exo']['var']:
             vars['exo'].append(x[0].split('(')[0])
-            vars['iid'].append(x[2].split('(')[0])
+        for x in self.vardic['iid']['var']:
+            vars['iid'].append(x[0].split('(')[0])
         for x in self.vardic['other']['var']:
             if '|' in x[0]:
                 vars['other'].append(x[0].split('|')[1].split('(')[0])
@@ -601,7 +602,7 @@ class DSGEmodel(object):
             elif vtype == 'con':
                 posx = [x[0].split('(')[0] for x in self.vardic['con']['var']].index(var)
             elif vtype == 'iid':
-                posx = [x[2].split('(')[0] for x in self.vardic['exo']['var']].index(var)
+                posx = [x[0].split('(')[0] for x in self.vardic['iid']['var']].index(var)
             elif vtype == 'other':
                 posx = [x[0] for x in self.vardic['other']['var']].index(alcap)
 
@@ -647,7 +648,7 @@ class DSGEmodel(object):
                 elif vtype == 'con':
                     posx = [x[0].split('(')[0] for x in self.vardic['con']['var']].index(var)
                 elif vtype == 'iid':
-                    posx = [x[2].split('(')[0] for x in self.vardic['exo']['var']].index(var)
+                    posx = [x[0].split('(')[0] for x in self.vardic['iid']['var']].index(var)
                 elif vtype == 'other':
                     posx = [x[0] for x in self.vardic['other']['var']].index(alcap)
                 if ma.groupdict().has_key('itime'):
@@ -716,6 +717,23 @@ class DSGEmodel(object):
             endo_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['endo']['var']]
         elif vtiming['endo'][1] > 0:
             endo_1 = [x[0].split('(')[0]+'(t+'+str(vtiming['endo'][1])+')' for x in self.vardic['endo']['var']]
+
+        # Timing assumptions, iid variables
+        # For past
+        if vtiming['iid'][0] < 0:
+            iid_0 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['iid'][0]))+')' for x in self.vardic['iid']['var']]
+        elif vtiming['iid'][0] == 0:
+            iid_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['iid']['var']]
+        elif vtiming['iid'][0] > 0:
+            iid_0 = [x[0].split('(')[0]+'(t+'+str(vtiming['iid'][0])+')' for x in self.vardic['iid']['var']]
+        # For future
+        if vtiming['iid'][1] < 0:
+            iid_1 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['iid'][1]))+')' for x in self.vardic['iid']['var']]
+        elif vtiming['iid'][1] == 0:
+            iid_1 = [x[0].split('(')[0]+'(t)' for x in self.vardic['iid']['var']]
+        elif vtiming['iid'][1] > 0:
+            iid_1 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['iid'][1])+')' for x in self.vardic['iid']['var']]
+
             
         # Timing assumptions, control variables
         # For past
@@ -738,10 +756,12 @@ class DSGEmodel(object):
         differvardic['exo_1'] = exo_1
         differvardic['endo_0'] = endo_0
         differvardic['endo_1'] = endo_1
+        differvardic['iid_0'] = iid_0
+        differvardic['iid_1'] = iid_1
         differvardic['con_0'] = con_0
         differvardic['con_1'] = con_1
         self.differvardic = deepcopy(differvardic)
-        return exo_0,exo_1,endo_0,endo_1,con_0,con_1
+        return exo_0,exo_1,endo_0,endo_1,iid_0,iid_1,con_0,con_1
 
     def mkjahe(self):
         '''
@@ -821,14 +841,6 @@ class DSGEmodel(object):
                 poe = y[3][1]
                 vari = y[0]
                 str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
-            list2 = self.vreg(('{-10,10}|None','iid','{-10,10}'),str_tmp,True,'max')
-            if list2:
-                list2.reverse()
-                for y in list2:
-                    pos = y[3][0]
-                    poe = y[3][1]
-                    vari = y[0]
-                    str_tmp = str_tmp[:pos]+'0.0'+str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
             elog = re.compile('LOG\(')
             while elog.search(str_tmp):
@@ -1085,15 +1097,19 @@ class DSGEmodel(object):
         
         import sympycore
         
-        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
+        exo_0,exo_1,endo_0,endo_1,iid_0,iid_1,con_0,con_1 = self.def_differ_periods()
         
-        inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
+        inlist = exo_1+endo_1+iid_1+con_1+exo_0+endo_0+iid_0+con_0
         intup=tuple(inlist)
 
-        patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+        patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
         nlsys = copy.deepcopy(self.nlsys_list)
+        
+        # Add the forecast equations of the iid variables to the FOC system, i.e. E(t)|eps(t+1) = 0;
+        for varo in iid_1:
+            nlsys.append(varo)
 
         if 'nlsubsys' in dir(self):
             lsubs = len(self.nlsubsys)
@@ -1132,15 +1148,6 @@ class DSGEmodel(object):
                 poe = y[3][1]
                 vari = y[0]
                 str_tmp = str_tmp[:pos] + dicli[vari] +str_tmp[poe:]
-            # Take out the IID variables as they don't matter for computation of derivative matrices
-            list2 = self.vreg(('{-10,10}|None','iid','{-10,10}'),str_tmp,True,'max')
-            if list2:
-                list2.reverse()
-                for y in list2:
-                    pos = y[3][0]
-                    poe = y[3][1]
-                    vari = y[0]
-                    str_tmp = str_tmp[:pos] + '0.0' +str_tmp[poe:]
             # Now substitute out exp and log in terms of sympycore expressions
             elog = re.compile('LOG\(')
             while elog.search(str_tmp):
@@ -1171,9 +1178,11 @@ class DSGEmodel(object):
         list1 = [x[1] for x in self.vardic['endo']['var']]
         list1 = list1 + [x[1] for x in self.vardic['con']['var']]
         list1 = list1 + [x[1] for x in self.vardic['exo']['var']]
+        list1 = list1 + [x[1] for x in self.vardic['iid']['var']]
         list2 = [x for x in self.vardic['endo']['mod']]
         list2 = list2 + [x for x in self.vardic['con']['mod']]
         list2 = list2 + [x for x in self.vardic['exo']['mod']]
+        list2 = list2 + [x for x in self.vardic['iid']['mod']]
         if self.vardic['other']['var']:
             list1 = list1 + [x[1] for x in self.vardic['other']['var']]
             list2 = list2 + [x for x in self.vardic['other']['mod']]
@@ -1438,11 +1447,11 @@ class DSGEmodel(object):
         '''
         mk_hessian = self._mk_hessian
         
-        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
-        inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
+        exo_0,exo_1,endo_0,endo_1,iid_0,iid_1,con_0,con_1 = self.def_differ_periods()
+        inlist = exo_1+endo_1+iid_1+con_1+exo_0+endo_0+iid_0+con_0
         intup=tuple(inlist)
 
-        patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+        patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
         nlsys = deepcopy(self.nlsys_list)
@@ -1470,9 +1479,11 @@ class DSGEmodel(object):
         list1 = [x[1] for x in self.vardic['endo']['var']]
         list1 = list1 + [x[1] for x in self.vardic['con']['var']]
         list1 = list1 + [x[1] for x in self.vardic['exo']['var']]
+        list1 = list1 + [x[1] for x in self.vardic['iid']['var']]
         list2 = [x for x in self.vardic['endo']['mod']]
         list2 = list2 + [x for x in self.vardic['con']['mod']]
         list2 = list2 + [x for x in self.vardic['exo']['mod']]
+        list2 = list2 + [x for x in self.vardic['iid']['mod']]
         if self.vardic['other']['var']:
             list1 = list1 +  [x[1] for x in self.vardic['other']['var']]
             list2 = list2 +  [x for x in self.vardic['other']['mod']]
@@ -1591,11 +1602,11 @@ class DSGEmodel(object):
         # import local sympycore
         import sympycore
         
-        exo_0,exo_1,endo_0,endo_1,con_0,con_1 = self.def_differ_periods()
-        inlist = exo_1+endo_1+con_1+exo_0+endo_0+con_0
+        exo_0,exo_1,endo_0,endo_1,iid_0,iid_1,con_0,con_1 = self.def_differ_periods()
+        inlist = exo_1+endo_1+iid_1+con_1+exo_0+endo_0+iid_0+con_0
         intup=tuple(inlist)
 
-        patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+        patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
         jcols = len(intup)
         jrows = len(self.nlsys_list)
         nlsys = deepcopy(self.nlsys_list)
@@ -1623,9 +1634,11 @@ class DSGEmodel(object):
         list1 = [x[1] for x in self.vardic['endo']['var']]
         list1 = list1 + [x[1] for x in self.vardic['con']['var']]
         list1 = list1 + [x[1] for x in self.vardic['exo']['var']]
+        list1 = list1 + [x[1] for x in self.vardic['iid']['var']]
         list2 = [x for x in self.vardic['endo']['mod']]
         list2 = list2 + [x for x in self.vardic['con']['mod']]
         list2 = list2 + [x for x in self.vardic['exo']['mod']]
+        list2 = list2 + [x for x in self.vardic['iid']['mod']]
         if self.vardic['other']['var']:
             list1 = list1 +  [x[1] for x in self.vardic['other']['var']]
             list2 = list2 +  [x for x in self.vardic['other']['mod']]

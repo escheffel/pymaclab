@@ -1,9 +1,11 @@
-%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-This is just a standard RBC model, as you can see.
+from mako.template import Template
 
+template = """\
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is just a dynare++ to pymaclab translated file which does not possess any model desc.
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-Name = Standard RBC Model, NUM-SS;
+Name = dynarepp-to-pymaclab translated model;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -13,34 +15,21 @@ betta     = 1.0/1.01;
 eta	  = 2.0; 
 psi	  = 0.95;
 z_bar     = 1.0;
-eps_bar   = 0.0;
-sigma_eps = 0.052; 
-
+sigma_eps = 0.052;
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]  k(t):capital{endo}[log,bk]
 [2]  c(t):consumption{con}[log,bk]
 [4]  y(t):output{con}[log,bk]
 [4]  R(t):rrate{con}[log,bk]
-[5]  z(t):productivity{exo}[log,bk]
-[6]  eps(t):prod_shock{iid}[]
+[5]  z(t):eps(t):productivity{exo}[log,bk]
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
 
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-[2]   @inv_bar  = SS{@inv(t)};
-[2]   @F(t)     = z(t-1)*k(t-1)**rho;
-[2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
-[2]   @Fk_bar   = SS{@Fk(t)};
-[2]   @F_bar    = SS{@F(t)};
-[4]   @U(t)     = @I{eta!=1.0}{c(t)**(1-eta)/(1-eta)}+@I{eta==1.0}{LOG(c(t))};
-[5]   @MU(t)    = DIFF{@U(t),c(t)};
-[5]   @MU_bar   = SS{@U(t)};
-[6]   @MU(t+1)  = FF_1{@MU(t)};
-
+None
 
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -58,15 +47,12 @@ None
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
-[1]   y_bar-@inv_bar-c_bar = 0;
-[2]   y_bar-@F_bar = 0;
-[3]   betta*R_bar-1 = 0;
-[4]   R_bar-(1+@Fk_bar-delta) = 0;
 
 [1]   c_bar = 1.0;
 [2]   y_bar = 1.0;
 [2]   k_bar = 1.0;
 [3]   R_bar = 1.01;
+
 
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None
@@ -77,3 +63,10 @@ Sigma = [sigma_eps**2];
 
 
 %End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+
+"""
+
+mako_pml_template = Template(template)

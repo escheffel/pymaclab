@@ -15,6 +15,7 @@ betta     = 0.95;
 gamma     = 2.0; 
 rho	  = 0.0;
 z_bar     = 1.0;
+eps_bar   = 0.0;
 sigma_eps = 1.0; 
 
 
@@ -23,7 +24,8 @@ sigma_eps = 1.0;
 [2]  c(t):consumption{con}[log,bk]
 [4]  y(t):output{con}[log,bk]
 [4]  R(t):rrate{con}[log,bk]
-[5]  z(t):eps(t):productivity{exo}[log,bk]
+[5]  z(t):productivity{exo}[log,bk]
+[6]  eps(t):prod_shock{iid}[]
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

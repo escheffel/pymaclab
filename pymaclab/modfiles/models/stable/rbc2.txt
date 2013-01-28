@@ -19,6 +19,8 @@ R_bar	= 1.01;
 eta	= 2.0;
 #Autocorrelation shock 
 psi	= 0.95;
+#Steady State of IID Shock
+eps_bar	= 0.0;
 #Steady State of Shock
 z_bar	= 1.0;
 # Standard Deviation Shock
@@ -32,7 +34,8 @@ l_bar	= 1.0/3.0;
 [2]  c(t):consumption{con}[log,hp]
 [4]  l(t):labour{con}[log,hp]
 [5]  lam(t):lambda{con}[log,hp]
-[5]  z(t):eps(t):productivity{exo}[log,hp]
+[5]  z(t):productivity{exo}[log,hp]
+[6]  eps(t):prod_shock{iid}[]
 [6]  @inv(t):investment[log,hp]
 [7]  @w(t):wage[log,hp]
 [8]  @R(t):interest[log,hp]

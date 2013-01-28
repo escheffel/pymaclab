@@ -37,6 +37,17 @@ def expose_testing(scopedic=None):
 	for elem in modpdic.keys():
 		exec elem+'='+'"'+modpdic[elem]+'"' in scopedic
 
+# Now do for abcs_rbcs branch
+def expose_abcs_rbcs(scopedic=None):
+	fcont = os.listdir(os.path.join(root_dir,'modfiles/models/abcs_rbcs'))
+	modfiles = [x for x in fcont if x[-4:] == '.txt']
+	modpdic = {}
+	for modo in modfiles:
+		modpdic[modo.split('.')[0]] = os.path.join(root_dir,'modfiles/models/abcs_rbcs',modo)
+	# Now expose the model files' paths to the local scope to make it accessible for users
+	for elem in modpdic.keys():
+		exec elem+'='+'"'+modpdic[elem]+'"' in scopedic
+
 
 # Now delete the objects we no longer want in this namespace
 def delete_all():

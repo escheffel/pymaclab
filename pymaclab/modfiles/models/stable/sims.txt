@@ -12,6 +12,7 @@ delta     = 0.0;
 alpha     = 0.3;
 rho       = 0.0;
 gamma     = 2.0;
+eps_bar   = 0.0;
 z_bar     = 1.0;
 sigma_eps = 1.0; 
 
@@ -19,7 +20,8 @@ sigma_eps = 1.0;
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]  k(t):capital{endo}[log,hp]
 [2]  c(t):consumption{con}[log,hp]
-[3]  z(t):eps(t):productivity{exo}[log,hp]
+[3]  z(t):productivity{exo}[log,hp]
+[6]  eps(t):prod_shock{iid}[]
 [4]  @y(t):output[log,hp]
 
 

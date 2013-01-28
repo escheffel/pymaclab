@@ -18,6 +18,7 @@ delta      = 0.025;
 rho        = 0.95;
 a1         = (g+delta)**(1.0/xi);
 a2         = (g+delta)/(1.0-xi);
+eps_bar    = 0.0;
 z_bar      = 1.0;
 sigma_eps  = 0.01;
 
@@ -27,7 +28,8 @@ sigma_eps  = 0.01;
 [2]   c(t):consumption{con}[log,cf]
 [3]   inv(t):investment{con}[log,cf]
 [4]   mu(t):mwealth{con}[log,cf]
-[5]   z(t):eps(t):productivity{exo}[log,cf]
+[5]   z(t):productivity{exo}[log,cf]
+[6]   eps(t):prod_shock{iid}[]
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

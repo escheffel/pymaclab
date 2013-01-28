@@ -19,6 +19,7 @@ rho_z    = 0.95;
 psi      = 0.07;
 a        = 0.05;
 c0       = 0.005;
+epsz_bar = 0.0;
 z_bar    = 1.0;
 A_g      = 1.0;
 sigma_z  = 0.007;
@@ -37,7 +38,8 @@ sigma_z  = 0.007;
 [10] inv(t):investment{con}[log,cf]
 [11] r(t):real_rate{con}
 [12] w(t):wage{con}[log,cf]
-[13] z(t):epsz(t):productivity{exo}[log,cf]
+[13] z(t):productivity{exo}[log,cf]
+[14] epsz(t):prod_shock{iid}[]
 
 
 %Boundary Conditions+++++++++++++++++++++++++++++++++
@@ -95,7 +97,7 @@ None
 # Defintion of aggregate output, y(t)
 [7]   y(t)-@F(t) = 0;
 # Law of motion of productivity shock, z(t)
-[8]   (z(t)/z(t-1)**rho_z)-epsz(t) = 0;
+[8]   z(t)-rho_z*LOG(z(t-1))-epsz(t) = 0;
 # Definition of the real rate of return on capital, r(t)
 [9]   r(t)-1-@Fk(t)+delta = 0;
 # Definition of the return on labour (i.e. wage rate), w(t)

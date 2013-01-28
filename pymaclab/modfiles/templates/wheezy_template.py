@@ -60,9 +60,18 @@ None
 @if vardic:
 @for x,y,z in zip(vardic['exo']['var'],vardic['exo']['mod'],[str(z+1) for z in range(len(vardic['exo']['var']))]):
 @if len(y) == 2: 
-[@z]   @x[0]:@x[2]:@x[1]{exo}[@y[0],@y[1]]
+[@z]   @x[0]:@x[1]{exo}[@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[2]:@x[1]{exo}
+[@z]   @x[0]:@x[1]{exo}
+@end
+@end
+@end
+@if vardic:
+@for x,y,z in zip(vardic['iid']['var'],vardic['iid']['mod'],[str(z+1) for z in range(len(vardic['iid']['var']))]):
+@if len(y) == 2: 
+[@z]   @x[0]:@x[1]{iid}[@y[0],@y[1]]
+@else:
+[@z]   @x[0]:@x[1]{iid}
 @end
 @end
 @end

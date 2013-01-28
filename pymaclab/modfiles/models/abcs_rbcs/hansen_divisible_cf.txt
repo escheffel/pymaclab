@@ -1,0 +1,109 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is Hansen's RBC model taken from McCandless' "ABCs of RBCs".
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Hansen's RBC Model, CLOSED FORM SS;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+theta     = 0.36;
+delta     = 0.025;
+betta     = 0.99;
+A         = 1.72;
+gamma	  = 0.95;
+eps_bar   = 0.0;
+sigma_eps = 0.052; 
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,bk]
+[2]  c(t):consumption{con}[log,bk]
+[3]  h(t):labour{con}[log,bk]
+[4]  l(t):leisure{con}[log,bk]
+[4]  w(t):real_wage{con}[log,bk]
+[5]  r(t):real_rate_capital{con}[log,bk]
+[4]  y(t):output{con}[log,bk]
+[5]  lam(t):productivity{exo}[log,bk]
+[6]  eps(t):prod_shock{iid}[]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+[1]   @inv(t)     = k(t)-(1-delta)*k(t-1);
+[2]   @inv_bar    = SS{@inv(t)};
+
+# Production function and derivatives
+[2]   @F(t)       = lam(t-1)*k(t-1)**theta*h(t)**(1-theta);
+[2]   @F_bar      = SS{@F(t)};
+[2]   @Fk(t)      = DIFF{@F(t),k(t-1)};
+[2]   @Fk(t+1)    = FF_1{@Fk(t)};
+[2]   @Fk_bar     = SS{@Fk(t)};
+[2]   @Fh(t)      = DIFF{@F(t),h(t)};
+[2]   @Fh(t+1)    = FF_1{@Fh(t)};
+[2]   @Fh_bar     = SS{@Fh(t)};
+
+# Utility function and derivatives
+[4]   @U(t)       = LOG(c(t))+A*LOG(1-h(t));
+[5]   @MU_c(t)    = DIFF{@U(t),c(t)};
+[5]   @MU_c_bar   = SS{@MU_c(t)};
+[6]   @MU_c(t+1)  = FF_1{@MU_c(t)};
+[5]   @MU_h(t)    = DIFF{@U(t),h(t)};
+[5]   @MU_h_bar   = SS{@MU_h(t)};
+[6]   @MU_h(t+1)  = FF_1{@MU_h(t)};
+
+
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the non-linear FOCs in format g(x)=0
+
+# The economy's budget constraint
+[1]   y(t)-@inv(t)-c(t) = 0;
+
+# The economy's time constraint
+[2]   1-l(t)-h(t) = 0;
+
+# Defining the real return on physical capital
+[3]   r(t)-@Fk(t) = 0;
+
+# Defining the economy's real wage
+[4]   w(t)-@Fh(t) = 0;
+
+# The MRS between consumption and leisure
+[5]   (A*c(t))/(1-h(t))-w(t) = 0;
+
+# The asset equation for bonds
+[2]   betta*(@MU_c(t+1)/@MU_c(t))*(1+E(t)|r(t+1)-delta)-1.0 = 0;
+
+# The production function
+[3]   y(t)-@F(t) = 0;
+
+# The evolution of technology
+[5]   LOG(lam(t))-gamma*LOG(lam(t-1))-eps(t) = 0;
+
+
+%Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  lam_bar = 1.0;
+[2]  h_bar   = 1/(1+(A/(1-theta)*(1-(betta*delta*theta)/(1-betta*(1-delta)))));
+[3]  k_bar   = h_bar*(theta*lam_bar/((1/betta)-(1-delta)))**(1/(1-theta));
+[4]  l_bar   = 1.0 - h_bar;
+[5]  y_bar   = @F_bar;
+[6]  c_bar   = y_bar-delta*k_bar;
+[7]  w_bar   = @Fh_bar;
+[8]  r_bar   = @Fk_bar;
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_eps**2];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

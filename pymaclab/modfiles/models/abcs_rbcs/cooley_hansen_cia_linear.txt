@@ -1,0 +1,89 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is Cooley and Hansen's cash-in-advance monetary RBC model
+taken from McCandless' "ABCs of RBCs".
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Cooley and Hansen's CIA-RBC Model, CLOSED FORM SS;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+theta      = 0.36;
+delta      = 0.025;
+betta      = 0.99;
+A          = 1.72;
+h_0        = 0.583;
+B          = A*LOG(1-h_0)/h_0;
+gamma	   = 0.95;
+lam_bar    = 1.0;
+mg_bar     = 1.0;
+m_bar      = 1.0;
+pi_bar     = 0.48;
+epsg_bar   = 0.0;
+epsu_bar   = 0.0;
+sigma_epsg = 0.0036;
+sigma_epsu = 0.01;
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  r(t):real_rate_capital{con}[log,bk]
+[2]  w(t):real_wage{con}[log,bk]
+[3]  h(t):labour{con}[log,bk]
+[4]  p(t):rprice{con}[log,bk]
+[5]  k(t):capital{endo}[log,bk]
+[6]  lam(t):productivity{exo}[log,bk]
+[7]  mg(t):mgrowth{exo}[log,bk]
+[8]  epsg(t):prod_shock{iid}[]
+[9]  epsu(t):mgro_shock{iid}[]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  r_bar   = (1/betta)-(1-delta);
+[2]  w_bar   = (1-theta)*(r_bar/theta)**(theta/(theta-1.0));
+[3]  c_bar   = -(betta*w_bar)/(mg_bar*B);
+[4]  p_bar   = 1/c_bar;
+[5]  k_bar   = c_bar/((r_bar/theta)-delta);
+[6]  h_bar   = (r_bar/theta)**(1/(1-theta))*k_bar;
+[7]  l_bar   = 1.0-h_bar;
+[8]  y_bar   = c_bar+delta*k_bar;
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Insert here the log-linearized FOCs in format g(x)=0
+
+[1] k_bar*k(t)-(1/p_bar)*p(t)-w_bar*h_bar*w(t)-w_bar*h_bar*h(t)-r_bar*k_bar*r(t)-...
+    r_bar*k_bar*k(t-1)-(1-delta)*k_bar*k(t-1) = 0;
+
+[2] r(t)-lam(t-1)-(theta-1)*k(t-1)+(theta-1)*h(t) = 0;
+
+[3] w(t)-lam(t-1)-theta*k(t-1)+theta*h(t) = 0;
+
+[4] p(t)+w(t)-pi_bar*mg(t-1) = 0;
+
+[5] w(t)+betta*r_bar*E(t)|r(t+1)-E(t)|w(t+1) = 0;
+
+[6] lam(t)-gamma*lam(t-1)-epsg(t) = 0;
+
+[7] mg(t)-pi_bar*mg(t-1)-epsu(t) = 0;
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_epsg**2  0;
+         0  sigma_epsu**2];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

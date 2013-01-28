@@ -61,8 +61,10 @@ chi                     = 1.0;
 chitil                  = 1.0;
 # steady state share of government expenditure in gdp
 sg                      = 0.18;
+epsg_bar               = 0.0;
 # steady state technology
 z_bar                   = 1.0;
+epsz_bar               = 0.0;
 # Tobin's q
 qq_bar                  = 1.0;
 # Parameter scaling standard deviations of exog shocks
@@ -79,7 +81,7 @@ sigma_g                 = 0.02;
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  z(t):eps_z(t):techshock{exo}[log,hp]
+[1]  z(t):techshock{exo}[log,hp]
 [2]  qq(t):tobinq{con}[log,hp]
 [3]  r(t):nrate{con}
 [4]  s(t):distoy{endo}[log,hp]
@@ -89,13 +91,15 @@ sigma_g                 = 0.02;
 [8]  output(t):output{con}[log,hp]
 [17] iv(t):investment{con}[log,hp]
 [2]  w(t):rwage{con}[log,hp]
-[9]  g(t):eps_g(t):govspending{exo}[log,hp]
+[9]  g(t):govspending{exo}[log,hp]
 [10] c(t):consumption{con}[log,hp]
 [11] la(t):marutilc{con}[log,hp]
 [12] pai(t):inflation{con}[log,hp]
 [13] u(t):caputil{con}[log,hp]
 [14] f2(t):prec2{con}[log,hp]
 [15] x2(t):wrec2{con}[log,hp]
+[15] epsg(t):gov_shock{iid}[]
+[15] epsz(t):tech_shock{iid}[]
 
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -170,9 +174,9 @@ None
 [13] -stil(t)+(1-alphatil)*(@wtil(t)/w(t))**(-etatil)+alphatil*...
      (w(t-1)/w(t))**(-etatil)*(pai(t)/pai(t-1)**chitil)**etatil*stil(t-1) = 0;
 # government purchase law of motion (shock)
-[14] LOG(g(t)/g_bar)-rho_g*LOG(g(t-1)/g_bar) = 0;
+[14] LOG(g(t)/g_bar)-rho_g*LOG(g(t-1)/g_bar)-epsg(t) = 0;
 # technology shock evolution
-[15] LOG(z(t))-rho_z*LOG(z(t-1)) = 0;
+[15] LOG(z(t))-rho_z*LOG(z(t-1))-epsz(t) = 0;
 
 
 %Steady State Non-Linear System [Manual]++++++++++++++++++++++++++++++++++++++++++++++++

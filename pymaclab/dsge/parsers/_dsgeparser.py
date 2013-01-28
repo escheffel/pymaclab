@@ -45,6 +45,8 @@ def populate_model_stage_one(self, secs):
         audic['exo'] = {}
         vardic['con'] = {}
         audic['con'] = {}
+        vardic['iid'] = {}
+        audic['iid'] = {}
         vardic['other'] = {}
         vardic['endo']['var'] = []
         vardic['endo']['mod'] = []
@@ -52,6 +54,8 @@ def populate_model_stage_one(self, secs):
         vardic['exo']['mod'] = []
         vardic['con']['var'] = []
         vardic['con']['mod'] = []
+        vardic['iid']['var'] = []
+        vardic['iid']['mod'] = []
         vardic['other']['var'] = []
         vardic['other']['mod'] = []
         audic['endo']['var'] = []
@@ -60,6 +64,8 @@ def populate_model_stage_one(self, secs):
         audic['con']['mod'] = []
         audic['exo']['var'] = []
         audic['exo']['mod'] = []
+        audic['iid']['var'] = []
+        audic['iid']['mod'] = []
 
         for x in secs['varvec'][0]:
             if viiexp.search(x):
@@ -113,9 +119,10 @@ def populate_model_stage_one(self, secs):
 
         self.nendo = len(vardic['endo']['var'])
         self.nexo = len(vardic['exo']['var'])
+        self.niid = len(vardic['iid']['var'])
         self.ncon = len(vardic['con']['var'])
         self.nother = len(vardic['other']['var'])
-        self.nstat = self.nendo+self.nexo
+        self.nstat = self.nendo+self.nexo+self.niid
         self.nall = self.nstat+self.ncon
         self.vardic = vardic
         self.audic = audic
@@ -154,8 +161,10 @@ from __future__ import division
             list_tmp = list_tmp[0].split('=')[:]
             str_tmp1 = list_tmp[0].strip()
             str_tmp2 = list_tmp[1].strip()
+            str_tmp2 = str_tmp2.replace('LOG(','np.log(')
             #NOTE: this *should* be safe, but users should know what's
             # in the .mod file
+            import numpy as np
             exec(safe_div + "param['"+str_tmp1+"']=" + str_tmp2, {}, locals())
             locals()[str_tmp1] = param[str_tmp1]
         self.paramdic = param
@@ -290,7 +299,7 @@ from __future__ import division
 
 
 ############# BELOW HERE IS ALL FOR 2ND STAGE ###########
-def def_timing(self,exo=[-1,0],endo=[-1,0],con=[0,1]):
+def def_timing(self,exo=[-1,0],endo=[-1,0],iid=[0,1],con=[0,1]):
     '''
     A small method which can be used in order to set the timings in stone.
     This will then be used in other parts of the code, also in macrolab package
@@ -298,6 +307,7 @@ def def_timing(self,exo=[-1,0],endo=[-1,0],con=[0,1]):
     self.vtiming = {}
     self.vtiming['endo'] = deepcopy(endo)
     self.vtiming['exo'] = deepcopy(exo)
+    self.vtiming['iid'] = deepcopy(iid)
     self.vtiming['con'] = deepcopy(con)
     
     return self
@@ -1011,8 +1021,7 @@ def ff_chron_str(self,str1='',ff_int=1,vtype='all'):
     patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
     reg_li = self.vreg(patup,str1,True,'max')
     if type(reg_li) == type(False):
-        print "ERROR at: ",str1
-        sys.exit()    
+        return str1
     var_li = list(reg_li)
     var_li.reverse()
     for varo in var_li:
@@ -1075,7 +1084,11 @@ def bb_chron_str(self,str1='',bb_int=1,vtype='all'):
     _mregv1b = '(?<!E)\(t(?P<oper>[\+|-]{0,1})(?P<counto>\d{0,2})\)'
     mregv1b = re.compile(_mregv1b)    
     patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
-    var_li = list(self.vreg(patup,str1,True,'max'))
+    var_li = self.vreg(patup,str1,True,'max')
+    if type(var_li) == type(False):
+        return str1
+    else:
+        var_li = list(var_li)
     var_li.reverse()
     for varo in var_li:
         if vtype != 'all' and varo[1][0] != vtype:
@@ -1128,13 +1141,12 @@ def ss_chron_str(self,str1=''):
     '''
     This turns all variables in an algebraic string expression into steady state equivalents.
     '''
-    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
-    try:
-        var_li = list(self.vreg(patup,str1,True,'max'))
-    except:
-        print "Model parsing error, problem with processing this text string:\n"+"'"+str1+"'."
-        sys.exit()
-
+    patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
+    var_li = self.vreg(patup,str1,True,'max')
+    if type(var_li) == type(False):
+        return str1
+    else:
+        var_li = list(var_li)
     var_li.reverse()
     for varo in var_li:
         varn = varo[0]
@@ -1153,18 +1165,10 @@ def chg_vtimings(self,eqli,vdico):
             diffli = list(np.array(vdico[keyo]) - np.array(vtiming[keyo]))
             if diffli[0] < 0:
                 for i1,lino in enumerate(eqli):
-                    if keyo == 'exo':
-                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype=keyo)
-                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype='iid')
-                    else:
-                        eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype=keyo)
+                    eqli[i1] = bb_chron_str(self,str1=eqli[i1],bb_int=abs(diffli[0]),vtype=keyo)
             elif diffli[0] > 0:
                 for i1,lino in enumerate(eqli):
-                    if keyo == 'exo':
-                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype=keyo)
-                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype='iid')
-                    else:
-                        eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype=keyo)
+                    eqli[i1] = ff_chron_str(self,str1=eqli[i1],ff_int=abs(diffli[0]),vtype=keyo)
     return eqli
 
 def mk_steady(self):
@@ -1188,7 +1192,7 @@ def mk_steady(self):
 
 def mk_steady2(self):
     list_tmp2 = deepcopy(self.foceqs2)
-    patup = ('{-10,10}|None','endo|con|exo|other','{-10,10}')
+    patup = ('{-10,10}|None','endo|con|exo|iid|other','{-10,10}')
     vreg = self.vreg
     for i1,elem in enumerate(list_tmp2):
         varli = list(vreg(patup,list_tmp2[i1],True,'max'))
@@ -1829,7 +1833,7 @@ def mknonlinsys(self, secs):
     self.nexo = len(self.vardic['exo']['var'])
     self.ncon = len(self.vardic['con']['var'])
     self.nother = len(self.vardic['other']['var'])
-    self.nstat = self.nendo+self.nexo
+    self.nstat = self.nendo+self.nexo+self.niid
     self.nall = self.nstat+self.ncon
 
     self.nlsys_list = deepcopy(list_tmp1)
@@ -2266,7 +2270,7 @@ def populate_model_stage_two(self, secs):
     if all([False if 'None' in x else True for x in secs['modeq'][0]]):
         llsys_list = mkloglinsys1(secs)
         self.llsys_list = mkloglinsys2(self,llsys_list)
-        self.llsys_list = subs_in_loglinsys(self)
+        if 'nlsubs' in dir(self): self.llsys_list = subs_in_loglinsys(self)
         # Save for template instantiation
         self.template_paramdic['llsys_list'] = deepcopy(self.llsys_list)
         self = mksymsys(self) # creates symbolic and numerical system

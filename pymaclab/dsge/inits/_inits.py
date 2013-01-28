@@ -106,7 +106,10 @@ class Inits(object):
         secs = txtpars.secs # do we need txtpars attached for anything else?
         if mesg: print "INIT: Extraction of info into DSGE model instance Stage [1]..."
         # Initial population method of model, does NOT need steady states
-        other = populate_model_stage_one(other, secs)
+        if txtpars.fmt == 'pymaclab':
+            other = populate_model_stage_one(other, secs)
+        elif txtpars.fmt == 'dynarepp':
+            pml_modfile = dynarepp_to_pml_translate(secs=secs)
 
         if not no_wrap:
             # Open updaters path
@@ -517,21 +520,25 @@ class Inits(object):
             if mesg: print "INIT: Computing DSGE model's log-linearized solution using Uhlig's Toolbox..."
 
             # Open the native Uhlig object
-            intup = ((other.nendo,other.ncon,other.nexo),
+            intup = ((other.nendo,other.ncon,other.nexo,other.niid),
                  other.eqindx,
                  other.vreg,
                  other.llsys_list,
                  other.diffli1,
-                 other.diffli2)
+                 other.diffli2,
+                 other._vtiming,
+                 other.vardic)
             other.modsolvers.pyuhlig = PyUhlig(intup)
 
             # Open the Fortran Klein object
-            intup = ((other.nendo,other.ncon,other.nexo),
+            intup = ((other.nendo,other.ncon,other.nexo,other.niid),
                  other.eqindx,
                  other.vreg,
                  other.llsys_list,
                  other.diffli1,
-                 other.diffli2)
+                 other.diffli2,
+                 other._vtiming,
+                 other.vardic)
             other.modsolvers.forklein = ForKlein(intup)
     ################## 1ST-ORDER NON-LINEAR METHODS !!! ##################
         if all([False if 'None' in x else True for x in secs['focs'][0]]):
@@ -568,7 +575,7 @@ class Inits(object):
             if 'nlsubsys' in dir(other):
                 intup = (other.derivatives.numj,
                      other.nendo,other.nexo,
-                     other.ncon,other.sigma,
+                     other.ncon,other.niid,other.sigma,
                      other.derivatives.jAA,other.derivatives.jBB,
                      other.vardic,other.vdic,
                      other.mod_name,other.audic,
@@ -577,7 +584,7 @@ class Inits(object):
             else:
                 intup = (other.derivatives.numj,
                      other.nendo,other.nexo,
-                     other.ncon,other.sigma,
+                     other.ncon,other.niid,other.sigma,
                      other.derivatives.jAA,other.derivatives.jBB,
                      other.vardic,other.vdic,
                      other.mod_name,other.audic)
@@ -593,7 +600,7 @@ class Inits(object):
             if 'nlsubsys' in dir(other):
                 intup = (other.derivatives.numj,other.derivatives.numh,
                      other.nendo,other.nexo,
-                     other.ncon,other.sigma,
+                     other.ncon,other.niid,other.sigma,
                      other.derivatives.jAA,other.derivatives.jBB,
                      other.vardic,other.vdic,
                      other.mod_name,other.audic,
@@ -602,7 +609,7 @@ class Inits(object):
             else:
                 intup = (other.derivatives.numj,other.derivatives.numh,
                      other.nendo,other.nexo,
-                     other.ncon,other.sigma,
+                     other.ncon,other.niid,other.sigma,
                      other.derivatives.jAA,other.derivatives.jBB,
                      other.vardic,other.vdic,
                      other.mod_name,other.audic)

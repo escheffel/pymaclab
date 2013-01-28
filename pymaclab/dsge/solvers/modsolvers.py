@@ -12,8 +12,8 @@
 
 from numpy import matlib as MAT
 from numpy import linalg as LIN
-from numpy.linalg import matrix_rank
-from .. import helpers as HLP
+from numpy.linalg import matrix_rank, inv
+from pymaclab.dsge.helpers import _helpers as HLP
 from scipy.linalg import qz
 import numpy as np
 import pylab as P
@@ -47,7 +47,7 @@ class Dynarepp(object):
             
     def solve(self,order=1,per=100,sim=80,rtper=0,rtsim=0,condper=0,condsim=0,centralize=False,\
               seed=934098,sstol=0.0000000000001,check='pes',checkevals=1000,checknum=10,checkscale=2.0,\
-              focli=None):
+              focli=None,ssidic=None):
         '''
         This is a method in order to invokde dynare++ from within a DSGE
         model instance. This method should never be called directly. Instead it is linked to a function
@@ -66,6 +66,8 @@ class Dynarepp(object):
         :type fpath:             str
         :param focli:            A list of indeces to pick out selectively equations from the system of FOCs
         :type focli:             list
+        :param ssidic:           A dictionary of provided initial values for nonlinear SS solver
+        :type ssidic:            dic
         '''
         from scipy import io
         import tempfile
@@ -78,7 +80,16 @@ class Dynarepp(object):
         
         # Render the template to be passed to dynare++
         if mesg: print "Translating PyMacLab model file to dynare++..."
-        modstr = other.translators.pml_to_dynarepp(template_paramdic=other.template_paramdic,focli=focli)
+        tmpdic = {}
+        if ssidic != None:
+            tmpdic.update(other.template_paramdic)
+            tmpdic['ssidic'].update(ssidic)
+            tmpdic['ssili'] = []
+            for itemo in ssidic.items():
+                tmpdic['ssili'].append([itemo[0],itemo[1]])
+        else:
+            tmpdic.update(other.template_paramdic)
+        modstr = other.translators.pml_to_dynarepp(template_paramdic=tmpdic,focli=focli)
         self.modfile = modstr
 
         filo = tempfile.NamedTemporaryFile()
@@ -130,6 +141,11 @@ class Dynarepp(object):
         self.dynsorder = []
         self.dynsindex = []
         self.dynindex = []
+        other = self._other
+        vardic = other.vardic
+        sstate = other.paramdic
+        sstate.update(other.sstate)
+
         for i1,elem in enumerate(self.dynarepp_out.dyn_vars):
             if str(elem).strip() in [str(x).strip() for x in self.dynarepp_out.dyn_state_vars]:
                 self.dynsindex.append(i1)
@@ -145,21 +161,36 @@ class Dynarepp(object):
         # Create PP and FF matrix reflecting ordering of pymaclab
         P = np.matlib.zeros([other.nstat,other.nstat])
         F = np.matlib.zeros([other.ncon,other.nstat])
-        #percP = np.matlib.zeros([other.nstat,other.nstat])
-        #percF = np.matlib.zeros([other.ncon,other.nstat])        
+        percP = np.matlib.zeros([other.nstat,other.nstat])
+        percF = np.matlib.zeros([other.ncon,other.nstat])
+        convarlog = [(True if 'log' in x else False) for x in vardic['con']['mod']]
+        svarlog = [(True if 'log' in x else False) for x in vardic['exo']['mod']]
+        svarlog += [(True if 'log' in x else False) for x in vardic['endo']['mod']]
+        svarlog += [(True if 'log' in x else False) for x in vardic['iid']['mod']]      
+        listos = [x[0] for x in other.vdic['exo']]+[x[0] for x in other.vdic['endo']]+[x[0] for x in other.vdic['iid']]
         listo = [x[0] for x in other.vdic['exo']]+[x[0] for x in other.vdic['endo']]
         for i1,elem in enumerate(listo):
-            for i2,elem2 in enumerate(listo):
+            for i2,elem2 in enumerate(listos):
                 P[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
-                #percP[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/self.dynarepp_out.dyn_steady_states[self.dynorder.index(self.dynorder[self.dynsindex[i2]])]
+                # We need to exclude cases where i1 == i2 because if the original variable on lhs was in logs then no division by SS
+                if svarlog[i1] and i1 != i2:
+                    percP[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/sstate[elem.split('(')[0]+'_bar']
+                else:
+                    percP[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
         for i1,elem in enumerate([x[0] for x in other.vdic['con']]):
-            for i2,elem2 in enumerate(listo):
+            for i2,elem2 in enumerate(listos):
                 F[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
-                #percF[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/self.dynarepp_out.dyn_steady_states[self.dynorder.index(self.dynorder[self.dynsindex[i2]])]
-        self.P = COP.deepcopy(P)
-        self.F = COP.deepcopy(F)
-        #self.percP = COP.deepcopy(percP)
-        #self.percF = COP.deepcopy(percF)
+                # We need to exclude cases where i1 == i2 because if the original variable on lhs was in logs then no division by SS
+                if convarlog[i1]:
+                    percF[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]/sstate[elem.split('(')[0]+'_bar']
+                else:
+                    percF[i1,i2] = self.dynarepp_out.dyn_g_1[self.dynorder.index(elem),self.dynsorder.index(elem2)]
+        nexo = other.nexo
+        nendo = other.nendo
+        self.P = MAT.matrix(COP.deepcopy(P))[:nendo+nexo,:nendo+nexo]
+        self.F = MAT.matrix(COP.deepcopy(F))[:,:]
+        self.percP = MAT.matrix(COP.deepcopy(percP))[:nendo+nexo,:nendo+nexo]
+        self.percF = MAT.matrix(COP.deepcopy(percF))[:,:]
     
 
 class PyUhlig(MODsolvers):
@@ -168,12 +199,15 @@ class PyUhlig(MODsolvers):
         self.nendo = self.ntup[0]
         self.ncon = self.ntup[1]
         self.nexo = self.ntup[2]
+        self.niid = self.ntup[3]
 
         self.eqindx = intup[1]
         self.vreg = intup[2]
         self.llsys_list = intup[3]
         self.diffli1 = intup[4]
         self.diffli2 = intup[5]
+        self.vtiming = intup[6]
+        self.vardic = intup[7]
         diffli1 = self.diffli1
         diffli2 = self.diffli2
 
@@ -228,20 +262,21 @@ class PyUhlig(MODsolvers):
         expdif2 = self.expdif2
         errdif1 = self.errdif1
         errdif2 = self.errdif2
+        vtime = self.vtiming
 
         # Create argument list for matrix creation
-        argli = [['AA',(detdif2,detdif1),deteq,(len(deteq),nendo),(None,'endo','0')],
-             ['BB',(detdif2,detdif1),deteq,(len(deteq),nendo),(None,'endo','-1')],
-             ['CC',(detdif2,detdif1),deteq,(len(deteq),ncon),(None,'con','0')],
-             ['DD',(detdif2,detdif1),deteq,(len(deteq),nexo),(None,'exo','0')],
-             ['FF',(expdif2,expdif1),expeq,(len(expeq),nendo),('0','endo','1')],
-             ['GG',(expdif2,expdif1),expeq,(len(expeq),nendo),(None,'endo','0')],
-             ['HH',(expdif2,expdif1),expeq,(len(expeq),nendo),(None,'endo','-1')],
-             ['JJ',(expdif2,expdif1),expeq,(len(expeq),ncon),('0','con','1')],
-             ['KK',(expdif2,expdif1),expeq,(len(expeq),ncon),(None,'con','0')],
-             ['LL',(expdif2,expdif1),expeq,(len(expeq),nexo),('0','exo','1')],
-             ['MM',(expdif2,expdif1),expeq,(len(expeq),nexo),(None,'exo','0')],
-             ['NN',(errdif2,errdif1),erreq,(len(erreq),nexo),(None,'exo','0')]]
+        argli = [['A',(detdif2,detdif1),deteq,(len(deteq),nendo),(None,'endo',str(vtime['endo'][1]))],
+             ['B',(detdif2,detdif1),deteq,(len(deteq),nendo),(None,'endo',str(vtime['endo'][0]))],
+             ['C',(detdif2,detdif1),deteq,(len(deteq),ncon),(None,'con',str(vtime['con'][0]))],
+             ['D',(detdif2,detdif1),deteq,(len(deteq),nexo),(None,'exo',str(vtime['exo'][0]))],
+             ['F',(expdif2,expdif1),expeq,(len(expeq),nendo),('0','endo',str(vtime['endo'][1]+1))],
+             ['G',(expdif2,expdif1),expeq,(len(expeq),nendo),(None,'endo',str(vtime['endo'][1]))],
+             ['H',(expdif2,expdif1),expeq,(len(expeq),nendo),(None,'endo',str(vtime['endo'][0]))],
+             ['J',(expdif2,expdif1),expeq,(len(expeq),ncon),('0','con',str(vtime['con'][1]))],
+             ['K',(expdif2,expdif1),expeq,(len(expeq),ncon),(None,'con',str(vtime['con'][0]))],
+             ['L',(expdif2,expdif1),expeq,(len(expeq),nexo),('0','exo',str(vtime['exo'][1]))],
+             ['M',(expdif2,expdif1),expeq,(len(expeq),nexo),(None,'exo',str(vtime['exo'][0]))],
+             ['N',(errdif2,errdif1),erreq,(len(erreq),nexo),(None,'exo',str(vtime['exo'][0]))]]
 
         # Create all matrices in a loop over argli
         for argx in argli:
@@ -256,11 +291,19 @@ class PyUhlig(MODsolvers):
                         sXX[y][z[1]] = argx[1][1][y][z[0]]
             exec('self.'+argx[0]+' = XX')
             exec('self.'+'s'+argx[0]+' = sXX')
+        # Change NN matrix by swapping signs
+        self.N = self.N*(-np.matlib.eye(self.N.shape[0]))
 
     def solve(self,sol_method='do_QZ',Xi_select='all'):
         self.output = {}
         self.Xi_select = Xi_select
         self.sol_method = sol_method
+        CC = self.C
+        try:
+            testo = inv(C)
+        except:
+            print "Error: Matrix C is not of full rank!"
+            return False
         if self.sol_method == 'do_PP':
             self.do_PP(self.Xi_select)
         elif self.sol_method == 'do_QZ':
@@ -269,18 +312,18 @@ class PyUhlig(MODsolvers):
 
     def do_QZ(self,Xi_select='all',Tol=1.0000e-06):
         # Make uhlig matrices locally available for computations
-        AA = self.AA
-        BB = self.BB
-        CC = self.CC
-        DD = self.DD
-        FF = self.FF
-        GG = self.GG
-        HH = self.HH
-        JJ = self.JJ
-        KK = self.KK
-        LL = self.LL
-        MM = self.MM
-        NN = self.NN
+        AA = self.A
+        BB = self.B
+        CC = self.C
+        DD = self.D
+        FF = self.F
+        GG = self.G
+        HH = self.H
+        JJ = self.J
+        KK = self.K
+        LL = self.L
+        MM = self.M
+        NN = self.N
         q_expectational_equ = np.shape(FF)[0]
         m_states = np.shape(FF)[1]
         l_equ = np.shape(CC)[0]
@@ -338,11 +381,11 @@ class PyUhlig(MODsolvers):
 
         d_Delta_up = MAT.diag(Delta_up)
         d_Xi_up = MAT.diag(Xi_up)
-        Xi_eigval = MAT.zeros(N.shape(Delta_up))
-        for i1 in range(0,N.shape(Delta_up)[0],1):
+        Xi_eigval = MAT.zeros(np.shape(Delta_up))
+        for i1 in range(0,np.shape(Delta_up)[0],1):
             Xi_eigval[i1,i1] = d_Xi_up[i1]/d_Delta_up[i1]
         d_Xi_eigval = np.diag(Xi_eigval)
-        mat_tmp = MAT.zeros((N.shape(Xi_eigval)[0],3))
+        mat_tmp = MAT.zeros((np.shape(Xi_eigval)[0],3))
         i1=0
         for x in d_Xi_eigval:
             mat_tmp[i1,0] = d_Xi_eigval[i1]
@@ -367,10 +410,10 @@ class PyUhlig(MODsolvers):
         VVV_2_2 = trVVV[m_states:2*m_states,m_states:2*m_states]
         UUU_2_1 = UUU[m_states:2*m_states,0:m_states]
 
-        PP = -(VVV_2_1.I*VVV_2_2)
+        PP = -(inv(VVV_2_1)*VVV_2_2)
         PP = np.real(PP)
 
-        self.PP = PP
+        self.P = PP
         self.CC_plus = CC_plus
 
     def do_PP(self,Xi_select='all'):
@@ -391,7 +434,7 @@ class PyUhlig(MODsolvers):
         m_states = np.shape(FF)[1]
         l_equ = np.shape(CC)[0]
         n_endog = np.shape(CC)[1]
-        k_exog = min(N.shape(NN))
+        k_exog = min(np.shape(NN))
 
 #        if HLP.rank(CC) < n_endog:
         if matrix_rank(CC) < n_endog:
@@ -434,8 +477,8 @@ class PyUhlig(MODsolvers):
                   ))
 
         (Xi_eigvec,Xi_eigval) = HLP.eig(Xi_mat,Delta_mat)
-        tmp_mat = MAT.eye(N.rank(Xi_eigvec))
-        for i1 in range(0,N.rank(Xi_eigvec),1):
+        tmp_mat = MAT.eye(np.rank(Xi_eigvec))
+        for i1 in range(0,np.rank(Xi_eigvec),1):
             tmp_mat[i1,i1] = float(Xi_eigval[0,i1])
         Xi_eigval = tmp_mat
 
@@ -448,7 +491,7 @@ class PyUhlig(MODsolvers):
 
 
         d_Xi_eigval = np.diag(Xi_eigval)
-        mat_tmp = MAT.zeros((N.rank(Xi_eigval),3))
+        mat_tmp = MAT.zeros((np.rank(Xi_eigval),3))
         i1=0
         for x in d_Xi_eigval:
             mat_tmp[i1,0] = d_Xi_eigval[i1]
@@ -476,63 +519,45 @@ class PyUhlig(MODsolvers):
             raise uhlerr, 'uhlerror: Omega_mat is not invertible!!\n\
                   Therefore, solution for PP is not available'
 
-        PP = Omega_mat*HLP.ctr((HLP.ctr(Omega_mat).I*HLP.ctr(Lambda_mat)))
+        PP = Omega_mat*HLP.ctr((inv(HLP.ctr(Omega_mat))*HLP.ctr(Lambda_mat)))
         self.PP = PP
         self.CC_plus = CC_plus
 
     def do_QRS(self):
         # Make uhlig matrices locally available for computations
-        AA = self.AA
-        BB = self.BB
-        CC = self.CC
-        DD = self.DD
-        FF = self.FF
-        GG = self.GG
-        HH = self.HH
-        JJ = self.JJ
-        KK = self.KK
-        LL = self.LL
-        MM = self.MM
-        NN = self.NN
-        PP = self.PP
+        AA = self.A
+        BB = self.B
+        CC = self.C
+        DD = self.D
+        FF = self.F
+        GG = self.G
+        HH = self.H
+        JJ = self.J
+        KK = self.K
+        LL = self.L
+        MM = self.M
+        NN = self.N
+        PP = self.P
         CC_plus = self.CC_plus
         (l_equ,m_states) = MAT.shape(AA)
         (l_equ,n_endog) = MAT.shape(CC)
         (l_equ,k_exog) = MAT.shape(DD)
-        if l_equ == 0:
-            RR = MAT.zeros((0,m_states))
-            VV1 = MAT.kron(MAT.transpose(NN),FF)+MAT.kron(MAT.identity(k_exog),FF*PP+GG)
-            VV2 = MAT.kron(MAT.transpose(NN),JJ)+MAT.kron(MAT.identity(k_exog),KK)
-            VV = MAT.hstack((VV1,VV2))
-        else:
-            RR = -CC_plus*(AA*PP+BB)
-            VV1 = MAT.kron(MAT.identity(k_exog),AA)
-            VV2 = MAT.kron(MAT.identity(k_exog),CC)
-            VV3 = MAT.kron(MAT.transpose(NN),FF)+MAT.kron(MAT.identity(k_exog),FF*PP+JJ*RR+GG)
-            VV4 = MAT.kron(MAT.transpose(NN),JJ)+MAT.kron(MAT.identity(k_exog),KK)
-            VV = MAT.vstack((MAT.hstack((VV1,VV2)),MAT.hstack((VV3,VV4))))
-        self.RR = RR
-
-        LLNN_plus_MM = LL*NN+MM
-        NON = MAT.hstack((DD.flatten(1),LLNN_plus_MM.flatten(1)))
-        try:
-            QQSS_vec = -(VV.I*MAT.transpose(NON))
-        except MyErr:
-            print 'Error: Matrix VV is not invertible!'
-        QQ = QQSS_vec[0:m_states*k_exog,:].reshape(-1,m_states).transpose()
-        SS = QQSS_vec[(m_states*k_exog):((m_states+n_endog)*k_exog),:].reshape(-1,n_endog).transpose()
-        WW1 = MAT.hstack((MAT.identity(m_states),MAT.zeros((m_states,k_exog))))
-        WW2 = MAT.hstack((RR*LIN.pinv(PP),SS-RR*LIN.pinv(PP)*QQ))
-        WW3 = MAT.hstack((MAT.zeros((k_exog,m_states)),MAT.identity(k_exog)))
-        WW = MAT.vstack((WW1,WW2,WW3))
-        self.WW = WW
-        self.QQ = QQ
-        self.SS = SS
+        RR = -CC_plus*(AA*PP+BB)
+        self.R = RR
+        Qone = MAT.kron(NN.T,(FF-JJ*inv(CC)*AA))
+        Qtwo = MAT.kron(MAT.eye(k_exog),(FF*PP+GG+JJ*RR-KK*inv(CC)*AA))
+        Q = Qone+Qtwo
+        invQ = inv(Q)
+        Qthree = ((JJ*inv(CC)*DD-LL)*NN+KK*inv(CC)*DD-MM).T
+        QQ = (invQ*Qthree).T
+        self.Q = QQ
+        SS = -CC_plus*(AA*QQ+DD)
+        self.S = SS
         del self.CC_plus
 
     def qzdiv(self,stake,A,B,Q,Z):
         n = np.shape(A)[0]
-        root = np.hstack((abs(N.mat(N.diag(A)).T),abs(N.mat(N.diag(B)).T)))
+        root = np.hstack((abs(np.mat(np.diag(A)).T),abs(np.mat(np.diag(B)).T)))
         index_mat = (root[:,0]<1e-13).choose(root[:,0],1)
         index_mat = (index_mat>1e-13).choose(root[:,0],0)
         root[:,0] = root[:,0]-MAT.multiply(index_mat,(root[:,0]+root[:,1]))
@@ -559,17 +584,17 @@ class PyUhlig(MODsolvers):
         e = B[i,i+1]
         c = A[i+1,i+1]
         f = B[i+1,i+1]
-        wz = np.mat(N.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
-        xy = np.mat(N.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
-        n = np.mat(N.sqrt(wz*wz.conjugate().T))
-        m = np.mat(N.sqrt(xy*xy.conjugate().T))
+        wz = np.mat(np.hstack(((c*e-f*b),(c*d-f*a).conjugate().T)))
+        xy = np.mat(np.hstack(((b*d-e*a).conjugate().T,(c*d-f*a).conjugate().T)))
+        n = np.mat(np.sqrt(wz*wz.conjugate().T))
+        m = np.mat(np.sqrt(xy*xy.conjugate().T))
         if n.all() == 0:
             return
         else:
             wz = np.mat(wz/n)
             xy = np.mat(xy/m)
-            wz = np.vstack((wz,N.hstack((-wz[:,1].T,wz[:,0].T))))
-            xy = np.vstack((xy,N.hstack((-xy[:,1].T,xy[:,0].T))))
+            wz = np.vstack((wz,np.hstack((-wz[:,1].T,wz[:,0].T))))
+            xy = np.vstack((xy,np.hstack((-xy[:,1].T,xy[:,0].T))))
             A[i:i+2,:] = xy*A[i:i+2,:]
             B[i:i+2,:] = xy*B[i:i+2,:]
             A[:,i:i+2] = A[:,i:i+2]*wz
@@ -1249,35 +1274,36 @@ class ForKlein:
     def __init__(self,intup):
         self.uhlig = PyUhlig(intup)
         self.uhlig.mkmats()
-        self.AA = self.uhlig.AA
-        self.BB = self.uhlig.BB
-        self.CC = self.uhlig.CC
-        self.DD = self.uhlig.DD
-        self.FF = self.uhlig.FF
-        self.GG = self.uhlig.GG
-        self.HH = self.uhlig.HH
-        self.JJ = self.uhlig.JJ
-        self.KK = self.uhlig.KK
-        self.LL = self.uhlig.LL
-        self.MM = self.uhlig.MM
-        self.NN = self.uhlig.NN
+        self.A = self.uhlig.A
+        self.B = self.uhlig.B
+        self.C = self.uhlig.C
+        self.D = self.uhlig.D
+        self.F = self.uhlig.F
+        self.G = self.uhlig.G
+        self.H = self.uhlig.H
+        self.J = self.uhlig.J
+        self.K = self.uhlig.K
+        self.L = self.uhlig.L
+        self.M = self.uhlig.M
+        self.N = self.uhlig.N
         self.mkKleinMats()
+        self.vardic = self.uhlig.vardic
         self.outdic = {}
 
     def mkKleinMats(self):
         # Make uhlig matrices locally available for computations
-        AA = self.AA
-        BB = self.BB
-        CC = self.CC
-        DD = self.DD
-        FF = self.FF
-        GG = self.GG
-        HH = self.HH
-        JJ = self.JJ
-        KK = self.KK
-        LL = self.LL
-        MM = self.MM
-        NN = self.NN
+        AA = self.A
+        BB = self.B
+        CC = self.C
+        DD = self.D
+        FF = self.F
+        GG = self.G
+        HH = self.H
+        JJ = self.J
+        KK = self.K
+        LL = self.L
+        MM = self.M
+        NN = self.N
 
         # Determine size of states, endogenous
         exo_st = MAT.shape(NN)[1]
@@ -1314,19 +1340,92 @@ class ForKlein:
         klein_B = MAT.vstack((klein_B_rone,klein_B_rtwo))
         klein_B = MAT.vstack((klein_B,klein_B_rthree))  
 
-        self.A = klein_A
-        self.B = klein_B
+        self.klein_A = klein_A
+        self.klein_B = klein_B
 
     def solve(self):
-        A = self.A
-        B = self.B
-        tstates = MAT.shape(self.AA)[1] + MAT.shape(self.DD)[1]
-        (F,P,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
+        A = self.klein_A
+        B = self.klein_B
+        tstates = MAT.shape(self.A)[1] + MAT.shape(self.D)[1]
+        (F,P,alpha,betta,retcon) = isolab(A,B,tstates,MAT.shape(A)[0])
+        self.alpha = abs(alpha)
+        self.betta = abs(betta)
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
             self.P = np.matrix(P)
             self.F = np.matrix(F)
+            
+    def pretty_P(self):
+        if 'P' not in dir(self):
+            return "You can only use this method once P has been solved for!"
+        else:
+            print 'Laws of motion for state variables as function of states'
+            print '--------------------------------------------------------\n'
+        P = COP.deepcopy(self.P)
+        stnames = [x[0] for x in self.vardic['exo']['var']+self.vardic['endo']['var']]
+        # Determine longest name
+        varlen = 0
+        for elem in stnames:
+            if len(elem) > varlen: varlen = len(elem)
+        for i1,elem in enumerate(stnames):
+            elemlen = len(elem)
+            restlen = varlen-elemlen
+            str_temp = ''
+            str_temp = elem+restlen*' '+' = '
+            for i2,elem2 in enumerate(stnames):
+                sign = True
+                sign2 = False
+                sign3 = True
+                sign4 = True
+                coefflen = len(str(round(P[i1,i2],4)))
+                addzero = 6-coefflen
+                if str(round(P[i1,i2],4))[0] == '-' or i2 == 0:
+                    sign = False
+                    if i2 != 0:
+                        sign2 = True
+                        sign3 = False
+                    if str(round(P[i1,i2],4))[0] == '-':
+                        sign4 = False
+                        addzero += 1
+                str_temp += (sign4*sign3)*' '+sign2*' - '+sign*'+ '+sign3*str(round(P[i1,i2],4))+sign2*str(round(P[i1,i2],4))[1:]+'0'*addzero+'*'+elem2.split('(')[0]+'(t-1)'
+            print str_temp+'\n'
+            
+    def pretty_F(self):
+        if 'F' not in dir(self):
+            return "You can only use this method once F has been solved for!"
+        else:
+            print 'Laws of motion for control variables as function of states'
+            print '----------------------------------------------------------\n'
+        F = COP.deepcopy(self.F)
+        stnames = [x[0] for x in self.vardic['exo']['var']+self.vardic['endo']['var']]
+        connames = [x[0] for x in self.vardic['con']['var']]
+        # Determine longest name
+        varlen = 0
+        for elem in connames:
+            if len(elem) > varlen: varlen = len(elem)
+        for i1,elem in enumerate(connames):
+            elemlen = len(elem)
+            restlen = varlen-elemlen
+            str_temp = ''
+            str_temp = elem+restlen*' '+' = '
+            for i2,elem2 in enumerate(stnames):
+                sign = True
+                sign2 = False
+                sign3 = True
+                sign4 = True
+                coefflen = len(str(round(F[i1,i2],4)))
+                addzero = 6-coefflen
+                if str(round(F[i1,i2],4))[0] == '-' or i2 == 0:
+                    sign = False
+                    if i2 != 0:
+                        sign2 = True
+                        sign3 = False
+                    if str(round(F[i1,i2],4))[0] == '-':
+                        sign4 = False
+                        addzero += 1
+                str_temp += (sign4*sign3)*' '+sign2*' - '+sign*'+ '+sign3*str(round(F[i1,i2],4))+sign2*str(round(F[i1,i2],4))[1:]+'0'*addzero+'*'+elem2.split('(')[0]+'(t-1)'
+            print str_temp+'\n'
 #----------------------------------------------------------------------------------------------------------------------
 class PyKlein2D(object):
 
@@ -1338,22 +1437,23 @@ class PyKlein2D(object):
         self.nendo = intup[2]
         self.nexo = intup[3]
         self.ncon = intup[4]
-        self.sigma = intup[5]
-        self.A = intup[6]
-        self.B = intup[7]
-        self.vardic = intup[8]
-        self.vdic = intup[9]
-        self.modname = intup[10]
-        self.audic = intup[11]
+        self.niid = intup[5]
+        self.sigma = intup[6]
+        self.A = intup[7]
+        self.B = intup[8]
+        self.vardic = intup[9]
+        self.vdic = intup[10]
+        self.modname = intup[11]
+        self.audic = intup[12]
         self.nacon = len(self.audic['con']['var'])
         self.naendo = len(self.audic['endo']['var'])
         if self.vardic['other']['var']:
-            self.numjl = intup[12]
-            self.numhl = intup[13]
-            self.nother = intup[14]
+            self.numjl = intup[13]
+            self.numhl = intup[14]
+            self.nother = intup[15]
             self.oswitch = 1
             kintup = (self.gra,self.nendo,
-                  self.nexo,self.ncon,
+                  self.nexo,self.ncon,self.niid,
                   self.sigma,self.A,self.B,
                   self.vardic,self.vdic,
                   self.modname,self.audic,
@@ -1361,13 +1461,13 @@ class PyKlein2D(object):
         else:
             self.oswitch = 0
             kintup = (self.gra,self.nendo,
-                  self.nexo,self.ncon,
+                  self.nexo,self.ncon,self.niid,
                   self.sigma,self.A,self.B,
                   self.vardic,self.vdic,
                   self.modname,self.audic)
-        self.tstates = self.nendo+self.nexo
+        self.tstates = self.nendo+self.nexo+self.niid
         self.forkleind = ForKleinD(kintup)
-        self.ssigma = self.mkssigma(self.tstates,self.nexo,self.sigma)
+        self.ssigma = self.mkssigma(self.nendo+self.nexo,self.nexo,self.sigma)
 
     def mkssigma(self,tstates,nexo,sigma):
         ssigma = MAT.zeros((tstates,tstates))
@@ -1418,7 +1518,7 @@ class PyKlein2D(object):
         ve_1 = f2*tracem(MAT.kron(MAT.eye(ny),ssigma)*ee)
         ve_2 = tracem(MAT.kron(MAT.eye(m),HLP.ctr(eyeff))*hes*eyeff*ssigma)
         ve = ve_1 + ve_2
-        kxy = -(ma.I)*ve
+        kxy = -(inv(ma))*ve
         kx = kxy[:nx]
         ky = kxy[nx:]
         self.E = ee
@@ -1469,12 +1569,12 @@ class PyKlein2D(object):
         for varia in MAT.diag(sigma):
             if locals().has_key('ranvec'):
                 if count in indx:
-                    ranvec = MAT.vstack((ranvec,N.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))))
+                    ranvec = MAT.vstack((ranvec,np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))))
                 else:
                     ranvec = MAT.vstack((ranvec,MAT.zeros((1,tlena))))
             else:
                 if count in indx:
-                    ranvec = np.sqrt(varia)*MAT.matrix(N.random.standard_normal(tlena))
+                    ranvec = np.sqrt(varia)*MAT.matrix(np.random.standard_normal(tlena))
                 else:
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
@@ -2676,21 +2776,22 @@ class ForKleinD(PyKlein2D):
         self.nendo = intup[1]
         self.nexo = intup[2]
         self.ncon = intup[3]
-        self.sigma = intup[4]
-        self.A = intup[5]
-        self.B = intup[6]
-        self.vardic = intup[7]
-        self.vdic = intup[8]
-        self.modname = intup[9]
-        self.audic = intup[10]
+        self.niid = intup[4]
+        self.sigma = intup[5]
+        self.A = intup[6]
+        self.B = intup[7]
+        self.vardic = intup[8]
+        self.vdic = intup[9]
+        self.modname = intup[10]
+        self.audic = intup[11]
         if self.vardic['other']['var']:
-            self.numjl = intup[11]
-            self.nother = intup[12]
+            self.numjl = intup[12]
+            self.nother = intup[13]
             self.oswitch = 1
         else:
             self.oswitch = 0
-        self.tstates = self.nendo+self.nexo
-        self.ssigma = self.mkssigma(self.tstates,self.nexo,self.sigma)
+        self.tstates = self.nendo+self.nexo+self.niid
+        self.ssigma = self.mkssigma(self.nendo+self.nexo,self.nexo,self.sigma)
 
     def solve(self):
         A = self.A
@@ -2702,8 +2803,9 @@ class ForKleinD(PyKlein2D):
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
-            self.P = np.matrix(P)
-            self.F = np.matrix(F)
+            # Strip out the iid cols and row
+            self.P = np.matrix(P)[:self.nendo+self.nexo,:self.nendo+self.nexo]
+            self.F = np.matrix(F)[:,:self.nendo+self.nexo]
 
 
     def sim(self,tlen,sntup=None,shockvec=None):
@@ -2726,12 +2828,18 @@ class ForKleinD(PyKlein2D):
         ncon = self.ncon
         nexo = self.nexo
         nendo = self.nendo
-        tstates = self.tstates
+        niid = self.niid
+        tstates = self.tstates-len(self.vardic['iid']['var'])
         tlena = 1000+tlen
         sigma = self.sigma
         ssigma = self.ssigma
         if self.oswitch:
             numjl = self.numjl
+            # We need to take out the "elasticities" w.r.t to the iid shocks
+            numjl = MAT.hstack((numjl[:,:nexo+nendo],
+                                numjl[:,nexo+nendo+niid:nexo+nendo+niid+ncon],
+                                numjl[:,nexo+nendo+niid+ncon:2*nexo+2*nendo+niid+ncon],
+                                numjl[:,2*nexo+2*nendo+2*niid+ncon:2*nexo+2*nendo+2*niid+2*ncon]))
 
         pp = self.P
         ff = self.F
@@ -2817,12 +2925,18 @@ class ForKleinD(PyKlein2D):
         ncon = self.ncon
         nexo = self.nexo
         nendo = self.nendo
-        tstates = self.tstates
+        niid = self.niid
+        tstates = self.tstates - len(self.vardic['iid']['var'])
         sigma = self.sigma
         ssigma = self.ssigma
         tlen = tlen
         if self.oswitch:
             numjl = self.numjl
+            # We need to take out the "elasticities" w.r.t to the iid shocks
+            numjl = MAT.hstack((numjl[:,:nexo+nendo],
+                                numjl[:,nexo+nendo+niid:nexo+nendo+niid+ncon],
+                                numjl[:,nexo+nendo+niid+ncon:2*nexo+2*nendo+niid+ncon],
+                                numjl[:,2*nexo+2*nendo+2*niid+ncon:2*nexo+2*nendo+2*niid+2*ncon]))            
 
         pp = self.P
         ff = self.F
@@ -2897,6 +3011,77 @@ class ForKleinD(PyKlein2D):
         if self.oswitch:
             self.irf_o_one = o_one[:,2:]
             self.inirf = self.inirf + [self.irf_o_one,]
+            
+    def pretty_P(self):
+        if 'P' not in dir(self):
+            return "You can only use this method once P has been solved for!"
+        else:
+            print 'Laws of motion for state variables as function of states'
+            print '--------------------------------------------------------\n'
+        P = COP.deepcopy(self.P)
+        stnames = [x[0] for x in self.vardic['exo']['var']+self.vardic['endo']['var']]
+        # Determine longest name
+        varlen = 0
+        for elem in stnames:
+            if len(elem) > varlen: varlen = len(elem)
+        for i1,elem in enumerate(stnames):
+            elemlen = len(elem)
+            restlen = varlen-elemlen
+            str_temp = ''
+            str_temp = elem+restlen*' '+' = '
+            for i2,elem2 in enumerate(stnames):
+                sign = True
+                sign2 = False
+                sign3 = True
+                sign4 = True
+                coefflen = len(str(round(P[i1,i2],4)))
+                addzero = 6-coefflen
+                if str(round(P[i1,i2],4))[0] == '-' or i2 == 0:
+                    sign = False
+                    if i2 != 0:
+                        sign2 = True
+                        sign3 = False
+                    if str(round(P[i1,i2],4))[0] == '-':
+                        sign4 = False
+                        addzero += 1
+                str_temp += (sign4*sign3)*' '+sign2*' - '+sign*'+ '+sign3*str(round(P[i1,i2],4))+sign2*str(round(P[i1,i2],4))[1:]+'0'*addzero+'*'+elem2.split('(')[0]+'(t-1)'
+            print str_temp+'\n'
+            
+    def pretty_F(self):
+        if 'F' not in dir(self):
+            return "You can only use this method once F has been solved for!"
+        else:
+            print 'Laws of motion for control variables as function of states'
+            print '----------------------------------------------------------\n'
+        F = COP.deepcopy(self.F)
+        stnames = [x[0] for x in self.vardic['exo']['var']+self.vardic['endo']['var']]
+        connames = [x[0] for x in self.vardic['con']['var']]
+        # Determine longest name
+        varlen = 0
+        for elem in connames:
+            if len(elem) > varlen: varlen = len(elem)
+        for i1,elem in enumerate(connames):
+            elemlen = len(elem)
+            restlen = varlen-elemlen
+            str_temp = ''
+            str_temp = elem+restlen*' '+' = '
+            for i2,elem2 in enumerate(stnames):
+                sign = True
+                sign2 = False
+                sign3 = True
+                sign4 = True
+                coefflen = len(str(round(F[i1,i2],4)))
+                addzero = 6-coefflen
+                if str(round(F[i1,i2],4))[0] == '-' or i2 == 0:
+                    sign = False
+                    if i2 != 0:
+                        sign2 = True
+                        sign3 = False
+                    if str(round(F[i1,i2],4))[0] == '-':
+                        sign4 = False
+                        addzero += 1
+                str_temp += (sign4*sign3)*' '+sign2*' - '+sign*'+ '+sign3*str(round(F[i1,i2],4))+sign2*str(round(F[i1,i2],4))[1:]+'0'*addzero+'*'+elem2.split('(')[0]+'(t-1)'
+            print str_temp+'\n'
 
 #------------------------currently not called and really not working, removed from init----------------
 class FairTaylor:

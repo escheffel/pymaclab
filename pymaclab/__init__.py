@@ -44,7 +44,7 @@ def db_graph(dbase,tseries):
     P.show()
 
 def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
-           mk_hessian=True,use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}):
+           mk_hessian=True,use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'iid':[0,1],'con':[0,1]}):
     '''
     Model's second intialisation method called by newMOD() function call. The model's
     __init__() method only creates the instance and adds information, but does no
@@ -62,7 +62,7 @@ def newMOD(txtfile=None,dbase=None,initlev=3,mesg=False,ncpus=ncpus,\
             sys.exit()
     # Create a new vtiming so that users can pass only one or two keys at instantiation of model
     # Clearly then vtiming2 represents the standard values which can get updated using vtiming
-    vtiming2={'exo':[-1,0],'endo':[-1,0],'con':[0,1]}
+    vtiming2={'exo':[-1,0],'endo':[-1,0],'iid':[0,1],'con':[0,1]}
     vtiming2.update(vtiming)
     modobj = macrolab.DSGEmodel(txtfile,dbase=dbase,initlev=initlev,mesg=mesg,ncpus=ncpus,\
                                 mk_hessian=mk_hessian,use_focs=use_focs,\

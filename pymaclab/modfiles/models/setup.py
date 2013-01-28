@@ -7,6 +7,7 @@ def configuration(parent_package='',top_path=None):
     config.add_data_dir('stable')
     config.add_data_dir('testing')
     config.add_data_dir('development')
+    config.add_data_dir('abcs_rbcs')
     return config
 
 if __name__ == '__main__':

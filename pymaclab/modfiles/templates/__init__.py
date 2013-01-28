@@ -22,3 +22,9 @@ try:
     from mako_dynare_template import mako_dynare_template
 except:
     pass
+
+try:
+    import mako
+    from mako_pml_template import mako_pml_template
+except:
+    pass
