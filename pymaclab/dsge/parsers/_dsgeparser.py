@@ -68,24 +68,8 @@ def populate_model_stage_one(self, secs):
         audic['iid']['mod'] = []
 
         for x in secs['varvec'][0]:
-            if viiexp.search(x):
-                ma = viiexp.search(x)
-                vari = ma.group('vari').strip()
-                viid = ma.group('viid').strip()
-                varn = ma.group('varn').strip()
-                vtype = ma.group('vtype').strip()
-                mods = ma.group('mod')
-                vardic[vtype]['var'].append([vari,varn,viid])
-                if mods != None:
-                    mods = mods.strip()
-                    if ',' in mods:
-                        vardic[vtype]['mod'].append(mods[1:-1].strip().split(','))
-                    else:
-                        vardic[vtype]['mod'].append([mods[1:-1].strip(),])
-                else:
-                    vardic[vtype]['mod'].append([])
 
-            elif vtexp.search(x):
+            if vtexp.search(x):
                 ma = vtexp.search(x)
                 vari = ma.group('vari').strip()
                 varn = ma.group('varn').strip()
@@ -99,7 +83,7 @@ def populate_model_stage_one(self, secs):
                     else:
                         vardic[vtype]['mod'].append([mods[1:-1].strip(),])
                 else:
-                    vardic[vtype]['mod'].append([])
+                    vardic[vtype]['mod'].append([''])
 
             elif voexp.search(x):
                 ma = voexp.search(x)
@@ -115,7 +99,7 @@ def populate_model_stage_one(self, secs):
                     else:
                         vardic['other']['mod'].append([mods[1:-1].strip(),])
                 else:
-                    vardic['other']['mod'].append([])
+                    vardic['other']['mod'].append([''])
 
         self.nendo = len(vardic['endo']['var'])
         self.nexo = len(vardic['exo']['var'])

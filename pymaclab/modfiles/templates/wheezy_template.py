@@ -42,36 +42,36 @@ None
 @if vardic:
 @for x,y,z in zip(vardic['endo']['var'],vardic['endo']['mod'],[str(z+1) for z in range(len(vardic['endo']['var']))]):
 @if len(y) == 2: 
-[@z]   @x[0]:@x[1]{endo}[@y[0],@y[1]]
+[@z]   @x[0]:@x[1]{endo} [@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[1]{endo}
+[@z]   @x[0]:@x[1]{endo} []
 @end
 @end
 @end
 @if vardic:
 @for x,y,z in zip(vardic['con']['var'],vardic['con']['mod'],[str(z+1) for z in range(len(vardic['con']['var']))]):
 @if len(y) == 2: 
-[@z]   @x[0]:@x[1]{con}[@y[0],@y[1]]
+[@z]   @x[0]:@x[1]{con} [@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[1]{con}
+[@z]   @x[0]:@x[1]{con} []
 @end
 @end
 @end
 @if vardic:
 @for x,y,z in zip(vardic['exo']['var'],vardic['exo']['mod'],[str(z+1) for z in range(len(vardic['exo']['var']))]):
 @if len(y) == 2: 
-[@z]   @x[0]:@x[1]{exo}[@y[0],@y[1]]
+[@z]   @x[0]:@x[1]{exo} [@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[1]{exo}
+[@z]   @x[0]:@x[1]{exo} []
 @end
 @end
 @end
 @if vardic:
 @for x,y,z in zip(vardic['iid']['var'],vardic['iid']['mod'],[str(z+1) for z in range(len(vardic['iid']['var']))]):
 @if len(y) == 2: 
-[@z]   @x[0]:@x[1]{iid}[@y[0],@y[1]]
+[@z]   @x[0]:@x[1]{iid} [@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[1]{iid}
+[@z]   @x[0]:@x[1]{iid} []
 @end
 @end
 @end
@@ -80,7 +80,7 @@ None
 @if len(y) == 2: 
 [@z]   @x[0]:@x[1] [@y[0],@y[1]]
 @else:
-[@z]   @x[0]:@x[1]
+[@z]   @x[0]:@x[1] []
 @end
 @end
 @end

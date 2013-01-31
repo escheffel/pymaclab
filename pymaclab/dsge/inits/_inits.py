@@ -109,7 +109,7 @@ class Inits(object):
         if txtpars.fmt == 'pymaclab':
             other = populate_model_stage_one(other, secs)
         elif txtpars.fmt == 'dynarepp':
-            pml_modfile = dynarepp_to_pml_translate(secs=secs)
+            pml_modfile = dynarepp_to_pml.translate(secs=secs)
 
         if not no_wrap:
             # Open updaters path

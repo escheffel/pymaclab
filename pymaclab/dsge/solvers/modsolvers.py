@@ -16,6 +16,7 @@ from numpy.linalg import matrix_rank, inv
 from pymaclab.dsge.helpers import _helpers as HLP
 from scipy.linalg import qz
 import numpy as np
+import scipy
 import pylab as P
 from matplotlib import pyplot as PLT
 import copy as COP
@@ -294,13 +295,13 @@ class PyUhlig(MODsolvers):
         # Change NN matrix by swapping signs
         self.N = self.N*(-np.matlib.eye(self.N.shape[0]))
 
-    def solve(self,sol_method='do_QZ',Xi_select='all'):
+    def solve(self,sol_method='do_QZ2',Xi_select='all'):
         self.output = {}
         self.Xi_select = Xi_select
         self.sol_method = sol_method
         CC = self.C
         try:
-            testo = inv(C)
+            testo = inv(CC)
         except:
             print "Error: Matrix C is not of full rank!"
             return False
@@ -308,8 +309,77 @@ class PyUhlig(MODsolvers):
             self.do_PP(self.Xi_select)
         elif self.sol_method == 'do_QZ':
             self.do_QZ(self.Xi_select,Tol=1.0000e-06)
+        elif self.sol_method == 'do_QZ2':
+            self.do_QZ2(self.Xi_select,Tol=1.0000e-06)
         self.do_QRS()
 
+    def do_QZ2(self,Xi_select='all',Tol=1.0000e-06):
+        # Make uhlig matrices locally available for computations
+        AA = self.A
+        BB = self.B
+        CC = self.C
+        DD = self.D
+        FF = self.F
+        GG = self.G
+        HH = self.H
+        JJ = self.J
+        KK = self.K
+        LL = self.L
+        MM = self.M
+        NN = self.N
+        q_expectational_equ = np.shape(FF)[0]
+        m_states = np.shape(FF)[1]
+        l_equ = np.shape(CC)[0]
+        n_endog = np.shape(CC)[1]
+        k_exog = min(np.shape(NN))
+        
+        # Do some test
+        if matrix_rank(CC) < n_endog:
+            print 'uhlerror: Rank(CC) needs to be at least\n\
+            equal to the number of endogenous variables'
+            return False
+        
+        # Set up and find the solution to the matrix quadratic polynomial
+        I1 = MAT.eye(m_states)
+        Z1 = MAT.zeros((m_states,m_states))       
+        invC = inv(CC);
+        psy = FF-JJ*invC*AA;
+        lambdar = JJ*invC*BB-GG+KK*invC*AA;
+        TT = KK*invC*BB-HH;
+        AA1 = MAT.vstack((MAT.hstack((lambdar,TT)),
+                          MAT.hstack((I1,Z1))
+                          ))
+        AA2 = MAT.vstack((MAT.hstack((psy,Z1)),
+                          MAT.hstack((Z1,I1))
+                          ))
+
+        # Find the generalized eigenvalues and eigenvectors
+        # Scipy returns eigval,eigvec, BUT Matlab returns eigvec,eigval !!!
+        [eigval,eigvecl,eigvecr] = scipy.linalg.eig(AA1,AA2,left=True,right=True)
+        eigval = MAT.real(eigval)
+        eigvecr = MAT.real(eigvecr)
+        
+        # Generate selection index
+        dtype = [('eigvals',float),('index', float)]
+        values = [(x,i1) for i1,x in enumerate(eigval)]
+        eigval = np.array(values,dtype=dtype)
+        eigval = np.sort(eigval,axis=0,order=['eigvals','index'])
+        eigpick = [x for i1,x in enumerate(eigval) if eigval[i1][0] < 1.0]
+        eigindex = np.array([x[1] for x in eigpick])
+        
+        # Use the selection index on eigval
+        eigval = np.array([x[0] for x in eigpick])
+        
+        # Generate DD and EE matrices and calculate PP
+        DD = MAT.zeros([m_states,m_states])
+        for i1 in range(m_states):
+            DD[i1,i1] = eigval[i1]
+        EE = eigvecr[:,list(eigindex)][-m_states:,:]
+        # Find the matrix P
+        PP = EE*DD*inv(EE)
+        self.P = PP
+        self.CC_plus = LIN.pinv(CC)
+        
     def do_QZ(self,Xi_select='all',Tol=1.0000e-06):
         # Make uhlig matrices locally available for computations
         AA = self.A
@@ -371,11 +441,6 @@ class PyUhlig(MODsolvers):
                       np.concatenate((MAT.zeros((m_states,m_states)),MAT.identity(m_states)),1)\
                   ))
 
-#        (Delta_up,Xi_up,UUU,VVV)=\
-#         HLP.qz(Delta_mat,Xi_mat,\
-#            mode='complex',\
-#            lapackname=lapackname,\
-#            lapackpath=lapackpath)
         (Delta_up,Xi_up,UUU,VVV) = qz(Delta_mat,Xi_mat)
         
 
@@ -542,16 +607,39 @@ class PyUhlig(MODsolvers):
         (l_equ,m_states) = MAT.shape(AA)
         (l_equ,n_endog) = MAT.shape(CC)
         (l_equ,k_exog) = MAT.shape(DD)
+        
+        # Compute the R matrix
         RR = -CC_plus*(AA*PP+BB)
         self.R = RR
         Qone = MAT.kron(NN.T,(FF-JJ*inv(CC)*AA))
         Qtwo = MAT.kron(MAT.eye(k_exog),(FF*PP+GG+JJ*RR-KK*inv(CC)*AA))
         Q = Qone+Qtwo
         invQ = inv(Q)
-        Qthree = ((JJ*inv(CC)*DD-LL)*NN+KK*inv(CC)*DD-MM).T
-        QQ = (invQ*Qthree).T
-        self.Q = QQ
-        SS = -CC_plus*(AA*QQ+DD)
+        self.invQ = invQ
+        Qthree = ((JJ*inv(CC)*DD-LL)*NN+KK*inv(CC)*DD-MM)
+        self.Qthree = Qthree
+        
+        # Some further manipulation to get Q
+        sizo,sizp = Qthree.shape
+        for i1 in range(sizp):
+            if i1 == 0:
+                Qfour = Qthree[:,i1]
+            else:
+                Qfour = MAT.vstack((Qfour,Qthree[:,i1]))
+        self.Qfour = Qfour
+        QQ = invQ*Qfour
+        self.QQ = QQ
+        for i1 in range(sizp):
+            begini = i1*sizo
+            endi = (i1+1)*sizo
+            if i1 == 0:
+                QQQ = QQ[begini:endi,0]
+            else:
+                QQQ = MAT.hstack((QQQ,QQ[begini:endi,0]))
+        self.Q = QQQ
+        
+        # Compute S matrix
+        SS = -CC_plus*(AA*QQQ+DD)
         self.S = SS
         del self.CC_plus
 

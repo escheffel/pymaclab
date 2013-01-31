@@ -41,7 +41,8 @@ The PyMacLab DSGE model file
       [1]  k(t):capital{endo}[log,bk]
       [2]  c(t):consumption{con}[log,bk]
       [4]  y(t):output{con}[log,bk]      
-      [5]  z(t):eps(t):productivity{exo}[log,bk]
+      [5]  z(t):productivity{exo}[log,bk]
+      [6]  eps(t):prod_shock{iid}[]
       [6]  @inv(t):investment[log,bk]
       [7]  @R(t):rrate
 
@@ -52,7 +53,7 @@ The PyMacLab DSGE model file
       %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++
       [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
       [2]   @inv_bar  = SS{@inv(t)};
-      [2]   @F(t)     = z(t)*k(t-1)**rho;
+      [2]   @F(t)     = z(t-1)*k(t-1)**rho;
       [2]   @Fk(t)    = DIFF{@F(t),k(t-1)};
       [2]   @Fk_bar   = SS{@Fk(t)};
       [2]   @F_bar    = SS{@F(t)};
@@ -72,7 +73,7 @@ The PyMacLab DSGE model file
       [1]   @F(t)-@inv(t)-c(t) = 0;
       [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
       [3]   @F(t)-y(t) = 0;
-      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+      [4]   LOG(z(t))-psi*LOG(z(t-1))-eps(t) = 0;
 
 
       %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -156,23 +157,18 @@ A Description of the model file's individual sections
 
    ::
 
-      [1] x(t):var_name{endo|con|exo}[log,hp|bk|cf]
+      [1] x(t):var_name{endo|con|exo|iid}[log,hp|bk|cf]
 
   The first element is a descriptor of how the time-subscripted variable will appear in the system of nonlinear equations. The second
   descriptor is a more revealing but still short name, such as `capital` or `consumption`. It is preferable to write longer variable names
   with an underscore, such as for example `physical_capital` or `human_capital`. Thirdly, the descriptor in curly brackets allows you to
-  specifically mark of each variable as either, control variable, endogenous state or exogenous state variable, using optimal control theory
-  language. These are inserted in abbreviated style using either `con`, `endo` or `exo`.
+  specifically mark of each variable as either, control variable, endogenous state, exogenous state or iid shock variable, using optimal
+  control theory language. These are inserted in abbreviated style using either `con`, `endo`, `exo` or `iid`.
   
   Finally, the last option given enclosed in squared brackets allows for two additional options to be specified. Supplying the keyword `log`
   means that the approximation of the model should be formed about the log of the variable, while the last option allows to supply a filtering
   option which is applied to the computation of results based on simulations of the solved model. Currently available choices are either `hp`
-  for the HP-Filter, `bk` for the Baxter-King-Filter or `cf` for the Christiano-Fitzgerald filter. Notice that for exogenous variables you also
-  have to specify the name of the iid shock:
-  
-    ::
-    
-      [7] x(t):eps(t):var_name{endo|con|exo}[log,hp|bk|cf]
+  for the HP-Filter, `bk` for the Baxter-King-Filter or `cf` for the Christiano-Fitzgerald filter.
 
 *Boundary Conditions Section*
 
@@ -190,7 +186,7 @@ A Description of the model file's individual sections
    ::
 
      [1]   @inv(t)   = k(t)-(1-delta)*k(t-1);
-     [2]   @F(t)     = z(t)*k(t-1)**rho;
+     [2]   @F(t)     = z(t-1)*k(t-1)**rho;
      [3]   @F_bar    = SS{@F(t)};
      [4]   @R(t)     = 1+DIFF{@F(t),k(t-1)}-delta;
      [5]   @R(t+1)   = FF_1{@R(t)};
@@ -301,17 +297,15 @@ A Description of the model file's individual sections
       [1]   @F(t)-@inv(t)-c(t) = 0;
       [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
       [3]   @F(t)-y(t) = 0;
-      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+      [4]   LOG(z(t))-psi*LOG(z(t-1))-eps(t) = 0;
 
   where we have made ample use of the convenient substitution definitions declared in the previous section. Expressions, such as the law of
   motion for the productivity shock, can be supplied in logs for the sake of readability, but otherwise could also alternatively be written as:
 
    ::
 
-      [4]   E(t)|z(t+1)/(z(t)**psi) = 0;
+      [4]   z(t)/(z(t-1)**psi*eps(t)) = 0;
 
-   .. deprecated:: 0.85 In previous versions of PyMacLab it was possible to write down the law of motion of exogenous states without expectations, i.e.
-      `z(t)/(z(t-1)**psi) = 0;`. This behaviour is now deprecated and no longer supported.
 
 *Steady States [Closed Form] Section*
 
@@ -409,7 +403,7 @@ A Description of the model file's individual sections
              LAM_bar*lam(t)+A_bar*MU_bar*mu(t);
       # foc leisure
       [2]   (1-Theta)*c(t)+(Psi*(1-Theta)-1)*x(t)=lam(t)+...
-             z(t)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
+             z(t-1)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
 
   In this case all variables already have to be interpreted as percentage deviations from steady state. Both in this and in the nonlinear FOCs
   section, model equations DO NOT necessarily have to be expressed as `g(x)=0`, but can also be written as `f(x)=g(x)`. In this case the PyMacLab
@@ -447,7 +441,7 @@ A Description of the model file's individual sections
 
 
       [1]   (1-Theta)*c(t)+(Psi*(1-Theta)-1)*x(t)=lam(t)+...
-             z(t)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
+             z(t-1)+(1-alpha)*k(t-1)-(1-alpha)*l(t);
 
   Finally, as is customary from other programming languages, comments can also be inserted into DSGE model files. However, in contrast to other
   languages conventions, such as Python itself, at the moment the library will only parse model files correctly if the comments are on a line of
@@ -504,7 +498,8 @@ More than one way to feed in model properties
       [1]  k(t):capital{endo}[log,bk]
       [2]  c(t):consumption{con}[log,bk]
       [4]  y(t):output{con}[log,bk]      
-      [5]  z(t):eps(t):productivity{exo}[log,bk]
+      [5]  z(t):productivity{exo}[log,bk]
+      [6]  eps(t):prod_shock{iid}[]
       [6]  @inv(t):investment[log,bk]
       [7]  @R(t):rrate
 
@@ -537,7 +532,7 @@ More than one way to feed in model properties
       [1]   @F(t)-@inv(t)-c(t) = 0;
       [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
       [3]   @F(t)-y(t) = 0;
-      [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+      [4]   LOG(z(t))-psi*LOG(z(t-1))-eps(t) = 0;
 
 
       %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -643,7 +638,8 @@ More than one way to feed in model properties
        [1]   k(t):capital{endo}[log,bk]
        [1]   c(t):consumption{con}[log,bk]
        [2]   y(t):output{con}[log,bk]
-       [1]   z(t):eps(t):productivity{exo}[log,bk]
+       [1]   z(t):productivity{exo}[log,bk]
+       [2]   eps(t):prod_shock{iid}[]
        [1]   @inv(t):investment [log,bk]
        [2]   @R(t):rrate
 
@@ -655,24 +651,24 @@ More than one way to feed in model properties
        %Variable Substitution Non-Linear System+++++++++++++
        [1]   @inv(t) = k(t)-(1-delta)*k(t-1);
        [2]   @inv_bar = SS{@inv(t)};
-       [3]   @F(t) = z(t)*k(t-1)**rho;
+       [3]   @F(t) = z(t-1)*k(t-1)**rho;
        [4]   @Fk(t) = DIFF{@F(t),k(t-1)};
        [5]   @Fk_bar = SS{@Fk(t)};
        [6]   @F_bar = SS{@F(t)};
        [7]   @R(t) = 1+DIFF{@F(t),k(t-1)}-delta;
        [8]   @R_bar = SS{@R(t)};
        [9]   @R(t+1) = FF_1{@R(t)};
-       [10]   @U(t) = c(t)**(1-eta)/(1-eta);
-       [11]   @MU(t) = DIFF{@U(t),c(t)};
-       [12]   @MU_bar = SS{@U(t)};
-       [13]   @MU(t+1) = FF_1{@MU(t)};
+       [10]  @U(t) = c(t)**(1-eta)/(1-eta);
+       [11]  @MU(t) = DIFF{@U(t),c(t)};
+       [12]  @MU_bar = SS{@U(t)};
+       [13]  @MU(t+1) = FF_1{@MU(t)};
  
  
        %Non-Linear First-Order Conditions+++++++++++++++++++
        [1]   @F(t)-@inv(t)-c(t) = 0;
        [2]   betta*(@MU(t+1)/@MU(t))*@R(t+1)-1 = 0;
        [3]   @F(t)-y(t) = 0;
-       [4]   LOG(E(t)|z(t+1))-psi*LOG(z(t)) = 0;
+       [4]   LOG(z(t))-psi*LOG(z(t-1))-eps(t) = 0;
  
  
        %Steady States [Closed Form]++++++++++++++++++++++++++

@@ -1,6 +1,7 @@
 %Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 This is Cooley and Hansen's cash-in-advance monetary RBC model
-taken from McCandless' "ABCs of RBCs".
+taken from McCandless' "ABCs of RBCs". This is the manually
+log-linearized version of the model.
 
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -26,11 +27,11 @@ sigma_epsu = 0.01;
 
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  r(t):real_rate_capital{con}[log,bk]
-[2]  w(t):real_wage{con}[log,bk]
-[3]  h(t):labour{con}[log,bk]
-[4]  p(t):rprice{con}[log,bk]
-[5]  k(t):capital{endo}[log,bk]
+[1]  k(t):capital{endo}[log,bk]
+[2]  r(t):real_rate_capital{con}[log,bk]
+[3]  w(t):real_wage{con}[log,bk]
+[4]  h(t):labour{con}[log,bk]
+[5]  p(t):rprice{con}[log,bk]
 [6]  lam(t):productivity{exo}[log,bk]
 [7]  mg(t):mgrowth{exo}[log,bk]
 [8]  epsg(t):prod_shock{iid}[]
@@ -55,8 +56,6 @@ None
 [4]  p_bar   = 1/c_bar;
 [5]  k_bar   = c_bar/((r_bar/theta)-delta);
 [6]  h_bar   = (r_bar/theta)**(1/(1-theta))*k_bar;
-[7]  l_bar   = 1.0-h_bar;
-[8]  y_bar   = c_bar+delta*k_bar;
 
 
 %Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -65,19 +64,26 @@ None
 %Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Insert here the log-linearized FOCs in format g(x)=0
 
+# The budget constraint
 [1] k_bar*k(t)-(1/p_bar)*p(t)-w_bar*h_bar*w(t)-w_bar*h_bar*h(t)-r_bar*k_bar*r(t)-...
     r_bar*k_bar*k(t-1)-(1-delta)*k_bar*k(t-1) = 0;
 
+# Definition of r(t)
 [2] r(t)-lam(t-1)-(theta-1)*k(t-1)+(theta-1)*h(t) = 0;
 
+# Definition of w(t)
 [3] w(t)-lam(t-1)-theta*k(t-1)+theta*h(t) = 0;
 
+# The MRS condition
 [4] p(t)+w(t)-pi_bar*mg(t-1) = 0;
 
+# The Euler asset equation
 [5] w(t)+betta*r_bar*E(t)|r(t+1)-E(t)|w(t+1) = 0;
 
+# The law of motion of technology
 [6] lam(t)-gamma*lam(t-1)-epsg(t) = 0;
 
+# The law of motion of money growth
 [7] mg(t)-pi_bar*mg(t-1)-epsu(t) = 0;
 
 

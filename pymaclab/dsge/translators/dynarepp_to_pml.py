@@ -1,4 +1,4 @@
-def translate(secs=None,fpath=None):
+def translate(secs=None,fpath=None,dyn_vtimings={'exo':[-1,0],'endo':[-1,0],'iid':[0,1],'con':[0,1]}):
     from pymaclab.modfiles.templates import mako_pml_template
     
     # Render the template to be passed to dynare++

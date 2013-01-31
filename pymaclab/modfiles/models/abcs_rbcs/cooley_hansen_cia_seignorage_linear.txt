@@ -1,0 +1,111 @@
+%Model Description+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+This is Cooley and Hansen's cash-in-advance monetary RBC model
+taken from McCandless' "ABCs of RBCs". This version of the model
+contains a government sector which finances its expenditures
+through seignorage.
+
+
+%Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Name = Cooley and Hansen's CIA-RBC Model with government seignorage, CLOSED FORM SS;
+
+
+%Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+theta      = 0.36;
+delta      = 0.025;
+betta      = 0.99;
+A          = 1.72;
+h_0        = 0.583;
+B          = A*LOG(1-h_0)/h_0;
+gamma	   = 0.95;
+lam_bar    = 1.0;
+pi_bar     = 0.48;
+g_bar      = 0.01;
+epsz_bar   = 0.0;
+epsg_bar   = 0.0;
+sigma_epsg = 0.0036;
+sigma_epsu = 0.01;
+
+
+%Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[1]  k(t):capital{endo}[log,bk]
+[2]  r(t):real_rate_capital{con}[log,bk]
+[3]  w(t):real_wage{con}[log,bk]
+[4]  p(t):rprice{con}[log,bk]
+[5]  mg(t):rmoney{con}[log,bk]
+[6]  h(t):labour{con}[log,bk]
+[7]  lam(t):productivity{exo}[log,bk]
+[8]  g(t):govexp{exo}[log,bk]
+[9]  epsz(t):prod_shock{iid}[]
+[10] epsg(t):govexp_shock{iid}[]
+
+%Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
+
+# Production function and derivatives
+[3]   @F(t)       = lam(t-1)*k(t-1)**theta*h(t)**(1-theta);
+[4]   @F_bar      = SS{@F(t)};
+[5]   @Fk(t)      = DIFF{@F(t),k(t-1)};
+[6]   @Fk(t+1)    = FF_1{@Fk(t)};
+[7]   @Fk_bar     = SS{@Fk(t)};
+[8]   @Fh(t)      = DIFF{@F(t),h(t)};
+[9]   @Fh(t+1)    = FF_1{@Fh(t)};
+[10]  @Fh_bar     = SS{@Fh(t)};
+
+
+
+%Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+
+%Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+[2]  r_bar      = (1/betta)-(1-delta);
+[3]  w_bar      = (1-theta)*(theta/((1/betta)-(1-delta)))**...
+                  (theta/(1.0-theta));
+[4]  p_bar      = -B/(betta*w_bar);
+[5]  mg_bar     = betta*w_bar/(B*g_bar+betta*w_bar);
+[6]  k_o_h_bar  = (theta/r_bar)**(1/(1-theta));
+[5]  c_bar      = -(betta*w_bar/B)-g_bar;
+[6]  h_bar      = betta*w_bar/(-B*(w_bar+(r_bar-delta)*k_o_h_bar));
+[7]  k_bar      = k_o_h_bar*h_bar;
+
+
+%Steady State Non-Linear System [Manual]+++++++++++++++++++++++++++++++++++++++++++++++++
+None
+
+%Log-Linearized Model Equations++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# The asset equation for bonds
+[1]  w(t)+r_bar*betta*E(t)|r(t+1)-E(t)|w(t+1) = 0;
+
+# The MRS between consumption and leisure
+[2]  w(t)+p(t) = 0;
+
+# Cash-in-advance constraint for G
+[3]  p_bar*g_bar*(p(t)+g(t-1))-(1/mg_bar)*mg(t) = 0;
+
+# The economy's budget constraint
+[4]  k_bar*k(t)-(1/p_bar)*p(t)-w_bar*h_bar*(w(t)+h(t))...
+     -r_bar*k_bar*(r(t)+k(t-1))-(1-delta)*k_bar*k(t-1) = 0;
+
+# Definition of the real return on physical capital
+[5]  r(t)-lam(t-1)-(theta-1)*k(t-1)+(theta-1)*h(t) = 0;     
+
+# Definition of the economy's real wage
+[6]  w(t)-lam(t-1)-theta*k(t-1)+theta*h(t) = 0;
+
+# The evolution of technology
+[7]  lam(t)-gamma*lam(t-1)-epsz(t) = 0;
+
+# The evolution of government expenditures
+[8]  g(t)-pi_bar*g(t-1)-epsg(t) = 0;
+
+
+%Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Sigma = [sigma_epsg**2  0;
+         0  sigma_epsu**2];
+
+
+%End Of Model File+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

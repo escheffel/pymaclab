@@ -83,7 +83,7 @@ sigma_g                 = 0.02;
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 [1]  z(t):techshock{exo}[log,hp]
 [2]  qq(t):tobinq{con}[log,hp]
-[3]  r(t):nrate{con}
+[3]  r(t):nrate{con}[]
 [4]  s(t):distoy{endo}[log,hp]
 [5]  hd(t):labdemand{con}[log,hp]
 [6]  stil(t):distoh{endo}[log,hp]
