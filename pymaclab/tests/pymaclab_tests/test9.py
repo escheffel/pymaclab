@@ -92,6 +92,9 @@ def test9():
     #####################################################################
     ## STANDARD COOLEY HANSE CIA MODEL WITH SEIGNORAGE AND CES UTILITY ##
     #####################################################################
+    # Be careful, here in the log-linearized version we have two endogenous states, k and mg
+    # But in the automatically linearized version using the Jacobian we only have one, k
+    
     # Load and solve the manually linearized model
     rbc1 = pm.newMOD(models.abcs_rbcs.cooley_hansen_cia_seignorage_ces_linear,mesg=True)
     rbc1.modsolvers.pyuhlig.solve()
@@ -110,7 +113,7 @@ def test9():
     nexo = len(rbc2.vardic['exo']['var'])
     nendo = len(rbc2.vardic['endo']['var'])
     
-    modlin1 = MAT.hstack((rbc1.modsolvers.pyuhlig.Q,rbc1.modsolvers.pyuhlig.P))
+    modlin1 = MAT.hstack((rbc1.modsolvers.pyuhlig.Q[:nendo,:],rbc1.modsolvers.pyuhlig.P[:nendo,:nendo]))
     modlin1 = [[round(modlin1[i2,i1],5) for i1 in range(modlin1.shape[1])] for i2 in range(modlin1.shape[0])]
     modnlin1 = rbc2.modsolvers.forkleind.P[-nendo:,:]
     modnlin1 = [[round(modnlin1[i2,i1],5) for i1 in range(modnlin1.shape[1])] for i2 in range(modnlin1.shape[0])]
@@ -120,9 +123,9 @@ def test9():
     print "Nonlinear is: ",modnlin1
     assert modlin1 == modnlin1
     
-    modlin2 = MAT.hstack((rbc1.modsolvers.pyuhlig.S,rbc1.modsolvers.pyuhlig.R))
+    modlin2 = MAT.hstack((rbc1.modsolvers.pyuhlig.S[:,:],rbc1.modsolvers.pyuhlig.R[:,:nendo]))
     modlin2 = [[round(modlin2[i2,i1],5) for i1 in range(modlin2.shape[1])] for i2 in range(modlin2.shape[0])]
-    modnlin2 = rbc2.modsolvers.forkleind.F
+    modnlin2 = rbc2.modsolvers.forkleind.F[:-1,:]
     modnlin2 = [[round(modnlin2[i2,i1],5) for i1 in range(modnlin2.shape[1])] for i2 in range(modnlin2.shape[0])]
     print modlin2
     print '----------------------'

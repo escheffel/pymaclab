@@ -328,10 +328,12 @@ def mkaug2(self,insys=None,othersys=None):
     spvdic3['endo'] = {}
     spvdic3['con'] = {}
     spvdic3['exo'] = {}
+    spvdic3['iid'] = {}
 
     endoli = [x[0].split('(')[0].strip() for x in self.vardic['endo']['var']]
     exoli = [x[0].split('(')[0].strip() for x in self.vardic['exo']['var']]
     conli = [x[0].split('(')[0].strip() for x in self.vardic['con']['var']]
+    iidli = [x[0].split('(')[0].strip() for x in self.vardic['iid']['var']]
 
 
     patup = ('{-100,100}|None','all','{-100,100}')
@@ -397,10 +399,10 @@ def mkaug2(self,insys=None,othersys=None):
                     newvar = vari+'_F'+tind+'(t)'
                     newname =  vari+'_F'+str(abs(i2+1))
                     if [newvar,newname] not in self.vardic['con']['var']:
-                        self.vardic['con']['var'].append([newvar,newname])
-                        self.vardic['con']['mod'].append(self.vardic['endo']['mod'][indx])
-                        self.audic['con']['var'].append([newvar,newname])
-                        self.audic['con']['mod'].append(self.vardic['endo']['mod'][indx])
+                        self.vardic['endo']['var'].append([newvar,newname])
+                        self.vardic['endo']['mod'].append(self.vardic['endo']['mod'][indx])
+                        self.audic['endo']['var'].append([newvar,newname])
+                        self.audic['endo']['mod'].append(self.vardic['endo']['mod'][indx])
                         if self.sstate.has_key(vari+'_bar'):
                             self.sstate[newvar.split('(')[0]+'_bar'] = self.sstate[vari+'_bar']
                         else:
@@ -535,7 +537,7 @@ def mkaug2(self,insys=None,othersys=None):
     #################################################################################################
     ##
     ## In this section we will compute the declarations which have to be added to the nonlinear system
-    ## in order to incorporate and include in derivations the auxiliare variables used throughout
+    ## in order to incorporate and include in derivations the auxiliary variables used throughout
     ##
     #################################################################################################
     list_added = []
@@ -600,7 +602,7 @@ def mkaug2(self,insys=None,othersys=None):
                     tind = (5-len(str(lead)))*'0'+str(lead)
                     tind1 = (5-len(str(lead+1)))*'0'+str(lead+1)
                     tind2 = (5-len(str(lead+2)))*'0'+str(lead+2)
-                    
+
                     # Define the beginning definition, needs to link up with the last variable define in endotime[1]
                     if lead == leador[0]:
                         if endotime[1] < 0:
@@ -620,7 +622,7 @@ def mkaug2(self,insys=None,othersys=None):
                     if lead != leador[0] and lead != leador[-1]:
                         if varin+'_F'+tind+'(t)'+' - '+varin+'_F'+tind1+'(t-1)' not in list_added:
                             list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'_F'+tind1+'(t-1)')
-                        
+   
                     # Define the end tail definition
                     if lead == leador[-1] and len(leador) != 1:
                         if spvdic3['endo'][varin][1] > 0:
@@ -628,7 +630,8 @@ def mkaug2(self,insys=None,othersys=None):
                         elif spvdic3['endo'][varin][1] == 0:
                             list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t)')
                         elif spvdic3['endo'][varin][1] < 0:
-                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t-'+str(abs(spvdic3['endo'][varin][1]))+')')  
+                            list_added.append(varin+'_F'+tind+'(t)'+' - '+varin+'(t-'+str(abs(spvdic3['endo'][varin][1]))+')')
+
 
     exo_r = filter(lambda x: x[1] != exotime, spvdic2['exo'])
     if exo_r:

@@ -2,7 +2,9 @@
 This is Cooley and Hansen's cash-in-advance monetary RBC model
 taken from McCandless' "ABCs of RBCs". This version of the model
 contains a government sector which finances its expenditures
-through seignorage. This is the version with CES utility
+through seignorage. This is the version with CES utility which
+linearizes the model automatically by computing the models Jacobian.
+Notice also that here we only have one state variable!
 
 
 %Model Information+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -33,7 +35,7 @@ sigma_epsu = 0.01;
 [3]  w(t):real_wage{con}[log,bk]
 [4]  p(t):rprice{con}[log,bk]
 [5]  h(t):labour{con}[log,bk]
-[6]  mg(t):rmoney{endo}[log,bk]
+[6]  mg(t):rmoney{con}[log,bk]
 [7]  lam(t):productivity{exo}[log,bk]
 [8]  g(t):govexp{exo}[log,bk]
 [9]  epsz(t):prod_shock{iid}[]

@@ -189,9 +189,9 @@ class Dynarepp(object):
         nexo = other.nexo
         nendo = other.nendo
         self.P = MAT.matrix(COP.deepcopy(P))[:nendo+nexo,:nendo+nexo]
-        self.F = MAT.matrix(COP.deepcopy(F))[:,:]
+        self.F = MAT.matrix(COP.deepcopy(F))[:,:nendo+nexo]
         self.percP = MAT.matrix(COP.deepcopy(percP))[:nendo+nexo,:nendo+nexo]
-        self.percF = MAT.matrix(COP.deepcopy(percF))[:,:]
+        self.percF = MAT.matrix(COP.deepcopy(percF))[:,:nendo+nexo]
     
 
 class PyUhlig(MODsolvers):

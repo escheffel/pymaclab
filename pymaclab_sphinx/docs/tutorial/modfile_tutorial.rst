@@ -105,6 +105,22 @@ The PyMacLab DSGE model file
   So what does this file mean, and in particular, what is the meaning and purpose of the individual sections?
   These and related questions are addressed in the sections to follow below. They mostly discuss the syntax
   conventions model builders have to adhere to in order to use PyMacLab correctly.
+  
+A word on timing assumptions
+----------------------------
+
+Writing down dynamic models in Macroeconomics in order to obtain their solutions is always a task beset with
+timing assumption problems. The best-known manifestation is that of choosing physical capital (or any other
+endogenous state variable) to be expressed either using t or t-1 as the current-period amount available.
+Some prefer to use t to indicate the amount of physical capital available for production in t, others prefer
+to use t-1 to indicate the period in which today's amount of physical capital was determined, which is usually
+always in the previous period, hence k(t-1).
+
+In general, users should know that in past versions of pymaclab these timing assumptions have also been changed
+around a couple of times and there is always the chance that in future versions of the library, the timining assimptions
+will again be subject to changes. At the moment for endogenous state we are employing the t-1 subscript convention for
+today's level of physical capital and we also crucially employ also t-1 for today's level of any exogenous state variable.
+Control variables are, in the usual way, denoted with the t subscript to indicate current levels of variables.
 
 A Description of the model file's individual sections
 -----------------------------------------------------
