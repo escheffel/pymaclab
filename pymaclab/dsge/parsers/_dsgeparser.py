@@ -243,7 +243,6 @@ from __future__ import division
             i1=i1+1
         if anyssi_found:
             self.ssidic = deepcopy(ssidic)
-            ssili.sort()
             self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssidic'] = deepcopy(ssidic)            
@@ -262,7 +261,6 @@ from __future__ import division
         elif use_focs and anyssi_found:
             self._use_focs = deepcopy(use_focs)
             self._ssidic = deepcopy(ssidic)
-            ssili.sort()
             self.ssili = deepcopy(ssili)
             # Save for template instantiation
             self.template_paramdic['ssys_list'] = False
@@ -277,8 +275,7 @@ from __future__ import division
         # Save for template instantiation
         self.template_paramdic['ssidic'] = False       
         self.template_paramdic['ssys_list'] = False
-        self.template_paramdic['use_focs'] = False
-        
+        self.template_paramdic['use_focs'] = False  
     return self
 
 
@@ -1079,12 +1076,6 @@ def bb_chron_str(self,str1='',bb_int=1,vtype='all'):
     var_li.reverse()
     for varo in var_li:
         if vtype != 'all' and varo[1][0] != vtype:
-            continue
-        elif vtype != 'all' and varo[1][0] != vtype:
-            continue
-        elif vtype != 'all' and varo[1][0] != vtype:
-            continue
-        elif vtype != 'all' and varo[1][0] != vtype:
             continue
         varn = varo[0]
         ma = mregv1b.search(varn)
@@ -1990,21 +1981,21 @@ def mksigmat(self, secs):
 
 def mkeqtype(self):
     lsys = self.llsys_list
-    tup1 = ('{-1,1}|None','iid|exo','{-1,1}')
+    tup1 = ('{-1,1}|None','exo|iid','{-1,1}')
     tup2 = ('{-1,1}|None','all','{-1,1}')
     tup3 = ('{-1,1}','all','{-1,1}')
     err_indx = []
     det_indx = []
     exp_indx = []
     for x,y in zip(lsys,range(len(lsys))):
-        if self.vreg(('{-1,1}','all','{-1,1}'),x,False,'max'):
-            exp_indx.append(y)
-        elif self.vreg((None,'exo|iid','{-1,1}'),x,False,'max'):
-            if len(self.vreg((None,'exo|iid','{-1,1}'),x,True,'max'))==\
+        if self.vreg(('{-1,1}|None','exo|iid','{-1,1}'),x,False,'max'):
+            if len(self.vreg(('{-1,1}|None','exo|iid','{-1,1}'),x,True,'max'))==\
                len(self.vreg(('{-1,1}|None','all','{-1,1}'),x,True,'max')):
                 err_indx.append(y)
             else:
                 det_indx.append(y)
+        elif self.vreg(('{-1,1}','all','{-1,1}'),x,False,'max'):
+            exp_indx.append(y)
         else:
             det_indx.append(y)
 
@@ -2105,7 +2096,7 @@ def mk_mssidic_subs(self):
             str_tmp = ma.group()
             tmp_list[i1][1] = tmp_list[i1][1].replace(str_tmp,'('+sub_dic[str_tmp]+')')
         locals().update(self.paramdic)
-        tmp_dic = {}       
+        tmp_dic = {}
         tmp_dic[tmp_list[i1][0]] = eval(tmp_list[i1][1].replace('EXP(','np.exp(').replace('LOG(','np.log('))
         locals().update(tmp_dic)
         # Update ssidic
@@ -2121,7 +2112,6 @@ def mk_mssidic_subs(self):
     for i1,keyo in enumerate([x[0] for x in self.ssili]):
         if keyo in self.ssidic.keys() and str(self.ssidic[keyo]) != self.ssili[i1][1]:
             self.ssili[i1][1] = str(self.ssidic[keyo])
-    self.ssili.sort()
     return self
 
 #This function is needed in population stage 1, at the end

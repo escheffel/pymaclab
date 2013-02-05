@@ -2,7 +2,7 @@ from copy import deepcopy
 from pymaclab.dsge.translators import pml_to_dynarepp
 from pymaclab.dsge.translators import dynarepp_to_pml
 from pymaclab.dsge.translators import pml_to_pml
-from pymaclab.dsge.parsers._dsgeparser import ff_chron_str
+from pymaclab.dsge.parsers._dsgeparser import ff_chron_str, bb_chron_str
 
 
 class Translators(object):
@@ -22,6 +22,8 @@ class Translators(object):
             varli = set([x[1][0] for x in vreg(patup,focli[i1],True,'max')])
             if varli.intersection(compset) != set([]) and 'exo' in varli:
                 focli[i1] = ff_chron_str(other,str1=focli[i1],ff_int=1,vtype='exo')
+            else:
+                focli[i1] = bb_chron_str(other,str1=focli[i1],bb_int=1,vtype='iid')
         template_paramdic = deepcopy(self.template_paramdic)
         template_paramdic['focs_dynare'] = focli
         

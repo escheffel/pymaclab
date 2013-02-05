@@ -69,22 +69,22 @@ None
     r_bar*k_bar*k(t-1)-(1-delta)*k_bar*k(t-1) = 0;
 
 # Definition of r(t)
-[2] r(t)-lam(t-1)-(theta-1)*k(t-1)+(theta-1)*h(t) = 0;
+[2] r(t)-lam(t)-(theta-1)*k(t-1)+(theta-1)*h(t) = 0;
 
 # Definition of w(t)
-[3] w(t)-lam(t-1)-theta*k(t-1)+theta*h(t) = 0;
+[3] w(t)-lam(t)-theta*k(t-1)+theta*h(t) = 0;
 
 # The MRS condition
-[4] p(t)+w(t)-pi_bar*mg(t-1) = 0;
+[4] p(t)+w(t)-pi_bar*mg(t) = 0;
 
 # The Euler asset equation
 [5] w(t)+betta*r_bar*E(t)|r(t+1)-E(t)|w(t+1) = 0;
 
 # The law of motion of technology
-[6] lam(t)-gamma*lam(t-1)-epsg(t) = 0;
+[6] E(t)|lam(t+1)-gamma*lam(t)-E(t)|epsg(t+1) = 0;
 
 # The law of motion of money growth
-[7] mg(t)-pi_bar*mg(t-1)-epsu(t) = 0;
+[7] E(t)|mg(t+1)-pi_bar*mg(t)-E(t)|epsu(t+1) = 0;
 
 
 %Variance-Covariance Matrix++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

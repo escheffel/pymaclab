@@ -9,20 +9,30 @@ Name = dynarepp-to-pymaclab translated model;
 
 
 %Parameters++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-rho       = 0.36;
-delta     = 0.025;
-betta     = 1.0/1.01;
-eta	  = 2.0; 
-psi	  = 0.95;
-z_bar     = 1.0;
-sigma_eps = 0.052;
+% for lino in paramvals[0]:
+  ${lino}
+% endfor
 
 %Variable Vectors+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+## Build the necessary list of variables we need to iter through.
+<%
+  varli = []
+  counter = 1
+  for keyo in vardic.keys():
+    for i1,itemo in enumerate(vardic[keyo]['var']):
+      varli.append([counter, itemo[0], itemo[1], itemo['mod'][i1]])
+      counter += 1
+%>
 [1]  k(t):capital{endo}[log,bk]
 [2]  c(t):consumption{con}[log,bk]
 [4]  y(t):output{con}[log,bk]
 [4]  R(t):rrate{con}[log,bk]
 [5]  z(t):eps(t):productivity{exo}[log,bk]
+% for keyo in vardic.keys():
+  % for itemo in vardic[keyo]['var']
+  [${loop.index+1}]  ${vardic[keyo]['var'][0]}:${vardic[keyo]['var'][1]}{keyo}
+  % endfor
+% endfor
 
 %Boundary Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 None

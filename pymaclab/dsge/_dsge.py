@@ -111,7 +111,7 @@ class DSGEmodel(object):
 
     # Initializes the absolute basics, errors difficult to occur
     def __init__(self,ffile=None,dbase=None,initlev=2,mesg=False,ncpus='auto',mk_hessian=True,\
-                 use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[-1,0],'endo':[-1,0],'iid':[0,1],'con':[0,1]}):
+                 use_focs=False,ssidic=None,sstate=None,vtiming={'exo':[0,1],'endo':[-1,0],'iid':[1,2],'con':[0,1]}):
         jobserver.wait()
         if sstate != None:
             self._sstate = deepcopy(sstate)
@@ -725,7 +725,7 @@ class DSGEmodel(object):
         elif vtiming['iid'][0] == 0:
             iid_0 = [x[0].split('(')[0]+'(t)' for x in self.vardic['iid']['var']]
         elif vtiming['iid'][0] > 0:
-            iid_0 = [x[0].split('(')[0]+'(t+'+str(vtiming['iid'][0])+')' for x in self.vardic['iid']['var']]
+            iid_0 = ['E(t)|'+x[0].split('(')[0]+'(t+'+str(vtiming['iid'][0])+')' for x in self.vardic['iid']['var']]
         # For future
         if vtiming['iid'][1] < 0:
             iid_1 = [x[0].split('(')[0]+'(t-'+str(abs(vtiming['iid'][1]))+')' for x in self.vardic['iid']['var']]

@@ -36,7 +36,7 @@ None
 [2]   @inv_bar    = SS{@inv(t)};
 
 # Production function and derivatives
-[2]   @F(t)       = lam(t-1)*k(t-1)**theta*h(t)**(1-theta);
+[2]   @F(t)       = lam(t)*k(t-1)**theta*h(t)**(1-theta);
 [2]   @F_bar      = SS{@F(t)};
 [2]   @Fk(t)      = DIFF{@F(t),k(t-1)};
 [2]   @Fk(t+1)    = FF_1{@Fk(t)};
@@ -81,7 +81,7 @@ None
 [3]   y(t)-@F(t) = 0;
 
 # The evolution of technology
-[5]   LOG(lam(t))-gamma*LOG(lam(t-1))-eps(t) = 0;
+[5]   LOG(E(t)|lam(t+1))-gamma*LOG(lam(t))-E(t)|eps(t+1) = 0;
 
 
 %Steady States [Closed Form]+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

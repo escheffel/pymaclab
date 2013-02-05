@@ -27,6 +27,7 @@ from pymaclab.dsge.updaters.queued import Updaters_Queued, dicwrap_queued, dicwr
 
 # Import of Translator Class for translating between different model formats
 from pymaclab.dsge.translators.translators import Translators
+from pymaclab.dsge.translators import dynarepp_to_pml
 
 # Import refactored DSGE model initialisor class and the dynarepp flag
 import pymaclab.dsge.inits._set_flags

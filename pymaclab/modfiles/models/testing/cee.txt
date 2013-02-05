@@ -107,7 +107,7 @@ None
 
 
 %Variable Substitution Non-Linear System++++++++++++++++++++++++++++++++++++++++++++++++
-[1]  @pf(t) = z(t-1)*(u(t)*k(t-1))**Theta*hd(t)**(1-Theta)-Pssi;
+[1]  @pf(t) = z(t)*(u(t)*k(t-1))**Theta*hd(t)**(1-Theta)-Pssi;
 [2]  @E(t)|pf(t+1) = E(t)|z(t+1)*(E(t)|u(t+1)*k(t))**Theta*E(t)|hd(t+1)**(1-Theta)-Pssi;
 [3]  @a(t) = gama1*(u(t)-1)+gama2/2*(u(t)-1)**2;
 [4]  @E(t)|a(t+1) = gama1*(E(t)|u(t+1)-1)+gama2/2*(E(t)|u(t+1)-1)**2;
@@ -117,7 +117,7 @@ None
 [10] @rk(t) = gama1+gama2*(u(t)-1);
 [11] @E(t)|rk(t+1) = gama1+gama2*(E(t)|u(t+1)-1);
 [12] @mh(t) = ((la(t)-betta*E(t)|la(t+1)/E(t)|pai(t+1))/phi1)**(-1/sigmam);
-[13] @mc(t) = @rk(t)/(z(t-1)*Theta*(u(t)*k(t-1)/hd(t))**(Theta-1));
+[13] @mc(t) = @rk(t)/(z(t)*Theta*(u(t)*k(t-1)/hd(t))**(Theta-1));
 [14] @E(t)|mc(t+1) = @E(t)|rk(t+1)/(E(t)|z(t+1)*Theta*(E(t)|u(t+1)*k(t)/E(t)|hd(t+1))**(Theta-1));
 [17] @ptil(t) = ((1-alpha*pai(t)**(eta-1)*pai(t-1)**(chi*(1-eta)))/(1-alpha))**(1/(1-eta));
 [18] @E(t)|ptil(t+1) = ((1-alpha*E(t)|pai(t+1)**(eta-1)*pai(t)**(chi*(1-eta)))/(1-alpha))**(1/(1-eta));
@@ -136,9 +136,9 @@ None
 
 %Non-Linear First-Order Conditions++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # def investment
-[1]  iv(t)-output(t)+c(t)+g(t-1)+@a(t)*k(t-1) = 0;
+[1]  iv(t)-output(t)+c(t)+g(t)+@a(t)*k(t-1) = 0;
 # wage rate
-[1] w(t)-@mc(t)*z(t-1)*(1-Theta)*(u(t)*k(t-1)/hd(t))**(Theta)/(1+nu*(r(t)-1)/r(t)) = 0;
+[1] w(t)-@mc(t)*z(t)*(1-Theta)*(u(t)*k(t-1)/hd(t))**(Theta)/(1+nu*(r(t)-1)/r(t)) = 0;
 # investment foc ?
 [1] (1-delta)*k(t-1)-k(t)+@qiv(t) = 0;
 # foc consumption
@@ -174,9 +174,9 @@ None
 [13] -stil(t)+(1-alphatil)*(@wtil(t)/w(t))**(-etatil)+alphatil*...
      (w(t-1)/w(t))**(-etatil)*(pai(t)/pai(t-1)**chitil)**etatil*stil(t-1) = 0;
 # government purchase law of motion (shock)
-[14] LOG(g(t)/g_bar)-rho_g*LOG(g(t-1)/g_bar)-epsg(t) = 0;
+[14] LOG(E(t)|g(t+1)/g_bar)-rho_g*LOG(g(t)/g_bar)-E(t)|epsg(t+1) = 0;
 # technology shock evolution
-[15] LOG(z(t))-rho_z*LOG(z(t-1))-epsz(t) = 0;
+[15] LOG(E(t)|z(t+1))-rho_z*LOG(z(t))-E(t)|epsz(t+1) = 0;
 
 
 %Steady State Non-Linear System [Manual]++++++++++++++++++++++++++++++++++++++++++++++++

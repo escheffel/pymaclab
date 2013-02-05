@@ -63,24 +63,24 @@ pandas_version = False
 try:
     import pandas
     pandas_version = pandas.__version__
-    if pandas_version and pandas_version != '0.9.0':
-        print "You need Pandas version 0.9.0 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install pandas==0.9.0") 
+    if pandas_version and pandas_version != '0.10.1':
+        print "You need Pandas version 0.10.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pandas==0.10.1") 
 except:
     print "Pandas not detected. Fetching now using pip..."
-    os.system("pip install pandas==0.9.0")
+    os.system("pip install pandas==0.10.1")
     
 # Now check for ipython and install if needed
 ipython_version = False
 try:
     import IPython
     ipython_version = IPython.__version__
-    if ipython_version and ipython_version != '0.13':
-        print "You should use IPython version 0.13 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install ipython==0.13") 
+    if ipython_version and ipython_version != '0.13.1':
+        print "You should use IPython version 0.13.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install ipython==0.13.1") 
 except:
     print "IPython not detected but is fun to use with PyMacLab. Fetching now using pip..."
-    os.system("pip install ipython==0.13")
+    os.system("pip install ipython==0.13.1")
 
 '''
 # Now check for pp and install if needed
