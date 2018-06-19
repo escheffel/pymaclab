@@ -1,3 +1,16 @@
-The prgram can be installed from source by running the command:
+The program can be installed from source by running the command:
 
-sudo python setup.py install 
+sudo -H python setup.py install 
+
+Before running this command make sure the following additional packages are installed (for example in Debian/Ubuntu/Mint using the following commands):
+
+sudo apt-get install python-pip
+sudo apt-get install python-setuptools
+sudo apt-get install python3-setuptools
+sudo apt-get install python-dev
+sudo apt-get install python3-dev
+sudo apt-get install python-tk
+
+In order for Numpy and Scipy to function and install normally (as well as for other routines which are compiled from source in C and Fortran), it would be good to have Lapack libraries and developement files installed, for example by issuing the following command before installing the main program:
+
+sudo-apt-get install liblapack-dev

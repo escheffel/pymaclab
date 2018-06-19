@@ -27,60 +27,60 @@ numpy_version = False
 try:
     import numpy
     numpy_version = numpy.__version__
-    if numpy_version and numpy_version != '1.6.2':
-        print "You need Numpy version 1.6.2 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install numpy==1.6.2")    
+    if numpy_version and numpy_version != '1.14.5':
+        print "You need Numpy version 1.14.5 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install numpy==1.14.5")    
 except:
-    print "Numpy not detected. Fetching version 1.6.2 now using pip..."
-    os.system("pip install numpy==1.6.2")
+    print "Numpy not detected. Fetching version 1.14.5 now using pip..."
+    os.system("pip install numpy==1.14.5")
     
 # Now check for scipy and install if needed
 scipy_version = False
 try:
     import scipy
     scipy_version = scipy.__version__
-    if scipy_version and scipy_version != '0.11.0':
-        print "You need Scipy version 0.11.0 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install scipy==0.11.0") 
+    if scipy_version and scipy_version != '1.1.0':
+        print "You need Scipy version 1.1.0 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install scipy==1.1.0") 
 except:
-    print "Scipy not detected. Fetching version 0.11.0 now using pip..."
-    os.system("pip install scipy==0.11.0")
+    print "Scipy not detected. Fetching version 1.1.0 now using pip..."
+    os.system("pip install scipy==1.1.0")
 
 # Now check for matplotlib and install if needed
 matplotlib_version = False
 try:
     import matplotlib
     matplotlib_version = matplotlib.__version__
-    if matplotlib_version and matplotlib_version != '1.1.0':
-        print "You need Matplotlib version 1.1.0 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install matplotlib==1.1.0") 
+    if matplotlib_version and matplotlib_version != '2.2.2':
+        print "You need Matplotlib version 2.2.2 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install matplotlib==2.2.2") 
 except:
     print "Matplotlib not detected. Fetching now using pip..."
-    os.system("pip install matplotlib==1.1.0")
+    os.system("pip install matplotlib==2.2.2")
 
 # Now check for pandas and install if needed
 pandas_version = False
 try:
     import pandas
     pandas_version = pandas.__version__
-    if pandas_version and pandas_version != '0.10.1':
-        print "You need Pandas version 0.10.1 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install pandas==0.10.1") 
+    if pandas_version and pandas_version != '0.23.1':
+        print "You need Pandas version 0.23.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pandas==0.23.1") 
 except:
     print "Pandas not detected. Fetching now using pip..."
-    os.system("pip install pandas==0.10.1")
+    os.system("pip install pandas==0.23.1")
     
 # Now check for ipython and install if needed
 ipython_version = False
 try:
     import IPython
     ipython_version = IPython.__version__
-    if ipython_version and ipython_version != '0.13.1':
-        print "You should use IPython version 0.13.1 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install ipython==0.13.1") 
+    if ipython_version and ipython_version != '6.2.1':
+        print "You should use IPython version 6.2.1 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install ipython==6.2.1") 
 except:
     print "IPython not detected but is fun to use with PyMacLab. Fetching now using pip..."
-    os.system("pip install ipython==0.13.1")
+    os.system("pip install ipython==6.2.1")
 
 '''
 # Now check for pp and install if needed
@@ -88,12 +88,12 @@ pp_version = False
 try:
     import pp
     pp_version = pp.version
-    if pp_version and pp_version != '1.6.2':
-        print "You should use PP version 1.6.2 for PyMacLab. Re-installing correct version now..."
-        os.system("pip install pp==1.6.2")
+    if pp_version and pp_version != '1.6.6':
+        print "You should use PP version 1.6.6 for PyMacLab. Re-installing correct version now..."
+        os.system("pip install pp==1.6.6")
 except:
     print "PP not detected but makes PyMacLab much faster. Fetching now using pip..."
-    os.system("pip install pp==1.6.2")
+    os.system("pip install pp==1.6.6")
 '''
 
 # Now check for wheezy.template and install if needed, but cannot check version so just install any latest
