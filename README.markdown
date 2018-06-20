@@ -102,19 +102,18 @@ import pymaclab as pm
 # Import a convenience handler to filepaths for supplied DSGE model files
 from pymaclab.modfiles import models
 
-# Model Instantiation with data, RBC1 model numerically solved/approximated
+# Model Instantiation, RBC1 steady state numerically solved/approximated
 rbc1 = pm.newMOD(models.stable.rbc1_num)
 
-# Model instantiation without data
-rbc2 = pm.newMOD(models.stable.rbc2)
+# Model instantiation with closed-form steady state solution
+rbc2 = pm.newMOD(models.stable.rbc1_cf)
 
 # Solve the models using different methods
 rbc1.modsolvers.forkleind.solve()
-rbc2.modsolvers.forkleind.solve()
+rbc2.modsolvers.pyklein2d.solve()
 
 # Simulate the models after they have been solved
 rbc1.modsolvers.forkleind.sim(400)
-rbc2.modsolvers.forkleind.sim(1000)
 
 # If dynare++ is installed and in your PATH, then you can solve
 # the model alternatively using dynare++ in the background and all 
