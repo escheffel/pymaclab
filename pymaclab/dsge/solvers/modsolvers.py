@@ -1574,9 +1574,12 @@ class PyKlein2D(object):
                 ymat[i1,0]=MAT.trace(xmat[n*i1:i1*n+1,:n])
             return ymat
 
-        ssigma = self.ssigma
-        pp = self.P
-        ff = self.F
+        # Generate "padded" ssigm with additional zero rows/cols for iid variable
+        ssigma = np.hstack([self.ssigma,np.zeros([self.ssigma.shape[0],self.niid])])
+        ssigma = np.vstack([ssigma,np.zeros([1,self.ssigma.shape[0]+self.niid])])
+        
+        pp = self.forkleind.FP
+        ff = self.forkleind.FF
         gra = self.gra
         hes = self.hes
         m = self.ncon+self.nendo+self.nexo
@@ -2891,7 +2894,10 @@ class ForKleinD(PyKlein2D):
         if MAT.sum(P.reshape(-1,1)) == 0.0:
             return
         else:
-            # Strip out the iid cols and row
+            # First save the full matrices which include the iid variable
+            self.FP = np.matrix(P)
+            self.FF = np.matrix(F)
+            # Strip out the iid cols and row to obtain "standard" views of P and F
             self.P = np.matrix(P)[:self.nendo+self.nexo,:self.nendo+self.nexo]
             self.F = np.matrix(F)[:,:self.nendo+self.nexo]
 
