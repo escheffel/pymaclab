@@ -1643,6 +1643,7 @@ class PyKlein2D(object):
         ncon = self.ncon
         nexo = self.nexo
         nendo = self.nendo
+        niid = self.niid
         tstates = self.tstates
         tlena = 1000+tlen
         sigma = self.sigma
@@ -1652,8 +1653,8 @@ class PyKlein2D(object):
             numhl = self.numhl
         kx = self.KX
         ky = self.KY
-        pp = self.P
-        ff = self.F
+        pp = self.forkleind.FP
+        ff = self.forkleind.FF
         ee = self.E
         gg = self.G
         count = 0
@@ -1670,7 +1671,7 @@ class PyKlein2D(object):
                     ranvec = MAT.zeros((1,tlena))
             count = count + 1
 
-        ranvec = MAT.vstack((ranvec,MAT.zeros((nendo,tlena))))
+        ranvec = MAT.vstack((ranvec,MAT.zeros((nendo+niid,tlena))))
 
         x_one_m1 = ranvec[:,0]
         x_one_0 = pp*x_one_m1

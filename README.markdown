@@ -114,6 +114,7 @@ rbc2.modsolvers.pyklein2d.solve()
 
 # Simulate the models after they have been solved
 rbc1.modsolvers.forkleind.sim(400)
+rbc2.modsolvers.pyklein2d.sim(200)
 
 # If dynare++ is installed and in your PATH, then you can solve
 # the model alternatively using dynare++ in the background and all 
