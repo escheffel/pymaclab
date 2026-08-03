@@ -49,7 +49,7 @@ def preprocess(msg):
             exec module
             globals().update(locals())
         except:
-            print "An error has occured during the module import"
+            print "An error has occurred during the module import"
             sys.excepthook(*sys.exc_info())
     return fname, fobjs
 
@@ -79,7 +79,7 @@ class _WorkerProcess(object):
                         exec __fobj
                         globals().update(locals())
                     except:
-                        print "An error has occured during the " + \
+                        print "An error has occurred during the " + \
                               "function import"
                         sys.excepthook(*sys.exc_info())
 
@@ -89,7 +89,7 @@ class _WorkerProcess(object):
                 try:
                     __result = __f(*__args)
                 except:
-                    print "An error has occured during the function execution"
+                    print "An error has occurred during the function execution"
                     sys.excepthook(*sys.exc_info())
                     __result = None
 
@@ -99,7 +99,7 @@ class _WorkerProcess(object):
                 self.t.send(__sresult)
                 self.sout.truncate(0)
         except:
-            print "A fatal error has occured during the function execution"
+            print "A fatal error has occurred during the function execution"
             sys.excepthook(*sys.exc_info())
             __result = None
             __sresult = pickle.dumps((__result, self.sout.getvalue()),
